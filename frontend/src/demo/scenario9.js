@@ -1,7 +1,7 @@
 /* ============================================================================
-   COURTIA — Démonstration : scénario de la visite guidée (9 chapitres)
+   COURTIARK — Démonstration : scénario de la visite guidée (9 chapitres)
    ----------------------------------------------------------------------------
-   UNE JOURNÉE AVEC COURTIA. 9 chapitres cliquables, 25 étapes.
+   UNE JOURNÉE AVEC COURTIARK. 9 chapitres cliquables, 25 étapes.
    Durée théorique : dureeTheorique() (somme des `tenue` + 1 900 ms de
    déplacement par étape) — mesurée à 136 s, en dessous de la cible de
    2 min 30 : l'ancien en-tête annonçait « 23 étapes, cible 2 min 30 », deux
@@ -13,10 +13,10 @@
    Règle : jamais plus de ~5 s sans changement visuel ou information nouvelle.
    On augmente la densité, jamais la durée par ralentissement artificiel.
 
-   `route`   : la vraie route COURTIA
+   `route`   : la vraie route COURTIARK
    `cible`   : élément réel — { texte } (résolu dans le DOM) ou { sel } (CSS)
    `clic`    : le curseur clique réellement, l'écran réagit
-   `compact` : overlay réduit (fin de parcours — COURTIA reste visible)
+   `compact` : overlay réduit (fin de parcours — COURTIARK reste visible)
    `tenue`   : temps de pose après l'action (ms)
    ========================================================================== */
 /* ─── Devise de la démonstration (P1 CH-020) ────────────────────────────
@@ -48,7 +48,7 @@ export const ETAPES = [
     route: '/demo/dashboard', chapitre: 'journee',
     cible: { texte: 'CLIENTS ACTIFS' },
     titre: 'Votre cabinet, ce matin',
-    texte: `Huit clients, quinze contrats, ${m(39810)} de primes gérées. COURTIA lit ce qui existe déjà — vous ne saisissez rien.`,
+    texte: `Huit clients, quinze contrats, ${m(39810)} de primes gérées. COURTIARK lit ce qui existe déjà — vous ne saisissez rien.`,
     tenue: 3200,
   },
   {
@@ -110,7 +110,7 @@ export const ETAPES = [
     route: '/demo/prospection', chapitre: 'acquerir',
     cible: { texte: 'POTENTIEL' },
     titre: 'Qui contacter, et pourquoi',
-    texte: 'Chaque prospect a son statut, sa source et sa prochaine action. COURTIA vous dit qui relancer en premier.',
+    texte: 'Chaque prospect a son statut, sa source et sa prochaine action. COURTIARK vous dit qui relancer en premier.',
     tenue: 3000,
   },
   {
@@ -126,14 +126,14 @@ export const ETAPES = [
     route: '/demo/devis', chapitre: 'convertir',
     cible: { sel: 'main' },
     titre: 'Vos devis, leur statut, leur montant',
-    texte: 'Envoyé, signé, en attente : COURTIA suit chaque devis et son ancienneté. Un devis sans réponse remonte tout seul.',
+    texte: 'Envoyé, signé, en attente : COURTIARK suit chaque devis et son ancienneté. Un devis sans réponse remonte tout seul.',
     tenue: 3200,
   },
   {
     route: '/demo/opportunites', chapitre: 'convertir',
     cible: { texte: 'Signé' },
     titre: 'Du prospect au client signé',
-    texte: 'C’est ce cycle complet que COURTIA tient : un prospect entre, un contrat signé sort. Sans ressaisie entre les étapes.',
+    texte: 'C’est ce cycle complet que COURTIARK tient : un prospect entre, un contrat signé sort. Sans ressaisie entre les étapes.',
     tenue: 3200,
   },
 
@@ -172,7 +172,7 @@ export const ETAPES = [
     route: '/demo/taches', chapitre: 'suivre',
     cible: { sel: 'main' },
     titre: 'Ce qu’il reste à faire',
-    texte: 'En retard, aujourd’hui, cette semaine : COURTIA trie vos tâches et signale celles qu’ARK a générées lui-même.',
+    texte: 'En retard, aujourd’hui, cette semaine : COURTIARK trie vos tâches et signale celles qu’ARK a générées lui-même.',
     tenue: 3200,
   },
   {
@@ -194,7 +194,7 @@ export const ETAPES = [
   {
     route: '/demo/dashboard', chapitre: 'automatiser',
     cible: { texte: 'Échéances 30 jours' },
-    titre: 'Pendant que vous travaillez, COURTIA surveille',
+    titre: 'Pendant que vous travaillez, COURTIARK surveille',
     texte: 'Échéances, dossiers bloqués, clients silencieux : les règles tournent seules et remontent ce qui compte.',
     tenue: 3400,
   },
@@ -202,7 +202,7 @@ export const ETAPES = [
     route: '/demo/clients/2003', chapitre: 'automatiser',
     cible: { texte: 'Documents' },
     titre: 'Une pièce manquante déclenche la relance',
-    texte: 'COURTIA sait depuis quand la pièce est attendue et prépare la demande. Du temps que vous ne passez plus à courir après l’information.',
+    texte: 'COURTIARK sait depuis quand la pièce est attendue et prépare la demande. Du temps que vous ne passez plus à courir après l’information.',
     tenue: 3200,
   },
 

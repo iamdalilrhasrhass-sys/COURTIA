@@ -18,14 +18,14 @@ function renderBootFallback(message, details) {
   target.innerHTML = `
     <main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#02030b;color:#fff;font-family:Inter,system-ui,sans-serif">
       <section style="max-width:620px;text-align:center">
-        <p style="margin:0 0 10px;color:#8fe7ff;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase">COURTIA</p>
+        <p style="margin:0 0 10px;color:#8fe7ff;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase">COURTIARK</p>
         <h1 style="margin:0 0 14px;font-size:clamp(2rem,6vw,4rem);line-height:.95">Le cockpit n'a pas pu se charger</h1>
         <p style="margin:0 auto 22px;color:rgba(255,255,255,.7);line-height:1.6">Une erreur technique empêche l'affichage de l'application. Rechargez la page ou réessayez dans quelques instants.</p>
         <button onclick="window.location.reload()" style="min-height:46px;padding:0 22px;border:0;border-radius:999px;background:linear-gradient(135deg,#a9f1ff,#ff71bd);color:#060717;font-weight:800;cursor:pointer">Recharger</button>
       </section>
     </main>
   `
-  console.error('[COURTIA boot]', message, details)
+  console.error('[COURTIARK boot]', message, details)
 }
 
 window.addEventListener('error', (event) => {

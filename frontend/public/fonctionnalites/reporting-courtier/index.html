@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/fonctionnalites">Fonctionnalités</a> › Reporting et pilotage</p>
 <h1>Reporting et pilotage</h1>
 <p class="chapeau">Un cabinet se pilote avec ce qu&#x27;il a réellement produit : contrats en portefeuille, devis en cours, commissions attendues, activité des collaborateurs. COURTIARK restitue ces éléments à partir des données du cabinet.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce que restitue le reporting</h2><div class="section"><ul><li>Portefeuille : contrats et valeurs associées.</li><li>Devis : en cours, gagnés, perdus.</li><li>Commissions : attendues, encaissées, par dossier.</li><li>Activité : tâches et relances traitées.</li><li>Objectifs du cabinet et avancement (module Objectifs).</li></ul></div><h2>Des chiffres qui viennent de vos données</h2><div class="section"><p>COURTIARK n'affiche pas d'estimation générique : un indicateur qui ne peut pas être calculé reste vide plutôt que d'être inventé. C'est une règle du produit.</p></div><h2>Le brief du matin : le rapport le plus utile</h2><div class="section"><p>Plutôt qu'un tableau à interpréter, le brief du matin résume ce qui a changé et ce qui demande une action aujourd'hui. Il se lit en quelques secondes, à la première connexion.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Les rapports utilisent-ils mes données ou des moyennes de marché ?</h3><p>Uniquement les données de votre cabinet.</p><h3>Puis-je suivre l&#x27;activité de plusieurs collaborateurs ?</h3><p>Le cabinet peut rattacher plusieurs utilisateurs avec des rôles distincts ; le pilotage reste à l&#x27;échelle du cabinet.</p><h3>Les indicateurs manquants sont-ils estimés ?</h3><p>Non, un indicateur non calculable reste vide.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/gestion-portefeuille-assurance">Gestion de portefeuille</a></li><li><a href="/guides/organiser-portefeuille-assurance">Guide : organiser un portefeuille</a></li></ul></div>
 </main>

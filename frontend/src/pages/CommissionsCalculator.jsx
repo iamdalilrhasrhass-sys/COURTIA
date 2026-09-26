@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Écran « Calculateur de commissions »
+   COURTIARK — Écran « Calculateur de commissions »
    ----------------------------------------------------------------------------
    POURQUOI cette réécriture : l'écran portait en constantes HUIT compagnies
    (« Aurora », « Novalia », « Helios », « Serenis », « Atlas », « Oria »,
@@ -187,14 +187,14 @@ export default function CommissionsCalculator() {
 
   function exportPdf() {
     if (!exportAutorise) return
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Commission COURTIA</title>
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Commission COURTIARK</title>
 <style>body{font-family:system-ui;margin:32px;color:#0F172A}h1{font-size:28px;margin:0 0 4px}table{width:100%;border-collapse:collapse;margin-top:24px}th,td{padding:10px 12px;border-bottom:1px solid #E2E8F0;text-align:left}th{background:#F8FAFC;font-size:11px;text-transform:uppercase}</style>
 </head><body>
 <h1>Commission calculée</h1>
 <table><tr><th>Compagnie</th><th>Produit</th><th>Prime</th><th>Taux</th><th>Commission</th></tr>
 <tr><td>${compagnie}</td><td>${produit}</td><td>${fmtMontantLocal(primeNombre)}</td><td>${taux}%</td><td><strong>${fmtMontantLocal(commission)}</strong></td></tr>
 </table>
-<p style="margin-top:24px;font-size:11px;color:#94A3B8">Barèmes du cabinet — COURTIA</p>
+<p style="margin-top:24px;font-size:11px;color:#94A3B8">Barèmes du cabinet — COURTIARK</p>
 <script>window.onload=()=>setTimeout(()=>window.print(),250)</script>
 </body></html>`
     const w = window.open('', '_blank')
@@ -429,7 +429,7 @@ export default function CommissionsCalculator() {
             compteur (« 0 relevé ») ne vient suggérer une mesure qui n'existe
             pas : l'écran dit simplement que la fonction n'est pas installée. */}
         <FonctionIndisponible titre="Relevé mensuel de commissions (PDF)" style={{ marginTop: 16 }}>
-          La production par COURTIA d&apos;un relevé mensuel téléchargeable n&apos;est pas
+          La production par COURTIARK d&apos;un relevé mensuel téléchargeable n&apos;est pas
           installée dans cette version : aucun bouton ne le propose ici. Le calcul affiché
           ci-dessus reste celui de votre écran, et l&apos;export CSV/PDF du calcul en cours
           reste disponible.

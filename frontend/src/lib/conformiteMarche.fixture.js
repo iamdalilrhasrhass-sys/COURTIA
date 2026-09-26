@@ -71,7 +71,7 @@ export const DASHBOARD_CH = {
         { code: 'protection_juridique', libelle: 'Protection juridique' },
       ],
       mots_cles: ['LAMal', 'LCA', 'LAA', 'LPP', '3e pilier', 'ménage', 'casco'],
-      note: "Familles de produits d'assurance pratiquées sur ce marché. COURTIA ne liste ni assureur, ni garantie, ni tarif.",
+      note: "Familles de produits d'assurance pratiquées sur ce marché. COURTIARK ne liste ni assureur, ni garantie, ni tarif.",
     },
   },
 }
@@ -121,7 +121,7 @@ export const DASHBOARD_FR = {
         { code: 'emprunteur', libelle: 'Assurance emprunteur' },
       ],
       mots_cles: ['IARD', 'auto', 'habitation', 'santé', 'prévoyance', 'emprunteur'],
-      note: "Familles de produits d'assurance pratiquées sur ce marché. COURTIA ne liste ni assureur, ni garantie, ni tarif.",
+      note: "Familles de produits d'assurance pratiquées sur ce marché. COURTIARK ne liste ni assureur, ni garantie, ni tarif.",
     },
   },
 }

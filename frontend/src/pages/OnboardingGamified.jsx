@@ -17,7 +17,7 @@ const STEPS = [
     key: 'create_client',
     icon: Users,
     title: 'Créez votre premier client',
-    description: 'Ajoutez une fiche client pour commencer à utiliser COURTIA',
+    description: 'Ajoutez une fiche client pour commencer à utiliser COURTIARK',
     badge: { name: 'Courtier Connecté', emoji: '🤝' },
     action: { label: 'Ajouter un client', route: '/clients/new' },
     color: '#6366f1',
@@ -53,7 +53,7 @@ const STEPS = [
     key: 'invite_colleague',
     icon: UserPlus,
     title: 'Invitez un collègue',
-    description: 'Partagez COURTIA avec un membre de votre équipe',
+    description: 'Partagez COURTIARK avec un membre de votre équipe',
     badge: { name: 'Ambassadeur', emoji: '🌟' },
     action: { label: 'Inviter', route: '/equipe' },
     color: '#f43f5e',
@@ -231,7 +231,7 @@ export default function OnboardingGamified() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
             <Award size={40} color="#6366f1" />
             <h1 style={{ fontSize: 32, fontWeight: 700, color: 'white', margin: 0 }}>
-              Bienvenue sur COURTIA
+              Bienvenue sur COURTIARK
             </h1>
           </div>
           <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.6)', margin: 0 }}>

@@ -21,10 +21,10 @@ export default function MarketingShell({ activePath = '/', children }) {
       <div className="mk-shell courtia-depth-stage">
         <div className="mk-nav-wrap">
           <header className="mk-nav">
-            <Link to="/" className="mk-brand" aria-label="COURTIA Home">
+            <Link to="/" className="mk-brand" aria-label="COURTIARK Home">
               <CourtiaMiniLogo size={26} />
             </Link>
-            <nav className="mk-links" aria-label="Navigation marketing COURTIA">
+            <nav className="mk-links" aria-label="Navigation marketing COURTIARK">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.to}

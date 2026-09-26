@@ -5,8 +5,8 @@ import { applySeo } from '../lib/seo'
 export default function LegalConditionsUtilisation() {
   useEffect(() => {
     applySeo({
-      title: "Conditions d'utilisation — COURTIA",
-      description: "Conditions d'utilisation de la plateforme COURTIA.",
+      title: "Conditions d'utilisation — COURTIARK",
+      description: "Conditions d'utilisation de la plateforme COURTIARK.",
       canonicalPath: '/legal/conditions-utilisation',
     })
   }, [])
@@ -18,7 +18,7 @@ export default function LegalConditionsUtilisation() {
         <div className="mk-card">
           <p>Dernière mise à jour: 9 mai 2026.</p>
           <p>
-            COURTIA est un logiciel SaaS B2B destiné aux courtiers en assurance français.
+            COURTIARK est un logiciel SaaS B2B destiné aux courtiers en assurance français.
             L&apos;accès est réservé aux usages professionnels autorisés par le cabinet utilisateur.
           </p>
           <p>
@@ -26,7 +26,7 @@ export default function LegalConditionsUtilisation() {
             le courtier reste seul responsable de ses décisions commerciales, techniques et réglementaires.
           </p>
           <p>
-            COURTIA vise à structurer, tracer et prioriser les actions métier. Il ne garantit pas à lui seul
+            COURTIARK vise à structurer, tracer et prioriser les actions métier. Il ne garantit pas à lui seul
             la conformité réglementaire complète (conformité des documents, devoir de conseil, obligations contractuelles).
           </p>
           <p>

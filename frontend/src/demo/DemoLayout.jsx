@@ -1,7 +1,7 @@
 /* ============================================================================
-   COURTIA — Démonstration : enveloppe
+   COURTIARK — Démonstration : enveloppe
    ----------------------------------------------------------------------------
-   Monte LE VRAI shell privé COURTIA (`AppPrivateLayout` : AuroraBackground,
+   Monte LE VRAI shell privé COURTIARK (`AppPrivateLayout` : AuroraBackground,
    Sidebar, topbar mobile, bottom nav, palette de commandes) et laisse
    l'`Outlet` rendre LES VRAIES pages du cockpit.
 
@@ -18,7 +18,7 @@ import './demoTour.css'
 export default function DemoLayout() {
   useEffect(() => {
     installerDemo()
-    document.title = 'COURTIA — Démonstration'
+    document.title = 'COURTIARK — Démonstration'
     return () => desinstallerDemo()
   }, [])
 

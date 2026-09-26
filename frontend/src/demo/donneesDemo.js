@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Démonstration : modèle de données SYNTHÉTIQUE
+   COURTIARK — Démonstration : modèle de données SYNTHÉTIQUE
    ----------------------------------------------------------------------------
    Cabinet fictif « Cabinet Horizon Assurances ». Aucune donnée réelle, aucun
    client, aucun prospect, aucun montant issu de la production.

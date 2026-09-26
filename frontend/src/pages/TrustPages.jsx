@@ -23,9 +23,9 @@ import { applySeo } from '../lib/seo'
 const processors = ['Vercel', 'Render', 'Stripe', 'Resend', 'Anthropic', 'Google', 'Microsoft', 'Meta WhatsApp', 'Yousign', 'Cloudflare R2']
 
 function TrustHero({ eyebrow, title, description, icon: Icon = ShieldCheck, canonicalPath }) {
-  // Titre d'onglet : pas de marque en double. « Statut des services COURTIA »
-  // suivi de « — COURTIA » donnait « Statut des services COURTIA — COURTIA ».
-  const titreDocument = /COURTIA/i.test(title) ? title : `${title} — COURTIA`
+  // Titre d'onglet : pas de marque en double. « Statut des services COURTIARK »
+  // suivi de « — COURTIARK » donnait « Statut des services COURTIARK — COURTIARK ».
+  const titreDocument = /COURTIARK/i.test(title) ? title : `${title} — COURTIARK`
 
   useEffect(() => {
     applySeo({
@@ -61,7 +61,7 @@ function InfoGrid({ items }) {
   )
 }
 
-function TrustCallout({ children, to = '/contact', label = 'Contacter COURTIA' }) {
+function TrustCallout({ children, to = '/contact', label = 'Contacter COURTIARK' }) {
   return (
     <section className="mk-section">
       <div className="mk-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
@@ -78,7 +78,7 @@ export function SecurityPublic() {
       <TrustHero
         eyebrow="Sécurité"
         title="Une base sécurité lisible pour cabinets exigeants"
-        description="COURTIA protège les données métier avec une architecture cloisonnée, des accès contrôlés, des logs maîtrisés et des intégrations activées uniquement par action explicite."
+        description="COURTIARK protège les données métier avec une architecture cloisonnée, des accès contrôlés, des logs maîtrisés et des intégrations activées uniquement par action explicite."
         canonicalPath="/securite"
         icon={ShieldCheck}
       />
@@ -98,7 +98,7 @@ export function SecurityPublic() {
         </div>
       </section>
       <TrustCallout label="Parler sécurité">
-        Besoin d’un point sécurité avant démo ou contractualisation ? COURTIA fournit une lecture claire des traitements, intégrations et responsabilités.
+        Besoin d’un point sécurité avant démo ou contractualisation ? COURTIARK fournit une lecture claire des traitements, intégrations et responsabilités.
       </TrustCallout>
     </MarketingShell>
   )
@@ -110,7 +110,7 @@ export function RgpdPublic() {
       <TrustHero
         eyebrow="RGPD"
         title="RGPD, DPA et droits utilisateurs"
-        description="COURTIA documente les données collectées, leurs finalités, les sous-traitants, les durées de conservation et les droits applicables aux cabinets utilisateurs."
+        description="COURTIARK documente les données collectées, leurs finalités, les sous-traitants, les durées de conservation et les droits applicables aux cabinets utilisateurs."
         canonicalPath="/rgpd"
         icon={Scale}
       />
@@ -120,7 +120,7 @@ export function RgpdPublic() {
         { icon: Archive, title: 'Export & suppression', text: 'Les exports RGPD et demandes de suppression sont traités selon le rôle et le périmètre cabinet.' },
         { icon: UserCheck, title: 'Droits des personnes', text: 'Accès, rectification, opposition, limitation, portabilité et suppression selon les cas applicables.' },
         { icon: Sparkles, title: 'IA encadrée', text: 'ARK produit des recommandations indicatives et actionnables, toujours soumises à validation humaine.' },
-        { icon: Database, title: 'DPA', text: 'Le DPA COURTIA est prévu dans le parcours conformité et disponible sur demande pendant la bêta.' },
+        { icon: Database, title: 'DPA', text: 'Le DPA COURTIARK est prévu dans le parcours conformité et disponible sur demande pendant la bêta.' },
       ]} />
       <section className="mk-section">
         <div className="mk-table-wrap">
@@ -150,7 +150,7 @@ export function RgpdPublic() {
 export function ChangelogPublic() {
   // POURQUOI ce contenu est réécrit : la page publique annonçait des jalons
   // d'atelier interne (« Closeout », « Smoke prod vert », « Growth playbook »,
-  // « Landing Aurora restaurée »). Un courtier qui découvre COURTIA y lisait le
+  // « Landing Aurora restaurée »). Un courtier qui découvre COURTIARK y lisait le
   // vocabulaire de l'équipe technique, pas ce qui a été livré pour lui.
   const releases = [
     { version: 'Version 1', date: 'Mai 2026', items: ['Sécurité et contrôle des accès', 'Mise en place du cabinet', 'Abonnement et paiement en ligne', 'Agendas et messagerie connectés', 'Documents de conformité', 'Signature électronique', 'Suivi des commissions', 'Assistant ARK', 'Notifications et recherche rapide'] },
@@ -160,7 +160,7 @@ export function ChangelogPublic() {
     <MarketingShell activePath="/changelog">
       <TrustHero
         eyebrow="Changelog"
-        title="Ce qui a été livré dans COURTIA"
+        title="Ce qui a été livré dans COURTIARK"
         description="Un historique lisible des grandes briques produit, sécurité et métier courtier livrées dans la V1."
         canonicalPath="/changelog"
         icon={BookOpen}
@@ -193,7 +193,7 @@ export function RoadmapPublic() {
       <TrustHero
         eyebrow="Roadmap"
         title="Une trajectoire produit claire, sans promesses magiques"
-        description="COURTIA avance par briques métier utiles : cockpit, conformité, intégrations, ARK actionnable et pilotage cabinet."
+        description="COURTIARK avance par briques métier utiles : cockpit, conformité, intégrations, ARK actionnable et pilotage cabinet."
         canonicalPath="/roadmap"
         icon={Map}
       />
@@ -210,7 +210,7 @@ export function HelpPublic() {
     <MarketingShell activePath="/aide">
       <TrustHero
         eyebrow="Aide"
-        title="Centre d’aide COURTIA"
+        title="Centre d’aide COURTIARK"
         description="Les réponses essentielles pour comprendre le cockpit, l’onboarding, les intégrations et les responsabilités métier."
         canonicalPath="/aide"
         icon={HelpCircle}
@@ -219,7 +219,7 @@ export function HelpPublic() {
         { icon: BookOpen, title: 'Démarrer', text: 'Créez votre compte, renseignez le cabinet, importez vos clients puis ouvrez votre premier Morning Brief.' },
         { icon: Sparkles, title: 'ARK', text: 'ARK priorise les actions mais ne décide pas seul. Le courtier valide chaque recommandation.' },
         { icon: Lock, title: 'Intégrations', text: 'Google Agenda, Gmail, Outlook et WhatsApp restent inactifs tant que le cabinet ne les a pas explicitement connectés depuis Paramètres.' },
-        { icon: FileText, title: 'Documents', text: 'COURTIA aide à structurer FIC, mandat et devoir de conseil. Les contenus doivent être vérifiés par le cabinet.' },
+        { icon: FileText, title: 'Documents', text: 'COURTIARK aide à structurer FIC, mandat et devoir de conseil. Les contenus doivent être vérifiés par le cabinet.' },
         { icon: Activity, title: 'Disponibilité', text: 'La page Statut indique l’état des services dont dépend votre connexion, et un message y est publié en cas de maintenance planifiée.' },
         { icon: Scale, title: 'RGPD', text: 'Les demandes RGPD passent par le contact indiqué et sont traitées selon le périmètre cabinet.' },
       ]} />
@@ -251,7 +251,7 @@ export function StatusPublic() {
     <MarketingShell activePath="/status">
       <TrustHero
         eyebrow="Status"
-        title="Statut des services COURTIA"
+        title="Statut des services COURTIARK"
         description="Vue publique indicative des briques dont dépend votre connexion au cockpit. Un incident en cours est annoncé ici."
         canonicalPath="/status"
         icon={Activity}

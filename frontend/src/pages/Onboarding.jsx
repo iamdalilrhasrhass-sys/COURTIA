@@ -117,7 +117,7 @@ export default function Onboarding() {
   }
 
   const handleFinish = () => {
-    toast.success('COURTIA est prêt !')
+    toast.success('COURTIARK est prêt !')
     navigate('/dashboard')
   }
 
@@ -140,7 +140,7 @@ export default function Onboarding() {
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="text-center py-8">
               <Database className="w-16 h-16 text-indigo-600 mx-auto mb-4" />
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Bienvenue dans COURTIA</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Bienvenue dans COURTIARK</h1>
               <p className="text-gray-500 mb-8">Importons votre portefeuille pour commencer.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button onClick={() => setStep(2)} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 justify-center">
@@ -314,7 +314,7 @@ export default function Onboarding() {
                 </div>
 
                 <button onClick={handleFinish} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors mt-4">
-                  Lancer COURTIA 🚀
+                  Lancer COURTIARK 🚀
                 </button>
               </div>
             </motion.div>

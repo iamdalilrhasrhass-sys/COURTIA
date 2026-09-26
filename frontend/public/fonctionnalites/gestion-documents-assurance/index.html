@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/fonctionnalites">Fonctionnalités</a> › Gestion des documents clients</p>
 <h1>Gestion des documents clients</h1>
 <p class="chapeau">Demander trois fois le même RIB coûte du temps et agace le client. COURTIARK fournit un lien de dépôt : le client dépose, le document arrive dans le bon dossier.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Comment fonctionne la collecte</h2><div class="section"><div class="etape"><b>Demande</b><span>Vous générez un lien de dépôt pour le dossier ou la pièce manquante.</span></div><div class="etape"><b>Dépôt</b><span>Le client ouvre le lien et dépose ses fichiers — sans créer de compte ni installer d'application.</span></div><div class="etape"><b>Classement</b><span>Le document arrive rattaché au dossier concerné.</span></div><div class="etape"><b>Contrôle</b><span>ARK peut lire le document et proposer les informations qu'il contient, après votre validation.</span></div><p>Le lien est nominatif et limité à la demande : il ne donne pas accès à l'espace du cabinet.</p></div><h2>Ce que vous gardez en main</h2><div class="section"><ul><li>Vous voyez qui a déposé quoi et quand.</li><li>Les pièces manquantes sont visibles dossier par dossier.</li><li>Les documents peuvent être lus par ARK pour alimenter la fiche (RIB, attestation, facture).</li><li>Les données de santé éventuelles ne sont jamais utilisées pour la prospection.</li></ul></div><h2>Un dossier complet, c'est un dossier qui se traite plus vite</h2><div class="section"><p>La plupart des blocages d'un dossier viennent d'une pièce manquante. La liste des documents attendus, rattachée au dossier, remplace les échanges d'e-mails « il manque toujours quelque chose ».</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Le client doit-il créer un compte ?</h3><p>Non : il dépose ses pièces via un lien, sans compte ni installation.</p><h3>Les documents sont-ils lisibles par ARK ?</h3><p>Oui, ARK peut extraire les informations d&#x27;un document et les proposer à la validation du courtier.</p><h3>Où sont stockés les documents ?</h3><p>Dans l&#x27;espace du cabinet, avec un accès limité aux utilisateurs de ce cabinet. Voir la page Sécurité.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/guides/centraliser-documents-clients-assurance">Guide : centraliser les documents clients</a></li><li><a href="/fonctionnalites/assistant-ark">Assistant ARK</a></li></ul></div>
 </main>

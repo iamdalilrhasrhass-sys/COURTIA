@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -100,8 +103,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -109,10 +113,10 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/suisse">Suisse</a> › Lausanne</p>
 <h1>Logiciel de courtage assurance à Lausanne</h1>
 <p class="chapeau">Le canton de Vaud mêle clientèle privée, PME et institutions : un cabinet doit tenir un portefeuille large avec une petite équipe. COURTIARK est fait pour ce rapport entre volume et temps disponible.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le contexte vaudois</h2><div class="section"><ul><li>Densité de PME et de professions libérales : assurances de choses, RC et prévoyance.</li><li>Clientèle privée attentive au suivi et aux échéances.</li><li>Cabinets de petite taille où chaque collaborateur porte plusieurs rôles.</li><li>Recherche de productivité : moins de saisie, moins de relances oubliées.</li></ul><p class="note">Sources consultées : <a href="https://www.finma.ch/fr/" rel="nofollow noopener" target="_blank">finma.ch</a> (surveillance et intermédiaires d'assurance) · <a href="https://www.fedlex.admin.ch/fr/cc/internal-law" rel="nofollow noopener" target="_blank">fedlex.admin.ch</a> (loi sur le contrat d'assurance, protection des données) · <a href="https://www.admin.ch/opc/fr/" rel="nofollow noopener" target="_blank">admin.ch</a>. Ces repères sont documentaires et ne constituent pas un conseil juridique.</p></div><h2>Ce que COURTIARK apporte dans une petite équipe</h2><div class="section"><ul><li>Un portefeuille lisible sans recourir à un tableur.</li><li>Les dossiers incomplets remontent d'eux-mêmes.</li><li>Les relances sont rattachées au dossier au lieu de dépendre de la mémoire.</li><li>ARK prépare (lecture de document, synthèse), le courtier valide.</li></ul></div><h2>Productivité : ce qui est mesurable, et ce qui ne l'est pas</h2><div class="section"><p>Nous n'annonçons pas de pourcentage de temps gagné : nous ne disposons pas de mesure représentative. En revanche, l'outil rend observable ce qui était invisible — nombre de dossiers bloqués, devis sans suite, pièces manquantes — et c'est là que le cabinet agit.</p><p><a href="/outils/calculateur-productivite-courtier">Estimer le temps administratif de votre cabinet</a></p></div><h2>Démarrer dans le canton de Vaud</h2><div class="section"><p>Essai 7 jours sans carte bancaire, facturation en CHF. Import d'un portefeuille existant possible.</p></div>
 <div class="section"><p>Pour comparer les fonctions attendues, la page <a href="/logiciel-courtier-assurance">logiciel courtier</a> liste le perimetre module par module.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK convient-il à un cabinet d&#x27;une seule personne ?</h3><p>Oui : l&#x27;offre Indépendant (199 CHF HT/mois) vise précisément ce cas, et l&#x27;outil évite de dépendre d&#x27;un tableur.</p><h3>Mes données Vaud sont-elles cloisonnées ?</h3><p>Oui : chaque cabinet ne voit que ses propres dossiers, ce qui est vérifié par des tests d&#x27;isolation exécutés en production.</p><h3>Puis-je gérer plusieurs langues de correspondance ?</h3><p>Le contenu des messages est libre : vous rédigez dans la langue de votre client.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/suisse">COURTIARK en Suisse</a></li><li><a href="/suisse/geneve">Genève</a></li><li><a href="/fonctionnalites/gestion-portefeuille-assurance">Gestion de portefeuille</a></li></ul></div>
 </main>

@@ -13,7 +13,7 @@ import '../../pages/marketing.css'
 export default function MarketingFooter() {
   return (
     <footer className="mk-footer">
-      <div>COURTIA · Cockpit IA des courtiers en assurance — France (DDA · ORIAS · RGPD) et Suisse (LSA · FINMA · nLPD)</div>
+      <div>COURTIARK · Cockpit IA des courtiers en assurance — France (DDA · ORIAS · RGPD) et Suisse (LSA · FINMA · nLPD)</div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Link to="/legal/mentions-legales">Mentions légales</Link>
         <Link to="/legal/confidentialite">Confidentialité</Link>

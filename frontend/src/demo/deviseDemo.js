@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Démonstration : la devise suit le marché du VISITEUR
+   COURTIARK — Démonstration : la devise suit le marché du VISITEUR
    ----------------------------------------------------------------------------
    POURQUOI CE MODULE (défauts P1 CH-020/CH-021, mesurés le 20/09/2026)
    La démonstration publique affichait « 39 810 € », « 4 777 € de commissions »

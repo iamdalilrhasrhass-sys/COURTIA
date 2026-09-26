@@ -1,5 +1,5 @@
 /**
- * Typography — the four signature COURTIA text components.
+ * Typography — the four signature COURTIARK text components.
  *
  *   <Kicker>EYEBROW TEXT</Kicker>
  *   <Headline>Une bulle d'intelligence</Headline>

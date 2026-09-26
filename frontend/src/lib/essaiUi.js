@@ -40,10 +40,10 @@ export function decisionEssai(statut) {
       etat,
       bandeau: null,
       paywall: {
-        titre: 'Votre essai COURTIA de 7 jours est terminé.',
+        titre: 'Votre essai COURTIARK de 7 jours est terminé.',
         message: "Vos clients, contrats, documents et tâches sont conservés et restent consultables. Choisissez un abonnement pour reprendre les modifications.",
         ctaPrincipal: 'Choisir mon abonnement',
-        ctaSecondaire: 'Contacter COURTIA',
+        ctaSecondaire: 'Contacter COURTIARK',
         finEssai: statut.trial_end_at || null,
       },
     }

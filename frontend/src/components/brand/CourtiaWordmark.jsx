@@ -1,7 +1,7 @@
 import React from 'react'
 
 /**
- * COURTIA — Wordmark
+ * COURTIARK — Wordmark
  * "courtia." avec point dégradé
  */
 

@@ -16,7 +16,7 @@ export default function RhasrhassSignature({ compact = false, className = '' }) 
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
       }}
-      aria-label="COURTIA — une création RHASRHASS™"
+      aria-label="COURTIARK — une création RHASRHASS™"
     >
       <span
         style={{
@@ -28,7 +28,7 @@ export default function RhasrhassSignature({ compact = false, className = '' }) 
           whiteSpace: 'nowrap',
         }}
       >
-        COURTIA
+        COURTIARK
       </span>
       <span style={{ color: 'rgba(255,255,255,0.46)', fontSize: compact ? 10 : 11 }}>—</span>
       <span

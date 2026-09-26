@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -100,8 +103,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -109,9 +113,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/solutions">Solutions</a> › Courtier en assurance indépendant</p>
 <h1>Courtier en assurance indépendant</h1>
 <p class="chapeau">Quand on est seul, le temps passé à chercher une information est du temps commercial perdu. COURTIARK supprime cette recherche et rend visibles les actions à mener.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce qui coince quand on est seul</h2><div class="section"><ul><li>Le portefeuille vit dans un tableur qui n'apprend rien.</li><li>Les documents arrivent par e-mail et se perdent.</li><li>Les échéances se découvrent au moment du renouvellement.</li><li>Les devis anciens dorment sans que personne ne les relance.</li></ul></div><h2>Ce que COURTIARK fait pour un indépendant</h2><div class="section"><ul><li>Une fiche client unique, avec contrats, échéances, documents et historique.</li><li>Une liste d'actions du jour, alimentée par les échéances et les dossiers incomplets.</li><li>Un lien de dépôt pour que le client envoie ses pièces lui-même.</li><li>ARK qui lit un document et prépare les informations, à valider par vous.</li></ul></div><h2>Ce que ça change concrètement</h2><div class="section"><div class="bascule"><div><h3>Sans COURTIARK</h3><ul><li>Rechercher dans trois outils</li><li>Relancer au hasard</li><li>Ressaisir les mêmes informations</li></ul></div><div><h3>Avec COURTIARK</h3><ul><li>Un dossier, un endroit</li><li>Relances rattachées au dossier</li><li>Informations lues puis validées</li></ul></div></div></div><h2>Le coût</h2><div class="section"><p>Offre Starter à 89 € HT/mois (France) ou Indépendant à 199 CHF HT/mois (Suisse), essai de 7 jours sans carte bancaire.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Est-ce trop lourd pour un courtier seul ?</h3><p>Non : c&#x27;est justement le cas d&#x27;usage le plus fréquent. L&#x27;essai de 7 jours permet de le vérifier sur vos propres dossiers.</p><h3>Puis-je démarrer sans ressaisir mon portefeuille ?</h3><p>Oui, un import permet de partir d&#x27;un fichier existant.</p><h3>Faut-il du matériel particulier ?</h3><p>Non : COURTIARK fonctionne dans un navigateur, sur ordinateur comme sur mobile.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/crm-courtier-assurance">CRM courtier assurance</a></li><li><a href="/fonctionnalites/gestion-portefeuille-assurance">Gestion de portefeuille</a></li></ul></div>
 </main>

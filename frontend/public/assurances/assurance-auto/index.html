@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/assurances">Branches d&#x27;assurance</a> › Assurance auto</p>
 <h1>Assurance auto</h1>
 <p class="chapeau">L&#x27;assurance auto génère beaucoup d&#x27;événements : achat, vente, sinistre, changement de conducteur. COURTIARK les rattache au dossier pour que le suivi reste cohérent.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce qui est suivi</h2><div class="section"><ul><li>Véhicules rattachés au client et contrats correspondants.</li><li>Échéances de renouvellement.</li><li>Pièces du dossier (carte verte, attestation, constat).</li><li>Historique des échanges et des relances.</li><li>Commissions liées aux contrats.</li></ul></div><h2>Sinistres : ce que fait l'outil</h2><div class="section"><p>Le dossier conserve la trace des échanges et des pièces liées à un sinistre. COURTIARK ne gère pas l'indemnisation et n'intervient pas auprès de l'assureur à votre place.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK gère-t-il les sinistres auto ?</h3><p>Il conserve les éléments et les échanges du dossier ; il ne traite pas l&#x27;indemnisation.</p><h3>Puis-je suivre plusieurs véhicules par client ?</h3><p>Oui, les véhicules et les contrats sont rattachés au dossier client.</p><h3>Les échéances remontent-elles automatiquement ?</h3><p>Les échéances portées par les contrats remontent dans la vue portefeuille et le brief du matin.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/gestion-clients">Gestion des clients</a></li><li><a href="/fonctionnalites/gestion-contrats">Gestion des contrats</a></li></ul></div>
 </main>

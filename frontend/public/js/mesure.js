@@ -27,7 +27,8 @@
   d.addEventListener('click', function(ev){
     var a = ev.target.closest ? ev.target.closest('a') : null; if (!a) return;
     var h = a.getAttribute('href') || '';
-    if (h.indexOf('/register') === 0) envoyer('cta_trial_click');
+    if (h.indexOf('/demo/dashboard') === 0) envoyer('cta_demo_interactive_click');
+    else if (h.indexOf('/register') === 0) envoyer('cta_trial_click');
     else if (h.indexOf('/demo') === 0) envoyer('cta_demo_click');
     else if (h.indexOf('/tarifs') === 0) envoyer('pricing_view');
     else if (h.indexOf('/assistant-ark') > -1) envoyer('ark_demo_view');

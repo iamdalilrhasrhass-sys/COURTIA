@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Mise en forme de la lecture commerciale (fonctions PURES)
+   COURTIARK — Mise en forme de la lecture commerciale (fonctions PURES)
    ----------------------------------------------------------------------------
    Tout ce qui décide de ce qui est AFFICHÉ vit ici, et seulement ici :
      * « non mesuré » ne devient jamais 0 ;

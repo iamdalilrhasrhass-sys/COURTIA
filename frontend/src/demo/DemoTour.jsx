@@ -1,8 +1,8 @@
 /* ============================================================================
-   COURTIA — Démonstration : visite guidée
+   COURTIARK — Démonstration : visite guidée
    ----------------------------------------------------------------------------
    Pose un automate PAR-DESSUS le vrai cockpit : le curseur se déplace, clique
-   et tape réellement dans les vrais écrans COURTIA, qui réagissent vraiment.
+   et tape réellement dans les vrais écrans COURTIARK, qui réagissent vraiment.
 
    Aucune imitation : les cibles sont les éléments réels de l'application,
    résolus dans le DOM au moment de l'étape (donc robuste au responsive et aux
@@ -120,7 +120,7 @@ export default function DemoTour() {
       if (cancel.current) break
 
       /* Étape finale (compacte) : AUCUN projecteur, aucun voile. Le bloc de
-         conversion s'affiche et COURTIA doit rester net et lisible derrière. */
+         conversion s'affiche et COURTIARK doit rester net et lisible derrière. */
       if (e.compact) {
         setSpot(null)
         setCurseur((c) => ({ ...c, visible: false }))
@@ -177,7 +177,7 @@ export default function DemoTour() {
     running.current = false
     if (!cancel.current) {
       /* Fin du parcours : le bloc de conversion prend la place du bandeau et
-         RESTE affiché — le cockpit COURTIA reste entièrement visible derrière. */
+         RESTE affiché — le cockpit COURTIARK reste entièrement visible derrière. */
       setFin(true)
       setActif(false)
       setSpot(null)
@@ -255,7 +255,7 @@ export default function DemoTour() {
         </span>
         <button type="button" className="dt-btn dt-btn-fort"
           onClick={() => { setPrisMain(false); setFin(true) }}>
-          <Sparkles size={13} /> Essayer COURTIA avec mon cabinet
+          <Sparkles size={13} /> Essayer COURTIARK avec mon cabinet
         </button>
         <button type="button" className="dt-btn" onClick={relancer}>
           <RotateCcw size={13} /> Revoir la visite

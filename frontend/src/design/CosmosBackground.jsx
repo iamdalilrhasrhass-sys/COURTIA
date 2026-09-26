@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 
 /**
- * CosmosBackground — the signature COURTIA universe.
+ * CosmosBackground — the signature COURTIARK universe.
  * - Deep black canvas (#020108 → #08051A)
  * - Three radial gradients (violet, pink, cyan) that breathe slowly
  * - A 3D perspective grid floor in violet

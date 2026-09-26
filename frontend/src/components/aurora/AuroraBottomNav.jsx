@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    AuroraBottomNav — Mobile Bottom Navigation Bar
-   COURTIA V2 • iOS-grade tab bar with glassmorphism
+   COURTIARK V2 • iOS-grade tab bar with glassmorphism
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import React, { useMemo } from 'react';
+import { estModeDemo } from '../../demo/modeDemo';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -19,7 +20,7 @@ import {
 import { LIBELLES } from '../../lib/libelles';
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Default Navigation Items — COURTIA Aurora-Bubble C
+   Default Navigation Items — COURTIARK Aurora-Bubble C
    Tableau de bord / Clients / ARK / Tâches / Plus
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -71,7 +72,7 @@ export function AuroraBottomNav({
     if (item.id === 'more' && onMoreClick) {
       onMoreClick();
     } else if (item.path) {
-      navigate(item.path);
+      navigate(estModeDemo() ? '/demo' + item.path : item.path);
     }
   };
 

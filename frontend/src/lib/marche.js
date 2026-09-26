@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Marché réellement servi (FR / CH) : un seul point de vérité
+   COURTIARK — Marché réellement servi (FR / CH) : un seul point de vérité
    ----------------------------------------------------------------------------
    POURQUOI ce module : plusieurs écrans affichaient des faits du marché
    FRANÇAIS à des cabinets SUISSES — autorité de supervision (ACPR), registre

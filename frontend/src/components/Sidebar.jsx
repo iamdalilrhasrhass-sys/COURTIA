@@ -34,7 +34,7 @@ const T = {
   activeBg: 'rgba(139,92,246,0.14)',
 }
 
-// ─── 7 UNIVERS COURTIA ─────────────────────────────────────────
+// ─── 7 UNIVERS COURTIARK ─────────────────────────────────────────
 const UNIVERSES = [
   {
     id: 'pilotage',
@@ -346,7 +346,7 @@ export default function Sidebar() {
       borderRight: `1px solid ${T.border}`,
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
-      {/* Logo COURTIA */}
+      {/* Logo COURTIARK */}
       <div className="courtia-sidebar-brand" style={{
         padding: '16px 18px',
         height: 60,
@@ -385,7 +385,7 @@ export default function Sidebar() {
             }}>
               Administration
             </div>
-            {/* ACQUISITION COURTIA — leads réellement captés (service de capture).
+            {/* ACQUISITION COURTIARK — leads réellement captés (service de capture).
                 Chaque cible ci-dessous a une route RÉELLE dans App.jsx, protégée
                 par la garde administrateur (AdminRoute) : aucun lien mort. */}
             {renderItem({ path: '/acquisition', label: 'Acquisition', icon: Flame })}

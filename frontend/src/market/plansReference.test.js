@@ -104,13 +104,13 @@ describe('grille publique FR/CH — codes backend et montants exacts', () => {
   })
 
   it('les libellés SEO sont DÉRIVÉS de la grille (aucun montant recopié)', () => {
-    expect(plansSeoTitle('FR')).toBe('Tarifs COURTIA — Starter 89 € / Pro 159 € / Cabinet sur devis')
-    expect(plansSeoTitle('CH')).toBe('Tarifs COURTIA Suisse — CHF 199 Indépendant / 349 Cabinet (TVA 8,1 % en sus)')
+    expect(plansSeoTitle('FR')).toBe('Tarifs COURTIARK — Starter 89 € / Pro 159 € / Cabinet sur devis')
+    expect(plansSeoTitle('CH')).toBe('Tarifs COURTIARK Suisse — CHF 199 Indépendant / 349 Cabinet (TVA 8,1 % en sus)')
     expect(plansSeoDescription('FR')).toBe(
-      'Grille tarifaire COURTIA pour courtiers d’assurance : Starter 89 € HT/mois, Pro 159 € HT/mois, Cabinet sur devis. Sans frais cachés ni engagement.'
+      'Grille tarifaire COURTIARK pour courtiers d’assurance : Starter 89 € HT/mois, Pro 159 € HT/mois, Cabinet sur devis. Sans frais cachés ni engagement.'
     )
     expect(plansSeoDescription('CH')).toBe(
-      'Grille tarifaire COURTIA en francs suisses pour courtiers d’assurance en Suisse : Indépendant 199 CHF/mois, Cabinet 349 CHF/mois, Sur-Mesure sur devis. Setup et TVA 8,1 % indiqués.'
+      'Grille tarifaire COURTIARK en francs suisses pour courtiers d’assurance en Suisse : Indépendant 199 CHF/mois, Cabinet 349 CHF/mois, Sur-Mesure sur devis. Setup et TVA 8,1 % indiqués.'
     )
   })
 

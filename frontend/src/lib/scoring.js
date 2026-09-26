@@ -1,5 +1,5 @@
 /**
- * @file scoring.js — Source unique de vérité pour les scores client COURTIA.
+ * @file scoring.js — Source unique de vérité pour les scores client COURTIARK.
  * Fonctions pures. Zéro React, zéro fetch, zéro localStorage.
  */
 

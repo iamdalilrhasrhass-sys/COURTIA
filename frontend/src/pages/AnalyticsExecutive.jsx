@@ -243,7 +243,7 @@ const LIBELLES_PRODUIT = {
   vie: 'Vie',
   autre: 'Autre',
 }
-// Palette du design system COURTIA (mêmes teintes que les KPI de l'écran).
+// Palette du design system COURTIARK (mêmes teintes que les KPI de l'écran).
 const COULEURS_PRODUIT = ['#2563eb', '#7c3aed', '#10b981', '#f59e0b', '#ec4899', '#0ea5e9', '#64748b']
 
 function libelleProduit(type) {
@@ -487,7 +487,7 @@ export default function AnalyticsExecutive() {
                   comme l'activité du cabinet. Aucune mesure d'activité par jour de
                   semaine n'existe côté API : la case est donc vide et l'écran le dit. */}
               <NonMesure>
-                L'activité par jour de la semaine n'est pas mesurée par COURTIA : aucune carte
+                L'activité par jour de la semaine n'est pas mesurée par COURTIARK : aucune carte
                 de chaleur n'est affichée tant que la mesure n'existe pas.
               </NonMesure>
             </BubbleCard>

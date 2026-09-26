@@ -145,7 +145,7 @@ export default function Billing() {
       <div className="mx-auto max-w-7xl space-y-6">
         <AuroraPageHeader
           title="Billing self-serve"
-          subtitle="Choisissez votre plan, ouvrez Checkout Stripe et gérez l’abonnement depuis le portail sécurisé. Aucun numéro de carte n’est saisi dans COURTIA."
+          subtitle="Choisissez votre plan, ouvrez Checkout Stripe et gérez l’abonnement depuis le portail sécurisé. Aucun numéro de carte n’est saisi dans COURTIARK."
         />
         <p className="sr-only">Statut abonnement</p>
         <p className="sr-only">Plans disponibles</p>
@@ -214,7 +214,7 @@ export default function Billing() {
             </div>
 
             <p className="mt-4 text-xs leading-relaxed text-white/50">
-              Prix hors taxes. Stripe gère la carte, les factures, les renouvellements et la résiliation. COURTIA ne stocke aucune donnée bancaire.
+              Prix hors taxes. Stripe gère la carte, les factures, les renouvellements et la résiliation. COURTIARK ne stocke aucune donnée bancaire.
             </p>
           </GlassCard>
 
@@ -305,7 +305,7 @@ function formatDate(value) {
 }
 
 function planSummary(code) {
-  if (code === 'starter') return 'Pour lancer COURTIA avec les fondations CRM et rapports simples.'
+  if (code === 'starter') return 'Pour lancer COURTIARK avec les fondations CRM et rapports simples.'
   if (code === 'pro') return 'L’offre principale avec ARK, documents, intégrations et cockpit complet.'
   if (code === 'cabinet') return 'Pour équipes multi-collaborateurs avec pilotage avancé et support renforcé.'
   // Codes suisses : le descriptif PUBLIÉ de l'offre (référentiel public) plutôt

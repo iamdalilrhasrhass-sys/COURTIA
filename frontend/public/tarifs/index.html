@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,7 +112,7 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Tarifs</p>
 <h1>Tarifs</h1>
 <p class="chapeau">Un abonnement par utilisateur et par mois, un essai de 7 jours sans carte bancaire, et une facturation dans la devise du marché du cabinet.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>France</h2><div class="section"><table><thead><tr><th>Offre</th><th>Prix</th><th>Pour qui</th><th>Ce qui change</th></tr></thead><tbody><tr><td>Starter</td><td>89 € HT/mois</td><td>Courtier indépendant</td><td>Dossiers clients, contrats, échéances, documents, relances, ARK.</td></tr><tr><td>Pro</td><td>159 € HT/mois</td><td>Cabinet avec plusieurs collaborateurs</td><td>Tout le Starter, plus la gestion d'équipe, les rôles et le reporting d'activité.</td></tr><tr><td>Cabinet</td><td>Sur devis</td><td>Structures et volumes spécifiques</td><td>Reprise de données accompagnée et besoins particuliers.</td></tr></tbody></table><p>Tarifs hors taxes, facturés en euros. Paiement par carte bancaire via notre prestataire de paiement.</p></div><h2>Suisse</h2><div class="section"><table><thead><tr><th>Offre</th><th>Prix</th><th>Pour qui</th></tr></thead><tbody><tr><td>Indépendant</td><td>199 CHF HT/mois</td><td>Intermédiaire seul</td></tr><tr><td>Cabinet</td><td>349 CHF HT/mois</td><td>Cabinet avec plusieurs collaborateurs</td></tr><tr><td>Sur devis</td><td>Sur devis</td><td>Structures et volumes spécifiques</td></tr></tbody></table><p>Tarifs hors taxes, facturés en francs suisses.</p></div><h2>L'essai</h2><div class="section"><ul><li>7 jours, sans carte bancaire.</li><li>À l'expiration, aucune donnée n'est supprimée : le compte reste consultable, les écritures sont suspendues.</li><li>Aucun engagement de durée : vous pouvez arrêter en fin de période.</li><li>Questions sur l'offre : contact@courtiark.fr.</li></ul></div><h2>Ce que le prix ne cache pas</h2><div class="section"><p>Toutes les fonctions décrites sur ce site sont incluses dans l'offre correspondante : il n'y a pas de module métier verrouillé en supplément. Nous ne facturons ni la reprise d'un fichier standard, ni l'export de vos données.</p></div>
 <div class="cta"><a class="principal" href="/register">Démarrer l&#x27;essai de 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Y a-t-il des frais d&#x27;installation ?</h3><p>Non pour un démarrage standard. Une reprise de données complexe est chiffrée dans l&#x27;offre Cabinet, avant tout engagement.</p><h3>Le prix dépend-il du nombre de dossiers ?</h3><p>Non : le nombre de dossiers clients n&#x27;est pas un critère de facturation. L&#x27;offre dépend du nombre d&#x27;utilisateurs du cabinet.</p><h3>Que se passe-t-il après l&#x27;essai de 7 jours ?</h3><p>Le compte reste accessible en lecture ; les fonctions d&#x27;écriture sont suspendues jusqu&#x27;à la souscription. Rien n&#x27;est supprimé.</p><h3>Peut-on changer d&#x27;offre en cours de route ?</h3><p>Oui, à la hausse comme à la baisse, au moment du renouvellement de la période.</p></div>

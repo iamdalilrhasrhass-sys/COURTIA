@@ -229,7 +229,7 @@ export default function RendezVous() {
             </div>
             <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>Rendez-vous</h1>
             <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>
-              Les rendez-vous enregistrés dans COURTIA, par jour.
+              Les rendez-vous enregistrés dans COURTIARK, par jour.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>

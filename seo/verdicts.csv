@@ -1,86 +1,86 @@
 slug;fichier;octets;schema;erreurs;alertes
-/;frontend/public/index.html;20541;Organization,WebSite,SoftwareApplication,FAQPage;;
-/crm-courtier-assurance;frontend/public/crm-courtier-assurance/index.html;18877;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/;frontend/public/fonctionnalites/index.html;13716;Organization,SoftwareApplication,BreadcrumbList;;
-/fonctionnalites/assistant-ark;frontend/public/fonctionnalites/assistant-ark/index.html;16151;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;title_82_caracteres
-/fonctionnalites/gestion-portefeuille-assurance;frontend/public/fonctionnalites/gestion-portefeuille-assurance/index.html;14868;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/relance-devis-assurance;frontend/public/fonctionnalites/relance-devis-assurance/index.html;15052;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/renouvellements-assurance;frontend/public/fonctionnalites/renouvellements-assurance/index.html;14687;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/gestion-documents-assurance;frontend/public/fonctionnalites/gestion-documents-assurance/index.html;14534;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/automatisation-relances;frontend/public/fonctionnalites/automatisation-relances/index.html;14945;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/gestion-clients;frontend/public/fonctionnalites/gestion-clients/index.html;14167;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/gestion-contrats;frontend/public/fonctionnalites/gestion-contrats/index.html;14044;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/reporting-courtier;frontend/public/fonctionnalites/reporting-courtier/index.html;14074;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/prospection-assurance;frontend/public/fonctionnalites/prospection-assurance/index.html;14198;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/fonctionnalites/compte-rendu-clients;frontend/public/fonctionnalites/compte-rendu-clients/index.html;13611;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/france/;frontend/public/france/index.html;18049;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/france/densite-courtage-grandes-villes-france
-/suisse/;frontend/public/suisse/index.html;17958;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/suisse/crm-courtier-assurance;frontend/public/suisse/crm-courtier-assurance/index.html;17084;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/suisse/geneve;frontend/public/suisse/geneve/index.html;16578;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/suisse/lausanne;frontend/public/suisse/lausanne/index.html;16070;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/solutions/;frontend/public/solutions/index.html;12132;Organization,SoftwareApplication,BreadcrumbList;;
-/solutions/courtier-assurance-independant;frontend/public/solutions/courtier-assurance-independant/index.html;14922;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/solutions/cabinet-courtage-assurance;frontend/public/solutions/cabinet-courtage-assurance/index.html;14837;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/solutions/equipe-commerciale-assurance;frontend/public/solutions/equipe-commerciale-assurance/index.html;14404;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/solutions/reseau-courtage;frontend/public/solutions/reseau-courtage/index.html;14578;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/assurances/;frontend/public/assurances/index.html;13323;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/assurances/mutuelle-sante;frontend/public/assurances/mutuelle-sante/index.html;14548;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/assurances/prevoyance;frontend/public/assurances/prevoyance/index.html;14138;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/assurances/assurance-auto;frontend/public/assurances/assurance-auto/index.html;13580;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/assurances/rc-pro;frontend/public/assurances/rc-pro/index.html;13665;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/assurances/multirisque-professionnelle;frontend/public/assurances/multirisque-professionnelle/index.html;13494;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/france/paris;frontend/public/france/paris/index.html;17686;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres
-/france/lyon;frontend/public/france/lyon/index.html;17376;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_184_caracteres
-/france/marseille;frontend/public/france/marseille/index.html;17629;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_189_caracteres
-/france/toulouse;frontend/public/france/toulouse/index.html;17277;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_188_caracteres
-/france/bordeaux;frontend/public/france/bordeaux/index.html;17539;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_188_caracteres
-/france/lille;frontend/public/france/lille/index.html;17202;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_185_caracteres
-/france/nantes;frontend/public/france/nantes/index.html;17152;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres
-/france/strasbourg;frontend/public/france/strasbourg/index.html;17231;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_190_caracteres
-/france/montpellier;frontend/public/france/montpellier/index.html;17216;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_191_caracteres
-/france/nice;frontend/public/france/nice/index.html;17214;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_184_caracteres
-/suisse/nyon;frontend/public/suisse/nyon/index.html;16023;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/suisse/vevey;frontend/public/suisse/vevey/index.html;15943;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/suisse/montreux;frontend/public/suisse/montreux/index.html;16058;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_176_caracteres
-/suisse/sion;frontend/public/suisse/sion/index.html;15977;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;
-/suisse/neuchatel;frontend/public/suisse/neuchatel/index.html;16028;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_182_caracteres
-/suisse/fribourg;frontend/public/suisse/fribourg/index.html;15971;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_180_caracteres
-/suisse/vaud;frontend/public/suisse/vaud/index.html;16167;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_182_caracteres
-/suisse/valais;frontend/public/suisse/valais/index.html;16187;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres
-/suisse/suisse-romande;frontend/public/suisse/suisse-romande/index.html;16268;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres
-/logiciel-courtier-assurance;frontend/public/logiciel-courtier-assurance/index.html;25679;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/logiciel-courtage-assurance;frontend/public/logiciel-courtage-assurance/index.html;16048;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;description_189_caracteres
-/automatisation-courtier-assurance;frontend/public/automatisation-courtier-assurance/index.html;16167;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;title_94_caracteres | description_186_caracteres
-/tarifs;frontend/public/tarifs/index.html;15491;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/outils/calculateur-taux-transformation-assurance;frontend/public/outils/calculateur-taux-transformation-assurance/index.html;14711;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/outils/checklist-dossier-courtier-assurance;frontend/public/outils/checklist-dossier-courtier-assurance/index.html;18152;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/outils/checklist-renouvellement-assurance;frontend/public/outils/checklist-renouvellement-assurance/index.html;16993;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;description_203_caracteres
-/guides/organiser-cabinet-courtage-25-points;frontend/public/guides/organiser-cabinet-courtage-25-points/index.html;15209;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/ressources/checklist-25-points-organiser-cabinet-courtage.pdf
-/glossaire;frontend/public/glossaire/index.html;22089;Organization,Article,BreadcrumbList,FAQPage;;description_193_caracteres
-/guides/;frontend/public/guides/index.html;12689;Organization,SoftwareApplication,BreadcrumbList;;
-/guides/comment-ne-plus-oublier-relances-courtier;frontend/public/guides/comment-ne-plus-oublier-relances-courtier/index.html;14542;Organization,Article,BreadcrumbList,FAQPage;;
-/guides/automatiser-renouvellements-assurance;frontend/public/guides/automatiser-renouvellements-assurance/index.html;14672;Organization,Article,BreadcrumbList,FAQPage;;
-/guides/centraliser-documents-clients-assurance;frontend/public/guides/centraliser-documents-clients-assurance/index.html;13859;Organization,Article,BreadcrumbList,FAQPage;;
-/guides/organiser-portefeuille-assurance;frontend/public/guides/organiser-portefeuille-assurance/index.html;14074;Organization,Article,BreadcrumbList,FAQPage;;
-/guides/reduire-saisie-manuelle-courtier;frontend/public/guides/reduire-saisie-manuelle-courtier/index.html;13870;Organization,Article,BreadcrumbList,FAQPage;;
-/guides/automatiser-suivi-prospects-assurance;frontend/public/guides/automatiser-suivi-prospects-assurance/index.html;14153;Organization,Article,BreadcrumbList,FAQPage;;
-/guides/devoir-de-conseil-suivi-dossier;frontend/public/guides/devoir-de-conseil-suivi-dossier/index.html;14942;Organization,Article,BreadcrumbList,FAQPage;;
-/guides/donnees-clients-assurance-france-suisse;frontend/public/guides/donnees-clients-assurance-france-suisse/index.html;15351;Organization,Article,BreadcrumbList,FAQPage;;
-/comparatifs/;frontend/public/comparatifs/index.html;12232;Organization,SoftwareApplication,BreadcrumbList;;
-/comparatifs/crm-assurance-vs-crm-generaliste;frontend/public/comparatifs/crm-assurance-vs-crm-generaliste/index.html;14922;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/comparatifs/excel-vs-crm-courtier-assurance;frontend/public/comparatifs/excel-vs-crm-courtier-assurance/index.html;14531;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/comparatifs/logiciel-metier-vs-crm-generaliste;frontend/public/comparatifs/logiciel-metier-vs-crm-generaliste/index.html;14254;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/outils/;frontend/public/outils/index.html;13170;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/ressources/checklist-25-points-organiser-cabinet-courtage.pdf | lien_interne_inconnu:/ressources/checklist-renouvellement-assurance.pdf | lien_interne_inconnu:/ressources/checklist-dossier-courtier-assurance.pdf
-/outils/calculateur-productivite-courtier;frontend/public/outils/calculateur-productivite-courtier/index.html;15149;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;
-/securite;frontend/public/securite/index.html;14332;Organization,BreadcrumbList,FAQPage;;
-/a-propos;frontend/public/a-propos/index.html;12869;Organization,BreadcrumbList,FAQPage;;
-/mentions-legales;frontend/public/mentions-legales/index.html;11526;Organization,BreadcrumbList;;
-/confidentialite;frontend/public/confidentialite/index.html;12431;Organization,BreadcrumbList,FAQPage;;
-/demo/;frontend/public/demo/index.html;12964;Organization,BreadcrumbList,FAQPage;;
-/contact;frontend/public/contact/index.html;12059;Organization,BreadcrumbList;;
-/changelog;frontend/public/changelog/index.html;14331;Organization,BreadcrumbList;;
-/france/densite-courtage;frontend/public/france/densite-courtage/index.html;15556;Organization,BreadcrumbList,FAQPage;;title_81_caracteres | description_178_caracteres
-/fonctionnalites/comparateur-devis-assurance;frontend/public/fonctionnalites/comparateur-devis-assurance/index.html;14697;Organization,BreadcrumbList,FAQPage;;
-/conformite/controle-acpr-courtier;frontend/public/conformite/controle-acpr-courtier/index.html;14526;Organization,BreadcrumbList,FAQPage;;title_87_caracteres
-/conformite/lcb-ft-courtier;frontend/public/conformite/lcb-ft-courtier/index.html;13157;Organization,BreadcrumbList,FAQPage;;title_84_caracteres
-/conformite/ipid-document-information;frontend/public/conformite/ipid-document-information/index.html;13116;Organization,BreadcrumbList,FAQPage;;title_90_caracteres
+/;frontend/public/index.html;20842;Organization,WebSite,SoftwareApplication,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/crm-courtier-assurance;frontend/public/crm-courtier-assurance/index.html;19178;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/;frontend/public/fonctionnalites/index.html;14017;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/assistant-ark;frontend/public/fonctionnalites/assistant-ark/index.html;16452;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;title_82_caracteres | lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/gestion-portefeuille-assurance;frontend/public/fonctionnalites/gestion-portefeuille-assurance/index.html;15169;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/relance-devis-assurance;frontend/public/fonctionnalites/relance-devis-assurance/index.html;15353;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/renouvellements-assurance;frontend/public/fonctionnalites/renouvellements-assurance/index.html;14988;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/gestion-documents-assurance;frontend/public/fonctionnalites/gestion-documents-assurance/index.html;14835;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/automatisation-relances;frontend/public/fonctionnalites/automatisation-relances/index.html;15246;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/gestion-clients;frontend/public/fonctionnalites/gestion-clients/index.html;14468;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/gestion-contrats;frontend/public/fonctionnalites/gestion-contrats/index.html;14345;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/reporting-courtier;frontend/public/fonctionnalites/reporting-courtier/index.html;14375;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/prospection-assurance;frontend/public/fonctionnalites/prospection-assurance/index.html;14499;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/compte-rendu-clients;frontend/public/fonctionnalites/compte-rendu-clients/index.html;13912;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/france/;frontend/public/france/index.html;18350;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard | lien_interne_inconnu:/france/densite-courtage-grandes-villes-france
+/suisse/;frontend/public/suisse/index.html;18259;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/suisse/crm-courtier-assurance;frontend/public/suisse/crm-courtier-assurance/index.html;17385;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/suisse/geneve;frontend/public/suisse/geneve/index.html;16879;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/suisse/lausanne;frontend/public/suisse/lausanne/index.html;16371;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/solutions/;frontend/public/solutions/index.html;12433;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/demo/dashboard
+/solutions/courtier-assurance-independant;frontend/public/solutions/courtier-assurance-independant/index.html;15223;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/solutions/cabinet-courtage-assurance;frontend/public/solutions/cabinet-courtage-assurance/index.html;15138;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/solutions/equipe-commerciale-assurance;frontend/public/solutions/equipe-commerciale-assurance/index.html;14705;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/solutions/reseau-courtage;frontend/public/solutions/reseau-courtage/index.html;14879;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/assurances/;frontend/public/assurances/index.html;13624;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/assurances/mutuelle-sante;frontend/public/assurances/mutuelle-sante/index.html;14849;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/assurances/prevoyance;frontend/public/assurances/prevoyance/index.html;14439;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/assurances/assurance-auto;frontend/public/assurances/assurance-auto/index.html;13881;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/assurances/rc-pro;frontend/public/assurances/rc-pro/index.html;13966;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/assurances/multirisque-professionnelle;frontend/public/assurances/multirisque-professionnelle/index.html;13795;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/france/paris;frontend/public/france/paris/index.html;17987;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres | lien_interne_inconnu:/demo/dashboard
+/france/lyon;frontend/public/france/lyon/index.html;17677;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_184_caracteres | lien_interne_inconnu:/demo/dashboard
+/france/marseille;frontend/public/france/marseille/index.html;17930;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_189_caracteres | lien_interne_inconnu:/demo/dashboard
+/france/toulouse;frontend/public/france/toulouse/index.html;17578;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_188_caracteres | lien_interne_inconnu:/demo/dashboard
+/france/bordeaux;frontend/public/france/bordeaux/index.html;17840;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_188_caracteres | lien_interne_inconnu:/demo/dashboard
+/france/lille;frontend/public/france/lille/index.html;17503;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_185_caracteres | lien_interne_inconnu:/demo/dashboard
+/france/nantes;frontend/public/france/nantes/index.html;17453;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres | lien_interne_inconnu:/demo/dashboard
+/france/strasbourg;frontend/public/france/strasbourg/index.html;17532;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_190_caracteres | lien_interne_inconnu:/demo/dashboard
+/france/montpellier;frontend/public/france/montpellier/index.html;17517;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_191_caracteres | lien_interne_inconnu:/demo/dashboard
+/france/nice;frontend/public/france/nice/index.html;17515;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_184_caracteres | lien_interne_inconnu:/demo/dashboard
+/suisse/nyon;frontend/public/suisse/nyon/index.html;16324;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/suisse/vevey;frontend/public/suisse/vevey/index.html;16244;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/suisse/montreux;frontend/public/suisse/montreux/index.html;16359;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_176_caracteres | lien_interne_inconnu:/demo/dashboard
+/suisse/sion;frontend/public/suisse/sion/index.html;16278;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/suisse/neuchatel;frontend/public/suisse/neuchatel/index.html;16329;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_182_caracteres | lien_interne_inconnu:/demo/dashboard
+/suisse/fribourg;frontend/public/suisse/fribourg/index.html;16272;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_180_caracteres | lien_interne_inconnu:/demo/dashboard
+/suisse/vaud;frontend/public/suisse/vaud/index.html;16468;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_182_caracteres | lien_interne_inconnu:/demo/dashboard
+/suisse/valais;frontend/public/suisse/valais/index.html;16488;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres | lien_interne_inconnu:/demo/dashboard
+/suisse/suisse-romande;frontend/public/suisse/suisse-romande/index.html;16569;Organization,SoftwareApplication,Service,BreadcrumbList,FAQPage;;description_186_caracteres | lien_interne_inconnu:/demo/dashboard
+/logiciel-courtier-assurance;frontend/public/logiciel-courtier-assurance/index.html;25965;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/logiciel-courtage-assurance;frontend/public/logiciel-courtage-assurance/index.html;16349;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;description_189_caracteres | lien_interne_inconnu:/demo/dashboard
+/automatisation-courtier-assurance;frontend/public/automatisation-courtier-assurance/index.html;16468;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;title_94_caracteres | description_186_caracteres | lien_interne_inconnu:/demo/dashboard
+/tarifs;frontend/public/tarifs/index.html;15777;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/outils/calculateur-taux-transformation-assurance;frontend/public/outils/calculateur-taux-transformation-assurance/index.html;14997;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/outils/checklist-dossier-courtier-assurance;frontend/public/outils/checklist-dossier-courtier-assurance/index.html;18438;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/outils/checklist-renouvellement-assurance;frontend/public/outils/checklist-renouvellement-assurance/index.html;17279;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;description_203_caracteres | lien_interne_inconnu:/demo/dashboard
+/guides/organiser-cabinet-courtage-25-points;frontend/public/guides/organiser-cabinet-courtage-25-points/index.html;15510;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/ressources/checklist-25-points-organiser-cabinet-courtage.pdf | lien_interne_inconnu:/demo/dashboard
+/glossaire;frontend/public/glossaire/index.html;22390;Organization,Article,BreadcrumbList,FAQPage;;description_193_caracteres | lien_interne_inconnu:/demo/dashboard
+/guides/;frontend/public/guides/index.html;12990;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/demo/dashboard
+/guides/comment-ne-plus-oublier-relances-courtier;frontend/public/guides/comment-ne-plus-oublier-relances-courtier/index.html;14843;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/guides/automatiser-renouvellements-assurance;frontend/public/guides/automatiser-renouvellements-assurance/index.html;14973;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/guides/centraliser-documents-clients-assurance;frontend/public/guides/centraliser-documents-clients-assurance/index.html;14160;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/guides/organiser-portefeuille-assurance;frontend/public/guides/organiser-portefeuille-assurance/index.html;14375;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/guides/reduire-saisie-manuelle-courtier;frontend/public/guides/reduire-saisie-manuelle-courtier/index.html;14171;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/guides/automatiser-suivi-prospects-assurance;frontend/public/guides/automatiser-suivi-prospects-assurance/index.html;14454;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/guides/devoir-de-conseil-suivi-dossier;frontend/public/guides/devoir-de-conseil-suivi-dossier/index.html;15243;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/guides/donnees-clients-assurance-france-suisse;frontend/public/guides/donnees-clients-assurance-france-suisse/index.html;15652;Organization,Article,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/comparatifs/;frontend/public/comparatifs/index.html;12533;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/demo/dashboard
+/comparatifs/crm-assurance-vs-crm-generaliste;frontend/public/comparatifs/crm-assurance-vs-crm-generaliste/index.html;15223;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/comparatifs/excel-vs-crm-courtier-assurance;frontend/public/comparatifs/excel-vs-crm-courtier-assurance/index.html;14832;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/comparatifs/logiciel-metier-vs-crm-generaliste;frontend/public/comparatifs/logiciel-metier-vs-crm-generaliste/index.html;14555;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/outils/;frontend/public/outils/index.html;13471;Organization,SoftwareApplication,BreadcrumbList;;lien_interne_inconnu:/ressources/checklist-25-points-organiser-cabinet-courtage.pdf | lien_interne_inconnu:/demo/dashboard | lien_interne_inconnu:/ressources/checklist-renouvellement-assurance.pdf | lien_interne_inconnu:/ressources/checklist-dossier-courtier-assurance.pdf
+/outils/calculateur-productivite-courtier;frontend/public/outils/calculateur-productivite-courtier/index.html;15450;Organization,SoftwareApplication,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/securite;frontend/public/securite/index.html;14633;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/a-propos;frontend/public/a-propos/index.html;13170;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/mentions-legales;frontend/public/mentions-legales/index.html;11827;Organization,BreadcrumbList;;lien_interne_inconnu:/demo/dashboard
+/confidentialite;frontend/public/confidentialite/index.html;12732;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/demo/;frontend/public/demo/index.html;13265;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/contact;frontend/public/contact/index.html;12360;Organization,BreadcrumbList;;lien_interne_inconnu:/demo/dashboard
+/changelog;frontend/public/changelog/index.html;14676;Organization,BreadcrumbList;;lien_interne_inconnu:/demo/dashboard
+/france/densite-courtage;frontend/public/france/densite-courtage/index.html;15857;Organization,BreadcrumbList,FAQPage;;title_81_caracteres | description_178_caracteres | lien_interne_inconnu:/demo/dashboard
+/fonctionnalites/comparateur-devis-assurance;frontend/public/fonctionnalites/comparateur-devis-assurance/index.html;14998;Organization,BreadcrumbList,FAQPage;;lien_interne_inconnu:/demo/dashboard
+/conformite/controle-acpr-courtier;frontend/public/conformite/controle-acpr-courtier/index.html;14827;Organization,BreadcrumbList,FAQPage;;title_87_caracteres | lien_interne_inconnu:/demo/dashboard
+/conformite/lcb-ft-courtier;frontend/public/conformite/lcb-ft-courtier/index.html;13458;Organization,BreadcrumbList,FAQPage;;title_84_caracteres | lien_interne_inconnu:/demo/dashboard
+/conformite/ipid-document-information;frontend/public/conformite/ipid-document-information/index.html;13417;Organization,BreadcrumbList,FAQPage;;title_90_caracteres | lien_interne_inconnu:/demo/dashboard

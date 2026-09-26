@@ -72,7 +72,7 @@ export default function AdminSidebar() {
 
       {/* Footer */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
-        COURTIA Admin · v1.0
+        COURTIARK Admin · v1.0
       </div>
     </aside>
   )

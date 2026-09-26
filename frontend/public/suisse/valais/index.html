@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -100,8 +103,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -109,9 +113,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/suisse">Suisse</a> › Canton du Valais</p>
 <h1>Logiciel de courtage assurance à Canton du Valais</h1>
 <p class="chapeau">Un cabinet d&#x27;intermédiation d&#x27;assurance à Canton du Valais doit suivre des dossiers dont les besoins changent avec l&#x27;activité et la saison. COURTIARK organise ce suivi et le rend partageable.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le marché local</h2><div class="section"><p>Le Valais combine tourisme de montagne, construction et PME. Les dossiers y sont marqués par la saisonnalité et par la dispersion géographique : beaucoup de clients, peu de proximité, et des périodes où l'activité se concentre.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class="section"><ul><li>Des activités saisonnières dont les couvertures doivent suivre la réalité de l'exploitation.</li><li>Des déplacements coûteux en temps : le suivi à distance devient un gain direct.</li><li>Des entreprises familiales avec des enjeux de transmission.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class="section"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Activités saisonnières</td><td>Besoins réévalués saison par saison, avec trace des décisions</td></tr><tr><td>Dispersion géographique</td><td>Suivi à distance : documents par lien, relances tracées</td></tr><tr><td>Construction et tourisme</td><td>Risques d'exploitation consignés par client</td></tr><tr><td>Entreprises familiales</td><td>Historique dans la durée, y compris les transmissions</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Canton du Valais</h2><div class="section"><ul><li><b>Exemple 1</b> — Une station qui prépare sa saison d'hiver en octobre : les couvertures doivent être prêtes avant l'ouverture</li><li><b>Exemple 2</b> — Une PME du bâtiment avec deux sites en vallée : un dossier, deux implantations</li><li><b>Exemple 3</b> — Un client qui vend son exploitation : les contrats à résilier doivent être identifiés</li></ul></div><h2>Cadre suisse</h2><div class="section"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href="/suisse">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class="section"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Pourquoi la saisonnalité complique-t-elle le suivi valaisan ?</h3><p>Parce que les besoins des clients touristiques et de la construction se réévaluent à chaque saison : sans vue consolidée des échéances, le cabinet court après les dates.</p><h3>Le produit est-il disponible en allemand ?</h3><p>Non : l&#x27;interface et les pages publiques sont en français. Nous ne l&#x27;annonçons donc pas comme disponible en Suisse alémanique.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/suisse">COURTIARK en Suisse</a></li><li><a href="/suisse/crm-courtier-assurance">CRM courtier assurance en Suisse</a></li><li><a href="/suisse/geneve">Genève</a></li><li><a href="/suisse/lausanne">Lausanne</a></li><li><a href="/suisse/suisse-romande">Suisse romande</a></li></ul></div>
 </main>

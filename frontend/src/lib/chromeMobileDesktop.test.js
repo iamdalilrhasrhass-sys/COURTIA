@@ -3,7 +3,7 @@
    mobile ne s'affiche pas sur desktop.
    ----------------------------------------------------------------------------
    POURQUOI CE TEST : `AppPrivateLayout` montait `AuroraMobileTopbar` sans
-   condition. Sur desktop, on voyait donc en permanence un second logo COURTIA,
+   condition. Sur desktop, on voyait donc en permanence un second logo COURTIARK,
    un hamburger et une cloche rognée au-dessus du cockpit (relevé en production
    le 21/09/2026). La condition doit rester la règle de viewport du produit —
    « max-width: 768px », celle du CSS de la barre basse et du hook partagé —

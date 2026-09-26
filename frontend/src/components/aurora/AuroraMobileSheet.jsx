@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    AuroraMobileSheet — iOS-style Bottom Sheet / Drawer
-   COURTIA V2 • Draggable sheet with snap points
+   COURTIARK V2 • Draggable sheet with snap points
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import React, { useRef, useEffect, useCallback } from 'react';

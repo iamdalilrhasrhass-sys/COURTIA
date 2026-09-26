@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Devise unique du frontend
+   COURTIARK — Devise unique du frontend
    ----------------------------------------------------------------------------
    Un cabinet suisse (pays = 'CH') raisonne en francs suisses : les écrans
    privés doivent afficher « 1'234.50 CHF », jamais « 1 235 € ». La règle vit

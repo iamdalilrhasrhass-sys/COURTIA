@@ -118,7 +118,7 @@ export default function Comparateur() {
           title={<span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Sparkles size={24} color={T.ark} /> Comparateur — 8 profils simulés
           </span>}
-          subtitle="Moteur de simulation COURTIA : score, badges et classement internes. Aucun tarif réel n'est obtenu auprès d'un assureur."
+          subtitle="Moteur de simulation COURTIARK : score, badges et classement internes. Aucun tarif réel n'est obtenu auprès d'un assureur."
         />
 
         {/* Bandeau simulation — visible en permanence, dans le design de la
@@ -136,7 +136,7 @@ export default function Comparateur() {
               </div>
               <div style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.6 }}>
                 {result?.simulation_notice
-                  || "Les offres affichées ici sont calculées par le moteur de simulation COURTIA : elles ne proviennent d'aucun assureur. Les primes, notations et délais sont simulés."}
+                  || "Les offres affichées ici sont calculées par le moteur de simulation COURTIARK : elles ne proviennent d'aucun assureur. Les primes, notations et délais sont simulés."}
                 {' '}Aucun document ni e-mail ne peut être envoyé au client à partir de ces montants : obtenez des tarifs réels avant toute remise.
               </div>
             </div>

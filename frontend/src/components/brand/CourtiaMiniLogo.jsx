@@ -2,7 +2,7 @@ import React from 'react'
 import CourtiaBubbleLogo from './CourtiaBubbleLogo'
 
 /**
- * COURTIA — Mini Logo (sidebar compact)
+ * COURTIARK — Mini Logo (sidebar compact)
  * Version réduite sans mousse ni specular pour sidebar
  */
 
@@ -28,7 +28,7 @@ export default function CourtiaMiniLogo({ size = 32, className, style }) {
         color: '#ffffff',
         letterSpacing: '-0.5px',
       }}>
-        COURTIA
+        COURTIARK
       </span>
     </div>
   )

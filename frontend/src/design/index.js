@@ -1,4 +1,4 @@
-// COURTIA · LA BULLE — Design System entrypoint
+// COURTIARK · LA BULLE — Design System entrypoint
 // Importing this module also loads the tokens (CSS variables + keyframes).
 
 import './tokens.css';

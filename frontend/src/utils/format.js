@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Helpers de formatage des fiches clients / listes
+   COURTIARK — Helpers de formatage des fiches clients / listes
    ----------------------------------------------------------------------------
    POURQUOI ce fichier passe par lib/monnaie.js : ses dates étaient figées en
    « fr-FR » et ses montants en euros. La devise ET la locale viennent maintenant

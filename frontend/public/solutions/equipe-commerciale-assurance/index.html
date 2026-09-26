@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -100,8 +103,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -109,9 +113,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/solutions">Solutions</a> › Équipe commerciale</p>
 <h1>Équipe commerciale</h1>
 <p class="chapeau">Une équipe commerciale sans liste commune travaille au ressenti. COURTIARK transforme l&#x27;activité en actions visibles et en résultats mesurables par le cabinet.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce que l'équipe voit</h2><div class="section"><ul><li>Les devis à relancer, rattachés au client et à l'étape en cours.</li><li>Les tâches et rendez-vous du jour.</li><li>Les prospects en séquence de contact et les réponses à traiter.</li><li>Les objectifs du cabinet et l'avancement.</li></ul></div><h2>Ce que le responsable voit</h2><div class="section"><ul><li>L'activité traitée : tâches et relances abouties.</li><li>Les devis gagnés et perdus.</li><li>Les commissions attendues.</li><li>Les dossiers bloqués depuis trop longtemps.</li></ul></div><h2>Ce qui reste humain</h2><div class="section"><p>Aucun message n'est envoyé automatiquement, aucune décision commerciale n'est prise par l'outil. Les séquences de prospection organisent les étapes ; l'envoi reste une action de l'équipe.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Puis-je suivre l&#x27;activité par collaborateur ?</h3><p>Le cabinet rattache plusieurs utilisateurs avec des rôles distincts ; le pilotage s&#x27;appuie sur les dossiers et l&#x27;activité enregistrée.</p><h3>Les relances sont-elles automatiques ?</h3><p>Non, elles sont organisées et tracées ; l&#x27;envoi reste humain.</p><h3>Puis-je importer une liste de prospects ?</h3><p>Un import permet de partir d&#x27;un fichier existant, puis de suivre les étapes de contact.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/prospection-assurance">Prospection assurance</a></li><li><a href="/fonctionnalites/relance-devis-assurance">Relance de devis</a></li></ul></div>
 </main>

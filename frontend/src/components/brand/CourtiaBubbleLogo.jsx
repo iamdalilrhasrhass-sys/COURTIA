@@ -1,7 +1,7 @@
 import React, { _useEffect, _useRef } from 'react'
 
 /**
- * COURTIA — Aurora Bubble C
+ * COURTIARK — Aurora Bubble C
  * Logo officiel — Bulle iridescente en forme de C
  * Référence : /public/courtia-bubble-C-reference.html
  */

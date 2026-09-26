@@ -6,6 +6,9 @@ import PaywallModal from './components/PaywallModal'
 import ImpersonationBanner from './components/ImpersonationBanner'
 import CommandPalette from './components/ui/CommandPalette'
 import { AuroraBackground } from './components/aurora/Aurora3D'
+// Mode demonstration : l'application y est montee sous /demo, les navigations programmees
+// doivent donc rester dans la demonstration (sinon le visiteur tombe sur le mur de connexion).
+import { estModeDemo } from './demo/modeDemo'
 import AuroraMobileTopbar from './components/aurora/AuroraMobileTopbar'
 import AuroraBottomNav from './components/aurora/AuroraBottomNav'
 // Règle de viewport mobile de l'application : le hook partagé utilisé par
@@ -33,7 +36,7 @@ export default function AppPrivateLayout() {
   const [cmdOpen, setCmdOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   // Mot de passe temporaire : le cabinet se connecte avec le mot de passe
-  // initial remis par COURTIA (must_change_password, renvoyé par /api/auth/me).
+  // initial remis par COURTIARK (must_change_password, renvoyé par /api/auth/me).
   // On l'invite à en choisir un — sans jamais l'y obliger : aucune route n'est
   // bridée tant qu'il utilise le mot de passe initial.
   const [motDePasseTemporaire, setMotDePasseTemporaire] = useState(false)
@@ -90,7 +93,7 @@ export default function AppPrivateLayout() {
       
       {/* Aurora Mobile Components — UNIQUEMENT sur mobile.
           La barre était montée sans condition : sur desktop, on voyait donc en
-          permanence un second logo COURTIA, un hamburger et une cloche rognée
+          permanence un second logo COURTIARK, un hamburger et une cloche rognée
           au-dessus du cockpit (relevé en production le 21/09/2026). La condition
           est la règle de viewport du produit (« max-width: 768px »), la même que
           celle qui masque déjà la barre de navigation basse et retire le
@@ -118,7 +121,7 @@ export default function AppPrivateLayout() {
               {essai.bandeau.titre} — {essai.bandeau.texte}
             </span>
             <button
-              onClick={() => navigate('/billing')}
+              onClick={() => navigate(estModeDemo() ? '/demo/billing' : '/billing')}
               style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: '#fff' }}
             >
@@ -137,7 +140,7 @@ export default function AppPrivateLayout() {
               Mot de passe temporaire — choisissez votre mot de passe personnel dans Paramètres &gt; Sécurité.
             </span>
             <button
-              onClick={() => navigate('/parametres')}
+              onClick={() => navigate(estModeDemo() ? '/demo/parametres' : '/parametres')}
               style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', color: '#fff' }}
             >
@@ -162,7 +165,7 @@ export default function AppPrivateLayout() {
         open={!!paywallError}
         error={paywallError}
         onClose={() => setPaywallError(null)}
-        onUpgrade={(plan) => navigate(`/billing?plan=${plan}`)}
+        onUpgrade={(plan) => navigate(estModeDemo() ? `/demo/billing?plan=${plan}` : `/billing?plan=${plan}`)}
       />
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 

@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    AuroraTableMobile — Responsive Table/Cards Component
-   COURTIA V2 • Desktop table, mobile stacked cards
+   COURTIARK V2 • Desktop table, mobile stacked cards
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import React, { useMemo } from 'react';

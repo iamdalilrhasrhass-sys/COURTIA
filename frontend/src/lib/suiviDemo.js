@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Mesure de la visite guidée /demo
+   COURTIARK — Mesure de la visite guidée /demo
    ----------------------------------------------------------------------------
    But : émettre demo_started, demo_chapter_view, demo_completed et
    demo_take_control SANS toucher à `src/demo/` (ces fichiers appartiennent à

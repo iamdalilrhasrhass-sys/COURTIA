@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Branches d&#x27;assurance</p>
 <h1>Branches d&#x27;assurance couvertes</h1>
 <p class="chapeau">COURTIARK ne tarife pas : il organise le suivi. Le même socle s&#x27;applique à toutes les branches — client, contrat, échéance, documents, relances, commissions.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce que le produit suit réellement</h2><div class="section"><p>Un dossier client, un ou plusieurs contrats, une échéance, des documents, des actions de relance et des commissions. Cette structure est la même pour une complémentaire santé, un contrat auto ou une responsabilité civile professionnelle.</p></div><h2>Pages par branche</h2><div class="section"><ul><li><a href="/assurances/mutuelle-sante">Mutuelle et complémentaire santé</a></li><li><a href="/assurances/prevoyance">Prévoyance</a></li><li><a href="/assurances/assurance-auto">Assurance auto</a></li><li><a href="/assurances/rc-pro">Responsabilité civile professionnelle</a></li><li><a href="/assurances/multirisque-professionnelle">Multirisque professionnelle</a></li></ul></div><h2>Ce que COURTIARK ne fait pas</h2><div class="section"><ul><li>Il ne calcule pas de prime et n'affiche pas de tarif d'assureur.</li><li>Il ne compare pas les offres du marché : le module de comparaison fonctionne en simulation explicitement étiquetée.</li><li>Il ne se substitue pas à votre devoir de conseil.</li></ul></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK gère-t-il toutes les branches ?</h3><p>Le suivi est identique quelle que soit la branche : client, contrats, échéances, documents, relances, commissions.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/crm-courtier-assurance">Le CRM courtier assurance</a></li><li><a href="/solutions">Solutions</a></li></ul></div>
 </main>

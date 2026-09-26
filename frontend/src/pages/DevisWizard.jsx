@@ -440,7 +440,7 @@ export default function DevisWizard() {
                         </div>
                         <div style={{ color: T.textSecondary, fontSize: 12, lineHeight: 1.6 }}>
                           {summary?.simulation_notice
-                            || "Ces offres sont calculées par le moteur de simulation COURTIA : elles ne proviennent d'aucun assureur."}
+                            || "Ces offres sont calculées par le moteur de simulation COURTIARK : elles ne proviennent d'aucun assureur."}
                           {' '}Aucun PDF ni e-mail client ne peut être produit à partir de ces montants.
                           Rattachez un devis réel (saisie manuelle, import ou retour d'API assureur) pour générer le document.
                         </div>

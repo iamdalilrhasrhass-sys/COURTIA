@@ -39,8 +39,8 @@ const REPONSE_BACKEND_AVANT_P0 = {
   notification_interne: { envoye: false, raison: 'configuration_required', canal: 'email' },
   configuration_required: true,
   message:
-    "Votre demande de démo est enregistrée et visible dans l'espace COURTIA, mais la notification "
-    + "interne n'a pas pu partir (configuration_required). Prévenez l'équipe COURTIA par un autre canal "
+    "Votre demande de démo est enregistrée et visible dans l'espace COURTIARK, mais la notification "
+    + "interne n'a pas pu partir (configuration_required). Prévenez l'équipe COURTIARK par un autre canal "
     + 'si votre demande est urgente.',
 }
 

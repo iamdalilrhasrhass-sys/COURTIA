@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/fonctionnalites">Fonctionnalités</a> › Automatisation des relances</p>
 <h1>Automatisation des relances</h1>
 <p class="chapeau">L&#x27;automatisation utile dans un cabinet n&#x27;est pas d&#x27;envoyer des messages à la chaîne : c&#x27;est de ne plus oublier une demande. COURTIARK transforme une situation (pièce manquante, devis sans suite, échéance) en action visible dans une liste de travail.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Les trois familles de relances</h2><div class="section"><table><thead><tr><th>Situation</th><th>Ce qui est déclenché</th><th>Qui agit</th></tr></thead><tbody><tr><td>Pièce manquante</td><td>Le dossier apparaît comme incomplet ; le lien de dépôt est prêt.</td><td>Le courtier décide de la demande.</td></tr><tr><td>Devis sans suite</td><td>Le devis remonte dans les relances à mener.</td><td>Le courtier relance (e-mail préparé, appel, message).</td></tr><tr><td>Échéance proche</td><td>Le contrat remonte dans la vue portefeuille et le brief du matin.</td><td>Le courtier prépare le renouvellement.</td></tr></tbody></table></div><h2>Ce qui n'est jamais automatique</h2><div class="section"><ul><li>Aucun e-mail n'est envoyé par COURTIARK à votre place.</li><li>Aucun SMS n'est envoyé automatiquement.</li><li>Aucune donnée n'est transmise à un tiers.</li><li>Aucune décision commerciale n'est prise par l'outil.</li></ul></div><h2>La séquence type d'un cabinet organisé</h2><div class="section"><div class="etape"><b>Lundi</b><span>Revue des devis sans suite et des pièces manquantes.</span></div><div class="etape"><b>Semaine</b><span>Relances consignées au fil de l'eau, rattachées au dossier.</span></div><div class="etape"><b>Vendredi</b><span>Point sur les dossiers qui bloquent depuis plus de deux semaines.</span></div><div class="etape"><b>Mois</b><span>Lecture du reporting : devis gagnés, perdus, en attente.</span></div></div><h2>Ce qu'il faut mesurer pour savoir si ça marche</h2><div class="section"><p>Le nombre de dossiers bloqués depuis plus de X jours doit diminuer. C'est un indicateur interne, que votre cabinet suit lui-même dans les listes de l'outil.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK envoie-t-il des relances automatiquement ?</h3><p>Non : l&#x27;outil organise et trace, l&#x27;envoi reste humain.</p><h3>Puis-je définir mes propres délais ?</h3><p>Oui, votre organisation fixe les délais ; l&#x27;outil les rend visibles et suivables.</p><h3>La relance téléphonique est-elle tracée ?</h3><p>Oui, elle se consigne dans le dossier pour garder un historique lisible.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/relance-devis-assurance">Relance de devis</a></li><li><a href="/guides/reduire-saisie-manuelle-courtier">Guide : réduire la saisie manuelle</a></li></ul></div>
 </main>

@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/fonctionnalites">Fonctionnalités</a> › Suivi des rendez-vous et des échanges</p>
 <h1>Suivi des rendez-vous et des échanges</h1>
 <p class="chapeau">Un échange client non consigné est un échange perdu. COURTIARK rattache rendez-vous et échanges au dossier pour que l&#x27;information survive au collaborateur.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce qui se consigne</h2><div class="section"><ul><li>Rendez-vous et visites (module rendez-vous).</li><li>Échanges avec le client, par téléphone ou message (module d'appels et messagerie).</li><li>Résultat de la relance et prochaine étape.</li><li>Documents transmis ou reçus.</li></ul></div><h2>Pourquoi c'est structurant</h2><div class="section"><p>Quand un collaborateur part ou s'absente, le dossier reste exploitable : la mémoire du cabinet ne dépend plus d'une personne.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Les appels sont-ils enregistrés ?</h3><p>Le suivi des appels consigne l&#x27;information utile au dossier ; le produit n&#x27;est pas un outil d&#x27;enregistrement à votre insu.</p><h3>Puis-je suivre les échanges WhatsApp ?</h3><p>Le suivi des conversations est prévu dans le même espace que le reste du dossier client.</p><h3>Les comptes rendus sont-ils visibles par toute l&#x27;équipe ?</h3><p>Oui, pour les utilisateurs rattachés au cabinet.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/gestion-clients">Gestion des clients</a></li><li><a href="/fonctionnalites/relance-devis-assurance">Relance de devis</a></li></ul></div>
 </main>

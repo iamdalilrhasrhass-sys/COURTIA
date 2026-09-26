@@ -179,7 +179,7 @@ function adapterPriorites(resultat, contexte = {}) {
 }
 /* ADAPTATEUR-FIN */
 
-/* ─── Lecture commerciale AVEC la session COURTIA ──────────────────────────────
+/* ─── Lecture commerciale AVEC la session COURTIARK ──────────────────────────────
    POURQUOI CET APPEL EST ÉCRIT ICI ET PAS DANS lib/salesApi.js
    Le relais de production (api/sales/[...chemin].js) refuse en 401 `jeton_absent`
    toute lecture commerciale qui n'arrive pas avec un en-tête
@@ -196,7 +196,7 @@ const BASE_SALES = import.meta.env.VITE_SALES_API_URL || '/api'
 
 function messageLectureCommerciale(statut, code) {
   if (code === 'jeton_absent' || code === 'jeton_invalide') {
-    return 'Lecture refusée : la session COURTIA transmise au relais est absente ou invalide.'
+    return 'Lecture refusée : la session COURTIARK transmise au relais est absente ou invalide.'
   }
   if (code === 'lecture_desactivee') {
     return "Lecture commerciale désactivée : le jeton de lecture n'est pas configuré sur le serveur."
@@ -230,7 +230,7 @@ async function chargerResume({ heures = 24 } = {}) {
   return charge
 }
 
-/* ─── COURTIA SALES : bloc d'acquisition alimenté par le service de capture ───
+/* ─── COURTIARK SALES : bloc d'acquisition alimenté par le service de capture ───
    Source UNIQUE : GET /api/sales/summary (service_capture.py). Rien n'est
    calculé ici, rien n'est inventé : le service dit pour chaque compteur s'il est
    « mesuré » ou « non mesuré », et l'écran affiche exactement cela. Un compteur
@@ -480,7 +480,7 @@ export default function MorningBrief() {
           </div>
         </div>
 
-        {/* COURTIA SALES — acquisition réelle (service de capture) */}
+        {/* COURTIARK SALES — acquisition réelle (service de capture) */}
         <BlocCourtiaSales />
 
         {/* SUMMARY COUNTERS */}

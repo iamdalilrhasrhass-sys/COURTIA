@@ -1,12 +1,12 @@
 /* ============================================================================
-   COURTIA — Mesure de trafic et d'usage (anonyme)
+   COURTIARK — Mesure de trafic et d'usage (anonyme)
    ----------------------------------------------------------------------------
    Point d'entrée UNIQUE : `evenement(nom, props)`.
 
    Un appel déclenche trois choses :
      (a) l'envoi à la mesure installée (Vercel Web Analytics, `track`) ;
      (b) la capture interne : POST vers /api/leads/events — le service de
-         capture COURTIA (service_capture.py, exposé en HTTPS par le site
+         capture COURTIARK (service_capture.py, exposé en HTTPS par le site
          public). Un seul chemin, DEUX vocabulaires dans le même corps : le
          service lit `event`, `session_id`, `route`, `device`, `meta`…, tandis
          que le backend historique (backend/src/routes/leads.js, table

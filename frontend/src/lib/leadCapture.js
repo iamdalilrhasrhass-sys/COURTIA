@@ -1,5 +1,5 @@
 /**
- * Capture publique des demandes de démo COURTIA.
+ * Capture publique des demandes de démo COURTIARK.
  *
  * Contrat du service de capture (VPS, exposé en HTTPS) :
  *   POST /api/leads/demo-request  ->  { ok: true, lead_id: 12, redirect: '/demo' }
@@ -248,7 +248,7 @@ export function resolveRedirect(data, fallback = '/demo') {
  * Oui dans le cas normal. NON quand le serveur signale explicitement que la
  * notification interne n'a pas pu partir (`configuration_required: true` ou
  * `notification_interne.envoye === false`) : le message qu'il produit alors
- * (« Prévenez l'équipe COURTIA par un autre canal si votre demande est
+ * (« Prévenez l'équipe COURTIARK par un autre canal si votre demande est
  * urgente. ») demande une action au prospect. Le rediriger au bout de 1,4 s
  * reviendrait à jeter ce message — c'est exactement ce que corrige ce
  * correctif. La démonstration reste accessible, par un clic explicite.

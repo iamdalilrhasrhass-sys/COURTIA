@@ -1,5 +1,5 @@
 /* ============================================================================
-   plansReference.js — référentiel UNIQUE des offres PUBLIQUES COURTIA (FR/CH)
+   plansReference.js — référentiel UNIQUE des offres PUBLIQUES COURTIARK (FR/CH)
    ----------------------------------------------------------------------------
    SOURCE DE VÉRITÉ EN APPLICATION : `GET /api/billing/plans`
    (backend/src/services/planService.js). Ce module sert aux pages PUBLIQUES
@@ -273,18 +273,18 @@ export function plansSeoTitle(market) {
   const [entree, principal, haut] = getMarketPlans(market)
   if (market === 'CH') {
     const symbol = MARKET_META.CH.currencySymbol
-    return `Tarifs COURTIA Suisse — ${symbol} ${entree.monthly} ${seoName(entree)} / ${principal.monthly} ${seoName(principal)} (TVA ${VAT_LABEL.CH} en sus)`
+    return `Tarifs COURTIARK Suisse — ${symbol} ${entree.monthly} ${seoName(entree)} / ${principal.monthly} ${seoName(principal)} (TVA ${VAT_LABEL.CH} en sus)`
   }
-  return `Tarifs COURTIA — ${seoName(entree)} ${formatPlanPrice(entree)} / ${seoName(principal)} ${formatPlanPrice(principal)} / ${seoName(haut)} ${SUR_DEVIS_LABEL.toLowerCase()}`
+  return `Tarifs COURTIARK — ${seoName(entree)} ${formatPlanPrice(entree)} / ${seoName(principal)} ${formatPlanPrice(principal)} / ${seoName(haut)} ${SUR_DEVIS_LABEL.toLowerCase()}`
 }
 
 /** Description SEO de /tarifs, dérivée de la grille publiée. */
 export function plansSeoDescription(market) {
   const [entree, principal, haut] = getMarketPlans(market)
   if (market === 'CH') {
-    return `Grille tarifaire COURTIA en francs suisses pour courtiers d’assurance en Suisse : ${seoName(entree)} ${entree.monthly} CHF/mois, ${seoName(principal)} ${principal.monthly} CHF/mois, ${seoName(haut)} ${SUR_DEVIS_LABEL.toLowerCase()}. Setup et TVA ${VAT_LABEL.CH} indiqués.`
+    return `Grille tarifaire COURTIARK en francs suisses pour courtiers d’assurance en Suisse : ${seoName(entree)} ${entree.monthly} CHF/mois, ${seoName(principal)} ${principal.monthly} CHF/mois, ${seoName(haut)} ${SUR_DEVIS_LABEL.toLowerCase()}. Setup et TVA ${VAT_LABEL.CH} indiqués.`
   }
-  return `Grille tarifaire COURTIA pour courtiers d’assurance : ${seoName(entree)} ${formatPlanPrice(entree)} HT/mois, ${seoName(principal)} ${formatPlanPrice(principal)} HT/mois, ${seoName(haut)} ${SUR_DEVIS_LABEL.toLowerCase()}. Sans frais cachés ni engagement.`
+  return `Grille tarifaire COURTIARK pour courtiers d’assurance : ${seoName(entree)} ${formatPlanPrice(entree)} HT/mois, ${seoName(principal)} ${formatPlanPrice(principal)} HT/mois, ${seoName(haut)} ${SUR_DEVIS_LABEL.toLowerCase()}. Sans frais cachés ni engagement.`
 }
 
 /**

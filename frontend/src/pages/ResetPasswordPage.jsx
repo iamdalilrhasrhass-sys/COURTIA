@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
               Nouveau mot de passe
             </h1>
             <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.35)', marginBottom: 24, textAlign: 'center' }}>
-              Choisissez un nouveau mot de passe pour votre compte COURTIA.
+              Choisissez un nouveau mot de passe pour votre compte COURTIARK.
             </p>
 
             <div className="auth-form-shell">

@@ -10,7 +10,7 @@
    libellés du plan (fill="#374151" sur fond sombre).
 
    RÈGLE : les écrans REACH déclarent maintenant explicitement les jetons du
-   design system COURTIA (styles/design-system.css : --bg-card, --bg-elevated,
+   design system COURTIARK (styles/design-system.css : --bg-card, --bg-elevated,
    --text-primary/secondary/tertiary, --r-*) au lieu d'emprunter la palette
    claire. Aucune palette nouvelle : ce sont les jetons déjà chargés dans
    l'application (main.jsx → styles/design-system.css).

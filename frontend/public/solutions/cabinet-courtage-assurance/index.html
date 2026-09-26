@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -100,8 +103,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -109,9 +113,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/solutions">Solutions</a> › Cabinet de courtage assurance</p>
 <h1>Cabinet de courtage assurance</h1>
 <p class="chapeau">Dès qu&#x27;il y a plusieurs collaborateurs, l&#x27;information doit survivre aux absences et aux départs. C&#x27;est le premier problème que règle COURTIARK.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Les problèmes de structure</h2><div class="section"><ul><li>Le dossier n'existe que dans la tête de celui qui l'a ouvert.</li><li>Deux collaborateurs relancent le même client, ou aucun.</li><li>Les commissions sont reconstituées en fin d'année.</li><li>Les pièces manquantes sont redemandées deux fois.</li></ul></div><h2>Ce que COURTIARK met en place</h2><div class="section"><table><thead><tr><th>Besoin du cabinet</th><th>Réponse</th></tr></thead><tbody><tr><td>Partage du suivi</td><td>Fiche client unique : contrats, échéances, documents, historique.</td></tr><tr><td>Rôles</td><td>Plusieurs utilisateurs rattachés au cabinet, avec des rôles distincts.</td></tr><tr><td>Cloisonnement</td><td>Un cabinet ne voit que ses données, vérifié par tests d'isolation.</td></tr><tr><td>Commissions</td><td>Suivi par dossier et calculateur d'appoint.</td></tr><tr><td>Pilotage</td><td>Brief du matin, santé du portefeuille, rapports d'activité.</td></tr></tbody></table></div><h2>Encadrer sans alourdir</h2><div class="section"><p>L'outil ne remplace pas vos procédures internes : il les rend applicables, parce que l'état d'un dossier est visible par tous au lieu d'être raconté.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Combien d&#x27;utilisateurs puis-je rattacher ?</h3><p>Plusieurs utilisateurs peuvent être rattachés au cabinet avec des rôles distincts.</p><h3>Les données sont-elles cloisonnées ?</h3><p>Oui, par cabinet, et ce cloisonnement est vérifié par des tests d&#x27;isolation exécutés sur la production.</p><h3>Puis-je suivre les commissions par collaborateur ?</h3><p>Le suivi des commissions est rattaché aux dossiers et contrats.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/crm-courtier-assurance">Le CRM courtier assurance</a></li><li><a href="/fonctionnalites/reporting-courtier">Reporting</a></li></ul></div>
 </main>

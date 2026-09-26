@@ -1,7 +1,7 @@
 /* ============================================================================
-   COURTIA — Lecture commerciale (écran ACQUISITION COURTIA / ARK SALES)
+   COURTIARK — Lecture commerciale (écran ACQUISITION COURTIARK / ARK SALES)
    ----------------------------------------------------------------------------
-   Source : service de capture COURTIA (routes GET /api/sales/*).
+   Source : service de capture COURTIARK (routes GET /api/sales/*).
 
    SÉCURITÉ — le jeton de lecture n'est JAMAIS dans ce fichier ni dans le bundle :
    le navigateur appelle la MÊME ORIGINE (`/api/sales/...`) et c'est le relais
@@ -116,7 +116,7 @@ export function chargerEvenements({ evenement, environment, leadId, depuis, incl
   }, options)
 }
 
-/** GET /api/sales/summary — bloc COURTIA SALES du Morning Brief. */
+/** GET /api/sales/summary — bloc COURTIARK SALES du Morning Brief. */
 export function chargerResume({ heures, environment, includeQa } = {}, options) {
   return lire('/sales/summary', { heures, environment, include_qa: includeQa }, options)
 }

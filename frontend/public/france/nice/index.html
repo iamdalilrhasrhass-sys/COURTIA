@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -100,8 +103,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -109,9 +113,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/france">France</a> › Nice</p>
 <h1>Logiciel de courtage assurance à Nice</h1>
 <p class="chapeau">Un cabinet de courtage à Nice tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le marché local</h2><div class="section"><p>Nice affiche une densité très élevée (14,1 pour 10 000 habitants) avec une clientèle marquée par la part des retraités et des résidents secondaires : beaucoup de dossiers, beaucoup de propriétaires, et des clients souvent absents une partie de l'année.</p><p><b>Nice</b> : 505 établissements de courtage d'assurances recensés  357 737 habitants  soit <b>14 1 établissements pour 10 000 habitants</b> (département : Alpes-Maritimes  région : Provence-Alpes-Côte d'Azur).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href="/fr/densite-courtage-grandes-villes-france">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class="section"><ul><li>Des clients difficiles à joindre à certaines périodes : la trace des échanges devient essentielle.</li><li>Des biens immobiliers multiples (résidence principale et secondaire) à couvrir.</li><li>Une proportion importante de clients seniors, avec des questions de prévoyance et de transmission.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class="section"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Clients absents une partie de l'année</td><td>Chaque demande et chaque réponse est tracée dans le dossier</td></tr><tr><td>Résidence principale et secondaire</td><td>Les biens couverts sont rattachés au même client, sans confusion</td></tr><tr><td>Clientèle senior</td><td>Suivi des échéances et des questions de transmission, sans perte d'historique</td></tr><tr><td>Volume de dossiers élevé</td><td>Recherche rapide et listes de travail quotidiennes</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Nice</h2><div class="section"><ul><li><b>Exemple 1</b> — Un client à l'étranger six mois par an : à son retour, le dossier doit dire où on en était</li><li><b>Exemple 2</b> — Un couple propriétaire de deux logements : les deux doivent être couverts sans doublon</li><li><b>Exemple 3</b> — Un client de 70 ans qui souhaite revoir sa prévoyance : l'historique doit être complet</li></ul></div><h2>Cadre français</h2><div class="section"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href="/france">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class="section"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Comment suivre des clients absents une partie de l&#x27;année ?</h3><p>En consignant chaque échange et chaque demande dans le dossier : à la reprise du contact, le cabinet sait exactement où en était le dossier.</p><h3>Combien d&#x27;établissements de courtage à Nice ?</h3><p>505 établissements (NAF 66.22Z) dans notre extraction du 19/09/2026, pour 357 737 habitants.</p><h3>COURTIARK est-il utilisé par des cabinets à Nice ?</h3><p>Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/crm-courtier-assurance">Le CRM courtier assurance</a></li><li><a href="/fonctionnalites/gestion-portefeuille-assurance">Gestion de portefeuille</a></li><li><a href="/fonctionnalites/relance-devis-assurance">Relance de devis</a></li><li><a href="/fr/densite-courtage-grandes-villes-france">Densité du courtage en France</a></li><li><a href="/france">COURTIARK en France</a></li></ul></div>
 </main>

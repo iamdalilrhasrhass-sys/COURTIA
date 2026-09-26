@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Démonstration : résolution des réponses d'API
+   COURTIARK — Démonstration : résolution des réponses d'API
    ----------------------------------------------------------------------------
    Chaque requête interceptée en mode démo est résolue ici, à partir du modèle
    synthétique de `donneesDemo.js`. Rien n'est inventé à l'écran : les réponses

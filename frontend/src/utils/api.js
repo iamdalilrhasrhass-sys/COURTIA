@@ -31,7 +31,7 @@ async function handleResponse(res) {
       throw new Error('Session expirée — veuillez vous reconnecter')
     }
 
-    throw new Error(body.message || body.error || 'Accès refusé sur ce module COURTIA.')
+    throw new Error(body.message || body.error || 'Accès refusé sur ce module COURTIARK.')
   }
   if (!res.ok) {
     let errMsg = `HTTP ${res.status}`

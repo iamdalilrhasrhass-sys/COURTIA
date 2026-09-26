@@ -182,7 +182,7 @@ export default function Taches() {
               <span style={{ fontSize: 12, fontWeight: 700, color: T.accent, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Actions</span>
             </div>
             <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>{LIBELLES.taches}</h1>
-            <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>Vos actions réelles, enregistrées dans COURTIA.</p>
+            <p style={{ fontSize: 13, color: T.textMuted, margin: 0 }}>Vos actions réelles, enregistrées dans COURTIARK.</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setFormulaire(v => !v)} style={btnStyle(T.accent)}>

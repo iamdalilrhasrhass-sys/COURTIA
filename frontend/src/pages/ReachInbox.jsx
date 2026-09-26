@@ -86,7 +86,7 @@ export default function ReachInbox() {
             <div className="rounded-2xl p-10 text-center" style={{ ...REACH.carte, borderRadius: RAYON.lg }}>
               <Inbox size={36} className="mx-auto mb-3 opacity-30" style={REACH.discret} />
               <p className="text-sm font-medium" style={REACH.libelle}>Aucune réponse reçue</p>
-              <p className="text-xs mt-1" style={REACH.discret}>COURTIA affichera ici les réponses REACH dès que vos campagnes recevront des retours.</p>
+              <p className="text-xs mt-1" style={REACH.discret}>COURTIARK affichera ici les réponses REACH dès que vos campagnes recevront des retours.</p>
             </div>
           )}
         </div>

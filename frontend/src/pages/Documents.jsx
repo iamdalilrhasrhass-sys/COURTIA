@@ -30,7 +30,7 @@ const DOC_TYPES = [
 ]
 
 // Statuts renvoyés par GET /api/documents → statuts affichés.
-// `documents.status` porte 'generated' (document produit par COURTIA),
+// `documents.status` porte 'generated' (document produit par COURTIARK),
 // 'draft', 'sent_to_sign' (en attente de signature) ou 'archived'.
 const STATUT_DOC_VERS_ECRAN = {
   generated: 'valide',
@@ -304,7 +304,7 @@ export default function Documents() {
             MAINTENANT : l'écran dit la vérité. Aucune API ne range un fichier
             déposé depuis cet écran (les pièces arrivent par la fiche client via
             POST /api/clients/:id/documents, et les documents listés ici sont
-            PRODUITS par COURTIA) : le bouton reste donc inactif. */}
+            PRODUITS par COURTIARK) : le bouton reste donc inactif. */}
         <AnimatePresence>
           {showUpload && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -331,7 +331,7 @@ export default function Documents() {
                     Le dépôt direct d&apos;un fichier depuis cet écran n&apos;est pas disponible.
                   </p>
                   <p style={{ fontSize: 11.5, color: T.textMuted, margin: 0, lineHeight: 1.6 }}>
-                    Cet écran liste les documents produits par COURTIA pour vos dossiers. Les pièces
+                    Cet écran liste les documents produits par COURTIARK pour vos dossiers. Les pièces
                     fournies par un client arrivent par sa fiche client, ou par le lien de dépôt
                     envoyé au client. Aucun fichier n&apos;est accepté ici, et rien n&apos;est
                     enregistré par le bouton ci-dessous.

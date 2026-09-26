@@ -2,7 +2,7 @@ import React from 'react'
 import CourtiaBubbleLogo from './CourtiaBubbleLogo'
 
 /**
- * COURTIA — Loader animé
+ * COURTIARK — Loader animé
  * Écran de chargement complet
  */
 

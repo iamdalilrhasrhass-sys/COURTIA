@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 
 /**
- * AuroraButton — Bouton premium COURTIA
+ * AuroraButton — Bouton premium COURTIARK
  * 
  * Variants :
  *   primary   — dégradé Aurora (cyan → indigo), glow hover

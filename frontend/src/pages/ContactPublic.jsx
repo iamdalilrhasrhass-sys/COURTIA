@@ -7,8 +7,8 @@ import { applySeo } from '../lib/seo'
 export default function ContactPublic() {
   useEffect(() => {
     applySeo({
-      title: 'Contact COURTIA — Bêta privée courtiers',
-      description: 'Contactez l\'équipe COURTIA pour une démo, un partenariat ou une question produit.',
+      title: 'Contact COURTIARK — Bêta privée courtiers',
+      description: 'Contactez l\'équipe COURTIARK pour une démo, un partenariat ou une question produit.',
       canonicalPath: '/contact',
     })
   }, [])
@@ -19,7 +19,7 @@ export default function ContactPublic() {
         <span className="mk-eyebrow">Contact</span>
         <h1 className="mk-section-title">Parlons de votre portefeuille courtier</h1>
         <p className="mk-section-sub">
-          L\'équipe COURTIA accompagne les cabinets souhaitant structurer un pilotage quotidien orienté actions.
+          L\'équipe COURTIARK accompagne les cabinets souhaitant structurer un pilotage quotidien orienté actions.
         </p>
       </section>
 

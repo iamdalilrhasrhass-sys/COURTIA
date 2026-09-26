@@ -3,7 +3,7 @@ import CourtiaBubbleLogo from './CourtiaBubbleLogo'
 import AuroraButton from './AuroraButton'
 
 /**
- * AuroraEmptyState — État vide premium COURTIA
+ * AuroraEmptyState — État vide premium COURTIARK
  * 
  * Affiche une mini bulle Aurora, un message et une action optionnelle.
  * Utilisé partout où une liste/page est vide.

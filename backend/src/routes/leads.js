@@ -47,6 +47,7 @@ const ALLOWED_EVENT_NAMES = new Set([
   'tool_start',
   'tool_complete',
   'tool_cta_click',
+  'cta_demo_interactive_click',
 ])
 
 function requireAdmin(req, res, next) {

@@ -361,7 +361,7 @@ export default function PublicDocumentUpload() {
         {/* Sécurité */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 11, color: '#9CA3AF', padding: '20px 0' }}>
           <Shield size={12} />
-          <span>Transmission sécurisée • COURTIA</span>
+          <span>Transmission sécurisée • COURTIARK</span>
         </div>
       </div>
     </div>

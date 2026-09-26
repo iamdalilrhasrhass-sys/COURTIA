@@ -44,6 +44,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -101,8 +104,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -110,9 +114,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/fonctionnalites">Fonctionnalités</a> › Comparateur de devis</p>
 <h1>Comparez les propositions d&#x27;assurance reçues dans un seul écran</h1>
 <p class="chapeau">Le comparateur de COURTIARK sert à suivre une demande de devis d&#x27;un bout à l&#x27;autre : ce qui a été demandé, à qui, les résultats reçus, la comparaison et la décision conservée.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le circuit réel, étape par étape</h2><div class="section"><div class="etape"><b>1. Demande</b><span>Le besoin est enregistré pour un client ou un prospect : produit concerné et informations utiles au devis.</span></div><div class="etape"><b>2. Envoi</b><span>La demande est transmise aux compagnies ou partenaires concernés.</span></div><div class="etape"><b>3. Résultats reçus</b><span>Chaque proposition reçue est saisie dans la demande : COURTIARK ne se connecte pas automatiquement aux compagnies.</span></div><div class="etape"><b>4. Comparaison</b><span>Les propositions sont mises côte à côte pour être comparées critère par critère.</span></div><div class="etape"><b>5. Décision conservée</b><span>La proposition retenue reste rattachée au dossier, ce qui laisse une trace du conseil donné.</span></div><p>Point important, dit clairement : il n'existe pas de connexion automatique aux systèmes des compagnies d'assurance. Les résultats reçus sont enregistrés dans l'outil, ce qui évite le tableau de comparaison tenu à part.</p></div><h2>Ce que la comparaison conserve</h2><div class="section"><table><thead><tr><th>Élément</th><th>Ce qui en est fait dans COURTIARK</th></tr></thead><tbody><tr><td>Demande initiale</td><td>Conservée avec son périmètre, sa date et son destinataire.</td></tr><tr><td>Propositions reçues</td><td>Rattachées à la demande, comparables entre elles.</td></tr><tr><td>Décision</td><td>La proposition retenue reste liée au dossier du client.</td></tr><tr><td>Historique</td><td>Un devis non retenu reste consultable, avec son motif.</td></tr><tr><td>Devoir de conseil</td><td>La trace de la comparaison alimente le dossier de conformité du client.</td></tr></tbody></table></div><h2>Pour aller plus loin</h2><div class="section"><p>La façon de tracer une comparaison de propositions fait partie du dossier de devoir de conseil : voir le guide sur le devoir de conseil et le suivi du dossier, ainsi que la page du logiciel pour courtier en assurance pour le périmètre complet du cockpit.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK interroge-t-il les compagnies automatiquement ?</h3><p>Non. Les propositions reçues sont saisies dans la demande de devis. Aucune connexion automatique aux systèmes des compagnies n&#x27;est annoncée, parce qu&#x27;elle n&#x27;existe pas.</p><h3>Peut-on comparer des propositions de plusieurs compagnies ?</h3><p>Oui : les résultats reçus sont rattachés à la même demande et comparés entre eux.</p><h3>La comparaison est-elle conservée après la signature ?</h3><p>Oui, elle reste attachée au dossier du client, ce qui permet de retrouver sur quoi le conseil a été fondé.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/guides/devoir-de-conseil-suivi-dossier">Devoir de conseil et suivi du dossier</a></li><li><a href="/logiciel-courtier-assurance">Logiciel pour courtier en assurance</a></li></ul></div>
 </main>

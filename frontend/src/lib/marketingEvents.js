@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Événements marketing : UNE seule nomenclature, celle du service.
+   COURTIARK — Événements marketing : UNE seule nomenclature, celle du service.
 
    BUG MESURÉ ET CORRIGÉ (18/09/2026)
    ----------------------------------

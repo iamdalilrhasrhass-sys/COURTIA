@@ -162,7 +162,7 @@ export default function Equipe() {
               <Button variant="ghost" onClick={loadTeam}><RefreshCcw size={16} /> Actualiser</Button>
             </div>
             {loading ? (
-              <EmptyState title="Chargement de l’équipe" description="COURTIA récupère les membres du cabinet." />
+              <EmptyState title="Chargement de l’équipe" description="COURTIARK récupère les membres du cabinet." />
             ) : data?.members?.length ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {data.members.map((member) => (

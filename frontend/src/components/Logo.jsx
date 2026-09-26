@@ -52,7 +52,7 @@ export default function Logo({ size = 80, dark = false, animated = true, withTex
         </svg>
       </span>
       {withText && (
-        <span style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: textSize, fontWeight: 700, letterSpacing: '0.06em', color: dark ? '#ffffff' : '#0a0a0a' }}>COURTIA</span>
+        <span style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: textSize, fontWeight: 700, letterSpacing: '0.06em', color: dark ? '#ffffff' : '#0a0a0a' }}>COURTIARK</span>
       )}
       <style>{`
         @keyframes logoFloat { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }

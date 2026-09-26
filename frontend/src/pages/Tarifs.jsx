@@ -179,7 +179,7 @@ const faq = [
   // partout. Les termes sont ceux réellement publiés ailleurs (7 jours, 0 €
   // aujourd'hui, annulation en ligne, carte gérée par Stripe Checkout) : rien de
   // nouveau n'est promis ici.
-  { q: 'Y a-t-il un essai gratuit ?', a: "Oui : 7 jours d'essai, 0 € aujourd'hui, annulation en ligne. Sans annulation avant la fin de l'essai, l'abonnement démarre. Le paiement passe par Stripe Checkout sécurisé et COURTIA ne stocke aucune donnée bancaire." },
+  { q: 'Y a-t-il un essai gratuit ?', a: "Oui : 7 jours d'essai, 0 € aujourd'hui, annulation en ligne. Sans annulation avant la fin de l'essai, l'abonnement démarre. Le paiement passe par Stripe Checkout sécurisé et COURTIARK ne stocke aucune donnée bancaire." },
   { q: 'Puis-je résilier à tout moment ?', a: "Oui, sans frais. Votre abonnement reste actif jusqu'à la fin de la période en cours." },
   { q: 'Mes données sont-elles sécurisées ?', a: 'Oui. Hébergement sécurisé, chiffrement SSL, sauvegardes quotidiennes. Conforme RGPD.' },
   { q: 'Puis-je importer mes clients depuis un autre CRM ?', a: 'Oui. Format Excel/CSV supporté. ARK nettoie et dédoublonne avec suivi.' },
@@ -264,7 +264,7 @@ function PlanCard({ plan, index }) {
 
       <div className="mt-auto">
         <a
-          href="mailto:contact@courtiark.fr?subject=Je%20souhaite%20une%20d%C3%A9mo%20COURTIA"
+          href="mailto:contact@courtiark.fr?subject=Je%20souhaite%20une%20d%C3%A9mo%20COURTIARK"
           className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all duration-200 ${
             plan.popular
               ? 'bg-[#534AB7] text-white hover:bg-[#4639a6] shadow-lg shadow-[#534AB7]/20'

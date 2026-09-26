@@ -125,7 +125,7 @@ export default function BillingOnboarding() {
       })
 
       if (planCode === 'cabinet') {
-        setSuccess('Votre demande Cabinet est enregistrée. L’équipe COURTIA vous contacte pour devis et contractualisation.')
+        setSuccess('Votre demande Cabinet est enregistrée. L’équipe COURTIARK vous contacte pour devis et contractualisation.')
         return
       }
 
@@ -219,7 +219,7 @@ export default function BillingOnboarding() {
 
             <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
               <Mini icon={CreditCard} text="Carte gérée exclusivement par Stripe Checkout." />
-              <Mini icon={ShieldCheck} text="Aucune donnée carte stockée dans COURTIA." />
+              <Mini icon={ShieldCheck} text="Aucune donnée carte stockée dans COURTIARK." />
               <Mini icon={Sparkles} text={bandeauPlan} />
             </div>
           </section>

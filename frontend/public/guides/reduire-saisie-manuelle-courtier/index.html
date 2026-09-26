@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/guides">Guides</a> › Réduire la saisie manuelle</p>
 <h1>Réduire la saisie manuelle</h1>
 <p class="chapeau">&lt;p&gt;Réponse courte : la saisie diminue quand une information n&#x27;est demandée qu&#x27;une fois et qu&#x27;elle est lue depuis les documents existants. Automatiser sans contrôle, en revanche, crée des erreurs coûteuses.&lt;/p&gt;</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce qui se ressaisit tous les jours</h2><div class="section"><ul><li>Les coordonnées du client, déjà présentes sur un devis ou une attestation.</li><li>Les références de contrat, déjà sur le document de l'assureur.</li><li>Les échéances, recopiées depuis un avis reçu.</li><li>Les informations véhicule, déjà sur la carte verte.</li></ul></div><h2>Ce qu'on peut éviter sans risque</h2><div class="section"><ul><li>La double saisie entre un fichier et le CRM (import).</li><li>La recopie d'un document lisible (lecture assistée puis validation).</li><li>La rédaction de messages répétitifs (modèles de messages).</li></ul></div><h2>Ce qu'il ne faut pas automatiser</h2><div class="section"><p>Écrire dans un dossier sans relecture, envoyer un message au client sans validation, ou décider d'un conseil : ces trois-là doivent rester humains. COURTIARK impose la validation avant écriture.</p></div><h2>Mesurer avant d'affirmer</h2><div class="section"><p>Nous n'annonçons pas de pourcentage de temps gagné : cela dépend de votre organisation et nous n'avons pas de mesure représentative.</p><p><a href="/outils/calculateur-productivite-courtier">Estimer la charge de votre cabinet</a></p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>ARK saisit-il les informations à ma place ?</h3><p>ARK propose les informations lues dans un document ; vous validez ou corrigez avant écriture.</p><h3>Puis-je importer mes données ?</h3><p>Oui, un import permet de démarrer depuis un fichier existant.</p><h3>Combien de temps vais-je gagner ?</h3><p>Nous ne le chiffrons pas : cela dépend de votre organisation. L&#x27;outil rend la charge observable.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/assistant-ark">Assistant ARK</a></li><li><a href="/guides/centraliser-documents-clients-assurance">Guide : centraliser les documents</a></li><li><a href="/automatisation-courtier-assurance">Automatisation : la frontière</a></li><li><a href="/outils/checklist-dossier-courtier-assurance">Checklist dossier client</a></li></ul></div>
 </main>

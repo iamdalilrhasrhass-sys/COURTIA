@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -100,8 +103,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -109,9 +113,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/suisse">Suisse</a> › Vevey</p>
 <h1>Logiciel de courtage assurance à Vevey</h1>
 <p class="chapeau">Un cabinet d&#x27;intermédiation d&#x27;assurance à Vevey doit suivre des dossiers dont les besoins changent avec l&#x27;activité et la saison. COURTIARK organise ce suivi et le rend partageable.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le marché local</h2><div class="section"><p>Vevey vit au rythme de l'industrie agroalimentaire et de l'hôtellerie-restauration : les dossiers d'entreprise y côtoient des clients saisonniers, avec des besoins qui varient fortement selon la période.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class="section"><ul><li>Des entreprises dont l'effectif varie selon la saison, avec des contrats à ajuster.</li><li>Des clients salariés du secteur hôtelier, souvent nouveaux en Suisse.</li><li>Des échéances groupées sur les périodes de basse activité.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class="section"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Entreprises à effectif variable</td><td>Contrats suivis avec les variations d'effectif, saison par saison</td></tr><tr><td>Clients nouveaux en Suisse</td><td>Parcours d'ouverture de dossier clair, pièces rattachées</td></tr><tr><td>Hôtellerie et restauration</td><td>Risques de l'exploitation consignés dans le dossier</td></tr><tr><td>Périodes de basse activité</td><td>Renouvellements préparés pendant les creux, pas pendant les pics</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Vevey</h2><div class="section"><ul><li><b>Exemple 1</b> — Un hôtel qui double son effectif en été : le contrat doit suivre la réalité</li><li><b>Exemple 2</b> — Un salarié qui obtient son permis et change de situation : son dossier doit être mis à jour</li><li><b>Exemple 3</b> — Un renouvellement à préparer en novembre : la vue des échéances doit le faire remonter</li></ul></div><h2>Cadre suisse</h2><div class="section"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href="/suisse">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class="section"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Pourquoi les dossiers saisonniers demandent-ils un suivi particulier ?</h3><p>Parce qu&#x27;un même client peut changer de statut plusieurs fois dans l&#x27;année : sans historique, le cabinet repart de zéro à chaque contact.</p><h3>Le produit est-il disponible en allemand ?</h3><p>Non : l&#x27;interface et les pages publiques sont en français. Nous ne l&#x27;annonçons donc pas comme disponible en Suisse alémanique.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/suisse">COURTIARK en Suisse</a></li><li><a href="/suisse/crm-courtier-assurance">CRM courtier assurance en Suisse</a></li><li><a href="/suisse/geneve">Genève</a></li><li><a href="/suisse/lausanne">Lausanne</a></li><li><a href="/suisse/suisse-romande">Suisse romande</a></li></ul></div>
 </main>

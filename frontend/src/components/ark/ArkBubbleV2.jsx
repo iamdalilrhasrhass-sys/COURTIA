@@ -430,7 +430,7 @@ export function ArkBubbleV2() {
                           onChange={(e) => setCreerContrat(e.target.checked)}
                         />
                         <span>
-                          <strong>Créer le contrat dans COURTIA</strong> à partir de ce document —
+                          <strong>Créer le contrat dans COURTIARK</strong> à partir de ce document —
                           {' '}{analyse.contrat_propose.apercu.numero_contrat || 'sans numéro'}
                           {analyse.contrat_propose.apercu.compagnie ? ` · ${analyse.contrat_propose.apercu.compagnie}` : ''}
                           {analyse.contrat_propose.apercu.date_echeance ? ` · échéance ${analyse.contrat_propose.apercu.date_echeance}` : ''}

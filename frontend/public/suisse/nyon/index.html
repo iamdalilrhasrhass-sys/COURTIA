@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -100,8 +103,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -109,9 +113,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/suisse">Suisse</a> › Nyon</p>
 <h1>Logiciel de courtage assurance à Nyon</h1>
 <p class="chapeau">Un cabinet d&#x27;intermédiation d&#x27;assurance à Nyon doit suivre des dossiers dont les besoins changent avec l&#x27;activité et la saison. COURTIARK organise ce suivi et le rend partageable.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le marché local</h2><div class="section"><p>Nyon est marquée par la proximité immédiate de Genève et par une population largement frontalière : un cabinet y suit des clients dont l'employeur, le lieu de travail et le lieu de résidence ne relèvent pas du même pays.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class="section"><ul><li>Des situations transfrontalières où le contrat doit correspondre à la réalité du quotidien du client.</li><li>Un tissu de PME locales et d'entreprises de services liées à l'axe Genève-Lausanne.</li><li>Des clients qui changent souvent d'employeur et donc de cadre d'assurance.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class="section"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Clients frontaliers</td><td>La situation réelle (lieu de travail, résidence, régime) est consignée dans le dossier</td></tr><tr><td>Changements d'employeur</td><td>Historique des modifications, sans repartir d'une feuille blanche</td></tr><tr><td>PME de l'axe lémanique</td><td>Contrats et échéances rattachés au dossier entreprise</td></tr><tr><td>Suivi à distance</td><td>Documents collectés par lien, échanges datés</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Nyon</h2><div class="section"><ul><li><b>Exemple 1</b> — Un frontalier qui change d'employeur genevois : sa couverture doit être revérifiée</li><li><b>Exemple 2</b> — Une PME de Nyon qui engage son premier salarié : prévoyance et RC à mettre en place</li><li><b>Exemple 3</b> — Un client qui déménage de Genève à Nyon : le dossier doit dire ce qui a changé et quand</li></ul></div><h2>Cadre suisse</h2><div class="section"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href="/suisse">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class="section"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Un cabinet de Nyon doit-il traiter différemment les frontaliers ?</h3><p>Oui : la couverture dépend de la situation réelle (lieu de travail, régime applicable), ce qui suppose un dossier à jour et un historique des changements de situation.</p><h3>Le produit est-il disponible en allemand ?</h3><p>Non : l&#x27;interface et les pages publiques sont en français. Nous ne l&#x27;annonçons donc pas comme disponible en Suisse alémanique.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/suisse">COURTIARK en Suisse</a></li><li><a href="/suisse/crm-courtier-assurance">CRM courtier assurance en Suisse</a></li><li><a href="/suisse/geneve">Genève</a></li><li><a href="/suisse/lausanne">Lausanne</a></li><li><a href="/suisse/suisse-romande">Suisse romande</a></li></ul></div>
 </main>

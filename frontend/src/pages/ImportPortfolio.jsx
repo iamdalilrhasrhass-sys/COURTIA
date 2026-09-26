@@ -145,7 +145,7 @@ export default function ImportPortfolio() {
     <div style={{ padding: '28px 22px 42px' }}>
       <AuroraPageHeader
         title="Import clients"
-        subtitle="Importez votre fichier client, COURTIA vous aide à mapper les colonnes."
+        subtitle="Importez votre fichier client, COURTIARK vous aide à mapper les colonnes."
         badge="Données"
         dark
       />
@@ -189,7 +189,7 @@ export default function ImportPortfolio() {
           <div>
             <strong>{error}</strong>
             <p style={{ margin: '4px 0 0', color: 'rgba(254,205,211,0.82)' }}>
-              Vérifiez le format CSV/XLSX ou repartez du template COURTIA pour éviter les colonnes ambiguës.
+              Vérifiez le format CSV/XLSX ou repartez du template COURTIARK pour éviter les colonnes ambiguës.
             </p>
           </div>
           <button type="button" onClick={downloadTemplate} style={errorActionBtn}>

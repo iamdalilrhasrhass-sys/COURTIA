@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -98,8 +101,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -107,9 +111,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Conformité › Documents d&#x27;information</p>
 <h1>Rattacher les documents d&#x27;information au dossier du client</h1>
 <p class="chapeau">Un document d&#x27;information produit n&#x27;a de valeur probante que s&#x27;il est retrouvable : au bon dossier, à la bonne date, rattaché au bon contrat.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le problème n'est pas le document, c'est de le retrouver</h2><div class="section"><p>Un IPID vient de la compagnie, circule par e-mail et finit dans un dossier partagé, souvent sans lien avec le client concerné. Le jour où l'on cherche la version remise un jour précis, il faut fouiller les boîtes mail.</p></div><h2>Ce que COURTIARK permet</h2><div class="section"><table><thead><tr><th>Besoin</th><th>Fonction</th></tr></thead><tbody><tr><td>Recevoir les pièces du client</td><td>Collecte par lien sécurisé, sans compte à créer pour le client.</td></tr><tr><td>Classer</td><td>Documents rattachés au dossier, avec leur type et leur date.</td></tr><tr><td>Retrouver</td><td>Recherche dans les documents et l'historique du dossier.</td></tr><tr><td>Lire un document</td><td>Lecture assistée : le contenu est proposé, puis validé par le cabinet avant écriture.</td></tr><tr><td>Transmettre</td><td>Documents générés et envoyés depuis le dossier, avec trace.</td></tr></tbody></table></div><h2>Sources officielles</h2><div class="section"><ul><li>France — ACPR : acpr.banque-france.fr</li><li>Suisse — FINMA : finma.ch</li><li>Suisse — loi sur le contrat d'assurance (LCA) : fedlex.admin.ch</li></ul></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK lit-il les documents à ma place ?</h3><p>La lecture assistée propose une extraction (par exemple les montants ou les dates d&#x27;un document). Le cabinet valide ou corrige avant que quoi que ce soit soit écrit au dossier.</p><h3>Un client doit-il créer un compte pour envoyer ses pièces ?</h3><p>Non : la collecte se fait par un lien sécurisé transmis au client.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/gestion-documents-assurance">Gestion des documents</a></li><li><a href="/conformite/controle-acpr-courtier">Contrôle : les preuves à présenter</a></li><li><a href="/logiciel-courtier-assurance">Logiciel pour courtier en assurance</a></li></ul></div>
 </main>

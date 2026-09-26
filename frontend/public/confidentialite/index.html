@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -98,8 +101,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -107,9 +111,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Confidentialité</p>
 <h1>Confidentialité</h1>
 <p class="chapeau">Ce que nous traitons quand vous visitez ce site, quand vous demandez une démonstration et quand vous utilisez le produit.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Visite du site</h2><div class="section"><ul><li>Aucun traceur publicitaire n'est déposé par ce site.</li><li>Les mesures d'audience sont réalisées sans identifiant personnel et servent à savoir quelles pages sont consultées.</li><li>Aucune donnée n'est revendue.</li></ul></div><h2>Demande de démonstration ou d'essai</h2><div class="section"><ul><li>Les informations transmises (nom, cabinet, e-mail, téléphone) servent uniquement à répondre à votre demande.</li><li>Elles ne sont pas utilisées pour un autre usage, et vous pouvez demander leur suppression.</li><li>L'origine de la visite (source de campagne) est conservée de façon agrégée pour savoir ce qui fonctionne.</li></ul></div><h2>Utilisation du produit</h2><div class="section"><ul><li>Le cabinet est responsable du traitement des données de ses clients ; COURTIARK est son sous-traitant technique.</li><li>Les données d'un cabinet ne sont accessibles qu'à ses propres utilisateurs.</li><li>Les données de santé ne sont jamais utilisées pour de la prospection.</li><li>Les données restent exportables.</li></ul></div><h2>Vos droits</h2><div class="section"><p>Vous pouvez demander l'accès, la rectification ou la suppression des données vous concernant en écrivant à <a href="mailto:contact@courtiark.fr">contact@courtiark.fr</a>.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Utilisez-vous des cookies publicitaires ?</h3><p>Non, ce site n&#x27;intègre pas de traceur publicitaire tiers.</p><h3>Mes données d&#x27;essai sont-elles supprimées à la fin de l&#x27;essai ?</h3><p>Non, elles restent consultables : un compte expiré passe en lecture seule, sans suppression.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/securite">Sécurité</a></li><li><a href="/mentions-legales">Mentions légales</a></li></ul></div>
 </main>

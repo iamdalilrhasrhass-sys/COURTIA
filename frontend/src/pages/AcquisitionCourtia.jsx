@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — ACQUISITION COURTIA
+   COURTIARK — ACQUISITION COURTIARK
    ----------------------------------------------------------------------------
    Écran interne de pilotage commercial. Il lit le service de capture
    (`GET /api/sales/leads`, `/funnel`, `/summary`) et affiche EXACTEMENT ce que
@@ -191,7 +191,7 @@ export default function AcquisitionCourtia() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
             <div>
               <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em' }}>
-                ACQUISITION COURTIA
+                ACQUISITION COURTIARK
               </h1>
               <p style={{ margin: 0, fontSize: 12.5, color: T.textSecondary }}>
                 Demandes de démo réellement captées par le formulaire du site public, lues depuis

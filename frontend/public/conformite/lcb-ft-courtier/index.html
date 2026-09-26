@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -98,8 +101,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -107,9 +111,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Conformité › LCB-FT</p>
 <h1>LCB-FT : ce qui doit rester traçable dans le dossier client</h1>
 <p class="chapeau">Les obligations de vigilance portent sur la connaissance du client et la conservation des éléments : voici la partie que le dossier client d&#x27;un logiciel de courtage peut porter.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce qui est conservé dans le dossier</h2><div class="section"><table><thead><tr><th>Élément</th><th>Dans COURTIARK</th></tr></thead><tbody><tr><td>Identité et vérification</td><td>Fiche KYC du client, avec le résultat de la vérification enregistré.</td></tr><tr><td>Pièces justificatives</td><td>Documents rattachés au client, collectés par lien sécurisé et classés au dossier.</td></tr><tr><td>Historique des actions</td><td>Journal d'audit et activité du dossier.</td></tr><tr><td>Documents signés</td><td>Mandats et documents générés, conservés au dossier.</td></tr><tr><td>Checklist</td><td>Points de contrôle par client, avec leur date.</td></tr></tbody></table></div><h2>Une règle simple pour un cabinet</h2><div class="section"><p>La difficulté opérationnelle n'est presque jamais de connaître la règle : c'est de retrouver la pièce trois ans plus tard, quand le dossier a changé de mains. C'est exactement ce que règle un dossier client centralisé : une seule fiche, avec ses pièces, ses dates et son historique.</p></div><h2>Sources officielles</h2><div class="section"><ul><li>France — ACPR : acpr.banque-france.fr</li><li>France — ORIAS (registre des intermédiaires) : orias.fr</li><li>Suisse — FINMA : finma.ch</li></ul></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK effectue-t-il la vérification d&#x27;identité à ma place ?</h3><p>Non. La vérification est enregistrée sur la fiche du client avec son résultat et sa date : c&#x27;est le cabinet qui l&#x27;effectue.</p><h3>Combien de temps les pièces sont-elles conservées ?</h3><p>La durée de conservation relève des textes applicables à votre activité ; nous ne la reproduisons pas ici et renvoyons aux sources officielles.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/conformite/controle-acpr-courtier">Contrôle : les preuves à présenter</a></li><li><a href="/conformite/ipid-document-information">IPID</a></li><li><a href="/logiciel-courtier-assurance">Logiciel pour courtier en assurance</a></li></ul></div>
 </main>

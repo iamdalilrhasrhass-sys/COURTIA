@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -100,8 +103,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -109,10 +113,10 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/suisse">Suisse</a> › Genève</p>
 <h1>Logiciel de courtage assurance à Genève</h1>
 <p class="chapeau">Genève combine clientèle privée exigeante et tissu d&#x27;entreprises : le suivi d&#x27;un cabinet s&#x27;y joue sur la réactivité et la traçabilité. COURTIARK organise les deux dans le même outil.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le contexte genevois</h2><div class="section"><ul><li>Concentration de cabinets de conseil financier et d'intermédiaires d'assurance, souvent avec une clientèle privée et internationale.</li><li>Tissu dense de PME, holdings et structures professionnelles qui demandent un suivi d'assurances d'entreprise.</li><li>Exigence de traçabilité forte : la relation client se documente, les pièces se conservent.</li><li>Proximité frontalière : un cabinet genevois côtoie des clients résidant en France voisine, avec deux cadres à connaître.</li></ul><p class="note">Sources consultées : <a href="https://www.finma.ch/fr/" rel="nofollow noopener" target="_blank">finma.ch</a> (surveillance et intermédiaires d'assurance) · <a href="https://www.fedlex.admin.ch/fr/cc/internal-law" rel="nofollow noopener" target="_blank">fedlex.admin.ch</a> (loi sur le contrat d'assurance, protection des données) · <a href="https://www.admin.ch/opc/fr/" rel="nofollow noopener" target="_blank">admin.ch</a>. Ces repères sont documentaires et ne constituent pas un conseil juridique.</p></div><h2>Ce que COURTIARK change pour un cabinet genevois</h2><div class="section"><table><thead><tr><th>Situation</th><th>Ce que fait COURTIARK</th></tr></thead><tbody><tr><td>Portefeuille privé et entreprises</td><td>Fiches clients avec tags et historique, contrats et échéances au même endroit.</td></tr><tr><td>Pièces à collecter</td><td>Lien de dépôt client, sans création de compte.</td></tr><tr><td>Suivi des échéances</td><td>Vue portefeuille et brief du matin.</td></tr><tr><td>Commissions</td><td>Suivi par dossier, avec calculateur d'appoint.</td></tr><tr><td>Prospection</td><td>Recherche de prospects et séquences suivies.</td></tr></tbody></table></div><h2>Travailler avec des clients en France voisine</h2><div class="section"><p>Un même cabinet peut suivre des clients résidant en Suisse et en France. Le vocabulaire et les repères diffèrent (LSA côté suisse, DDA et ORIAS côté français) : le suivi du dossier reste commun, les informations conservées s'adaptent au marché du client.</p></div><h2>Démarrer à Genève</h2><div class="section"><p>Essai de 7 jours sans carte bancaire, facturation en CHF (199 CHF HT/mois pour un indépendant, 349 CHF HT/mois pour un cabinet). Un import permet de repartir d'un portefeuille existant.</p></div>
 <div class="section"><p>Le detail de ce qu'un <a href="/logiciel-courtier-assurance">logiciel courtier</a> doit couvrir dans un cabinet est traite sur la page produit.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Faut-il être inscrit au registre des intermédiaires pour utiliser COURTIARK ?</h3><p>COURTIARK est un outil de gestion : il ne conditionne pas votre statut. C&#x27;est votre activité d&#x27;intermédiaire qui détermine vos obligations d&#x27;inscription.</p><h3>Le cabinet peut-il suivre des clients en France ?</h3><p>Oui, le suivi reste commun ; les repères réglementaires à consigner diffèrent selon le marché du client.</p><h3>Proposez-vous un accompagnement sur place à Genève ?</h3><p>La prise en main se fait à distance. Nous ne promettons pas de présence physique, ce serait faux.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/suisse">COURTIARK en Suisse</a></li><li><a href="/suisse/lausanne">Lausanne</a></li><li><a href="/suisse/crm-courtier-assurance">CRM courtier assurance en Suisse</a></li></ul></div>
 </main>

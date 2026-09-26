@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { estModeDemo } from '../../demo/modeDemo'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -113,7 +114,7 @@ export function AuroraLayout({ children, kicker, title, actions }) {
       >
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', gap: 10 }}>
-          <NavLink to="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+          <NavLink to={estModeDemo() ? '/demo/dashboard' : '/dashboard'} style={{ display: 'inline-flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
             <BubbleC size={collapsed ? 42 : 48} animated={false} glow={false} />
             {!collapsed && <Wordmark size={20} />}
           </NavLink>
@@ -357,9 +358,12 @@ export function AuroraLayout({ children, kicker, title, actions }) {
 
 function SidebarLink({ item, collapsed }) {
   const Icon = item.icon
+  // En mode demonstration, l'application est montee sous /demo : sans ce prefixe, le premier
+  // clic sort de la demonstration et renvoie le visiteur sur le mur de connexion.
+  const cibleDemo = estModeDemo() ? '/demo' + item.to : item.to
   return (
     <NavLink
-      to={item.to}
+      to={cibleDemo}
       style={({ isActive }) => ({
         display: 'flex',
         alignItems: 'center',

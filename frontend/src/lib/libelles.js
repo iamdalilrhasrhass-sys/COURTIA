@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Source UNIQUE des libellés de navigation (UX-024 / UX-025 / UX-037)
+   COURTIARK — Source UNIQUE des libellés de navigation (UX-024 / UX-025 / UX-037)
    ----------------------------------------------------------------------------
    POURQUOI ce module : le même écran portait plusieurs noms en production, dans
    la même session, pour le même courtier :

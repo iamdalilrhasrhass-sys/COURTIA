@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/assurances">Branches d&#x27;assurance</a> › Prévoyance</p>
 <h1>Prévoyance</h1>
 <p class="chapeau">La prévoyance se suit dans la durée : situation de famille, activité, échéances, documents. COURTIARK garde tout cela attaché au dossier pour que les points de situation se préparent vite.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce qui est suivi</h2><div class="section"><ul><li>Contrats de prévoyance et échéances, y compris en Suisse (LPP, 3e pilier).</li><li>Documents et pièces attendues.</li><li>Historique des échanges et des relances.</li><li>Commissions et rétrocessions.</li></ul></div><h2>Repères prudents</h2><div class="section"><p>COURTIARK ne délivre aucun conseil en prévoyance et ne calcule pas de besoin de couverture. Il organise le suivi du dossier et la préparation des échanges.</p><p class="note">Sources consultées : <a href="https://www.finma.ch/fr/" rel="nofollow noopener" target="_blank">finma.ch</a> (surveillance et intermédiaires d'assurance) · <a href="https://www.fedlex.admin.ch/fr/cc/internal-law" rel="nofollow noopener" target="_blank">fedlex.admin.ch</a> (loi sur le contrat d'assurance, protection des données) · <a href="https://www.admin.ch/opc/fr/" rel="nofollow noopener" target="_blank">admin.ch</a>. Ces repères sont documentaires et ne constituent pas un conseil juridique.</p></div><h2>Suisse : prévoyance professionnelle et individuelle</h2><div class="section"><p>Pour un cabinet suisse, le suivi distingue assurance-vie et prévoyance liée (LPP) de la prévoyance individuelle ; le vocabulaire reste celui du dossier client.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK calcule-t-il un besoin de prévoyance ?</h3><p>Non. Aucun calcul de besoin n&#x27;est proposé : l&#x27;outil organise le suivi.</p><h3>Le suivi fonctionne-t-il pour des dossiers suisses ?</h3><p>Oui, avec les repères du marché suisse.</p><h3>Puis-je suivre les échéances de plusieurs contrats ?</h3><p>Oui, un client peut avoir plusieurs contrats, chacun avec son échéance.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/renouvellements-assurance">Renouvellements</a></li><li><a href="/suisse">Suisse</a></li></ul></div>
 </main>

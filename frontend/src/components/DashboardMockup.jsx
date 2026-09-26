@@ -4,7 +4,7 @@ import { Brain, TrendingUp, Clock, Sparkles, Zap, Shield, Bell } from 'lucide-re
 import CourtiaBubbleLogo from './brand/CourtiaBubbleLogo'
 
 /**
- * DashboardMockup — Mockup 3D glassmorphism du cockpit COURTIA
+ * DashboardMockup — Mockup 3D glassmorphism du cockpit COURTIARK
  * Affiche les KPIs clés, le Morning Brief et des cartes flottantes
  * avec perspective 3D et effet flottant
  */
@@ -41,7 +41,7 @@ export default function DashboardMockup({ className = '' }) {
             <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
               <CourtiaBubbleLogo size={27} animated={false} showHalo={false} showFoam={false} />
             </div>
-            <span className="text-white font-semibold text-sm tracking-tight">COURTIA</span>
+            <span className="text-white font-semibold text-sm tracking-tight">COURTIARK</span>
             <span className="hidden sm:inline text-[9px] bg-white/10 text-white/60 px-2 py-0.5 rounded-full font-medium">
               Demo
             </span>

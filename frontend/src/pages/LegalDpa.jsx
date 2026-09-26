@@ -5,8 +5,8 @@ import { applySeo } from '../lib/seo'
 export default function LegalDpa() {
   useEffect(() => {
     applySeo({
-      title: 'DPA — COURTIA',
-      description: 'Accord de traitement des données COURTIA.',
+      title: 'DPA — COURTIARK',
+      description: 'Accord de traitement des données COURTIARK.',
       canonicalPath: '/legal/dpa',
     })
   }, [])
@@ -17,7 +17,7 @@ export default function LegalDpa() {
         <h1 className="mk-section-title">Data Processing Agreement</h1>
         <div className="mk-card">
           <p>Base opérationnelle à faire valider juridiquement.</p>
-          <p>Le cabinet utilisateur agit en responsable de traitement pour ses données clients. COURTIA agit comme sous-traitant pour l’hébergement, le traitement applicatif, la sécurité, les sauvegardes et le support.</p>
+          <p>Le cabinet utilisateur agit en responsable de traitement pour ses données clients. COURTIARK agit comme sous-traitant pour l’hébergement, le traitement applicatif, la sécurité, les sauvegardes et le support.</p>
           <p>Les finalités couvrent CRM courtier, contrats, tâches, documents de conformité, invitations, notifications, intégrations choisies et assistance ARK.</p>
           <p>ARK fournit une aide à la priorisation et à la rédaction. Il ne constitue pas une décision automatique produisant un effet juridique sans validation humaine du courtier.</p>
           <p>Les demandes d’accès, rectification, suppression, portabilité ou limitation sont traitées avec le cabinet selon le périmètre contractuel et les contraintes légales applicables.</p>

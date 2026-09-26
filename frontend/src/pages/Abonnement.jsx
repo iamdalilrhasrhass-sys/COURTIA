@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — /abonnement : redirection vers l'écran de facturation
+   COURTIARK — /abonnement : redirection vers l'écran de facturation
    ----------------------------------------------------------------------------
    POURQUOI : cette page était un SECOND écran de tarifs, concurrent de /billing.
    Elle portait en dur une grille « Starter 89 / Pro 159 » qui ne correspondait

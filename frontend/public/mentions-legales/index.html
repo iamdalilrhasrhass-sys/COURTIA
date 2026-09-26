@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -97,8 +100,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -106,9 +110,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Mentions légales</p>
 <h1>Mentions légales</h1>
 <p class="chapeau">Les informations d&#x27;édition et d&#x27;hébergement du service COURTIARK.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Éditeur</h2><div class="section"><ul><li>Service édité sous la marque COURTIARK (produit historiquement nommé COURTIA).</li><li>Contact : <a href="mailto:contact@courtiark.fr">contact@courtiark.fr</a></li><li>Les informations d'immatriculation de l'éditeur figurent dans le contrat de service transmis lors de la souscription.</li><li>Ce site ne publie pas de numéro d'immatriculation non vérifié.</li></ul></div><h2>Hébergement et sous-traitants techniques</h2><div class="section"><p>Le service s'appuie sur des prestataires d'hébergement et de base de données, ainsi que sur des prestataires d'envoi d'e-mails transactionnels et de paiement. La liste à jour est communiquée sur demande et annexée au contrat ; elle mentionne la nature du traitement confié à chacun.</p><p>Nous ne publions pas de localisation d'hébergement que nous ne pouvons pas prouver, et nous n'affirmons pas de conformité à un référentiel que nous ne détenons pas.</p></div><h2>Propriété intellectuelle</h2><div class="section"><p>Les contenus de ce site (textes, structure, visuels) sont protégés. Les données publiques réutilisées (par exemple des référentiels officiels) sont citées avec leur source.</p></div><h2>Conditions</h2><div class="section"><p>Les conditions générales et la politique de confidentialité détaillent les engagements réciproques : <a href="/confidentialite">confidentialité</a>.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/securite">Sécurité</a></li><li><a href="/confidentialite">Confidentialité</a></li><li><a href="/contact">Contact</a></li></ul></div>
 </main>
 <footer class="pied">

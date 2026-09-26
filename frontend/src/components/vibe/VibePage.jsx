@@ -1,5 +1,5 @@
 /**
- * VibePage — wrapper universel pour toutes les pages connectées COURTIA.
+ * VibePage — wrapper universel pour toutes les pages connectées COURTIARK.
  * 500x mieux que n'importe quel CRM: particules animées, parallax multicouche,
  * glow réactif au scroll, micro-interactions, glassmorphism Aurora-Bubble C.
  *

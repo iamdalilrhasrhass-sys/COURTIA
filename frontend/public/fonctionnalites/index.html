@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -98,8 +101,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -107,9 +111,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Fonctionnalités</p>
 <h1>Fonctionnalités de COURTIARK</h1>
 <p class="chapeau">Chaque page ci-dessous décrit une capacité réellement présente dans l&#x27;application, avec son usage en cabinet et ses limites.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Portefeuille et dossiers clients</h2><div class="section"><ul><li><a href="/fonctionnalites/gestion-clients">Gestion des clients</a> — la fiche qui remplace le tableur.</li><li><a href="/fonctionnalites/gestion-portefeuille-assurance">Gestion de portefeuille</a> — piloter l'ensemble du portefeuille.</li><li><a href="/fonctionnalites/gestion-contrats">Gestion des contrats</a> — contrats, échéances, statuts.</li><li><a href="/fonctionnalites/renouvellements-assurance">Renouvellements</a> — anticiper avant l'échéance.</li></ul></div><h2>Suivi commercial</h2><div class="section"><ul><li><a href="/fonctionnalites/relance-devis-assurance">Relance des devis</a> — ne plus laisser un devis sans suite.</li><li><a href="/fonctionnalites/automatisation-relances">Automatisation des relances</a> — organiser les demandes récurrentes.</li><li><a href="/fonctionnalites/prospection-assurance">Prospection</a> — recherche de prospects et campagnes.</li><li><a href="/fonctionnalites/reporting-courtier">Reporting</a> — ce que produit l'activité.</li></ul></div><h2>Administratif et documents</h2><div class="section"><ul><li><a href="/fonctionnalites/gestion-documents-assurance">Gestion des documents</a> — collecte par lien, pièces classées.</li><li><a href="/fonctionnalites/assistant-ark">Assistant ARK</a> — lecture de document, proposition, validation.</li><li><a href="/fonctionnalites/compte-rendu-clients">Comptes rendus clients</a> — consigner chaque échange dans le dossier.</li></ul></div><h2>Voir aussi</h2><div class="section"><ul><li><a href="/logiciel-courtier-assurance">Logiciel courtier assurance</a> — périmètre, modules et critères de choix.</li><li><a href="/logiciel-courtage-assurance">Logiciel de courtage</a> — le flux devis, contrat, commission.</li><li><a href="/automatisation-courtier-assurance">Automatisation</a> — ce qui peut être organisé, ce qui reste humain.</li><li><a href="/tarifs">Tarifs</a> — France et Suisse, essai de 7 jours.</li></ul></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/crm-courtier-assurance">Le CRM courtier assurance</a></li><li><a href="/guides">Guides pratiques</a></li><li><a href="/fr/formation-equipe-courtier-assurance">Formation de l&#x27;équipe</a></li><li><a href="/outils">Outils gratuits</a></li></ul></div>
 </main>
 <footer class="pied">

@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Mesure du clic sur le CTA « Demander une démo ».
+   COURTIARK — Mesure du clic sur le CTA « Demander une démo ».
 
    POURQUOI CE MODULE
    ------------------

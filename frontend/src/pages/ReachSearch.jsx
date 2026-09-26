@@ -124,7 +124,7 @@ export default function ReachSearch() {
               {prospects.length} prospects trouvés
             </h2>
             <span className="text-xs" style={searchMeta?.configuration_required ? { color: TEINTE.ambre } : REACH.discret}>
-              {searchMeta?.configuration_required ? 'Configuration Google Places requise' : 'Résultats COURTIA'}
+              {searchMeta?.configuration_required ? 'Configuration Google Places requise' : 'Résultats COURTIARK'}
             </span>
           </div>
 

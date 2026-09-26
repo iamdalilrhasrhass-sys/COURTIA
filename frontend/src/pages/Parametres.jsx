@@ -572,7 +572,7 @@ export default function Parametres() {
                     <div className="p-6 space-y-5">
                       {profile?.must_change_password && (
                         <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-xs text-violet-900">
-                          <strong>Mot de passe temporaire.</strong> Vous vous connectez avec le mot de passe initial remis par COURTIA. Choisissez votre propre mot de passe ci-dessous : il remplacera immédiatement l'ancien.
+                          <strong>Mot de passe temporaire.</strong> Vous vous connectez avec le mot de passe initial remis par COURTIARK. Choisissez votre propre mot de passe ci-dessous : il remplacera immédiatement l'ancien.
                         </div>
                       )}
                       {passwordState.succes && (
@@ -650,7 +650,7 @@ export default function Parametres() {
                 <Toggle icon={AlertTriangle} label="Alertes échéances contrats" description="Ne manquez jamais une date importante pour vos clients." enabled={notifications.echeances} busy={notifsEtat.enCours === 'echeances'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('echeances')}/>
                 <Toggle icon={ListTodo} label="Rappels de tâches" description="Soyez notifié lorsque des tâches arrivent à échéance." enabled={notifications.taches} busy={notifsEtat.enCours === 'taches'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('taches')}/>
                 <Toggle icon={Sunrise} label={`${LIBELLES.briefDuMatin} quotidien`} description="Recevez un résumé de votre journée chaque matin." enabled={notifications.morning_brief} busy={notifsEtat.enCours === 'morning_brief'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('morning_brief')}/>
-                <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIA." enabled={notifications.news} busy={notifsEtat.enCours === 'news'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('news')}/>
+                <Toggle icon={Sparkles} label="Nouveautés produit" description="Annonces des nouvelles fonctionnalités de COURTIARK." enabled={notifications.news} busy={notifsEtat.enCours === 'news'} disabled={notifsEtat.chargement || Boolean(notifsEtat.erreur)} setEnabled={() => changerPreference('news')}/>
               </div>
             </section>
 
@@ -697,7 +697,7 @@ export default function Parametres() {
               <p className="text-sm text-white/50 mb-5">Informations utilisées pour générer les FIC, mandats et devoirs de conseil.</p>
               <div className="courtia-depth-card rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-                  COURTIA aide à structurer et tracer le devoir de conseil. Le courtier reste responsable de la validation et de la remise des documents au client.
+                  COURTIARK aide à structurer et tracer le devoir de conseil. Le courtier reste responsable de la validation et de la remise des documents au client.
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   {champsConformite(form.pays).map(([key, label]) => (

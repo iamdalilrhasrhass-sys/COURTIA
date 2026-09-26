@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,10 +112,10 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/guides">Guides</a> › Organiser un portefeuille d&#x27;assurance</p>
 <h1>Organiser un portefeuille d&#x27;assurance</h1>
 <p class="chapeau">&lt;p&gt;Réponse courte : on ne pilote pas un portefeuille en le regardant. On le pilote en sachant combien de dossiers sont incomplets, combien d&#x27;échéances arrivent et combien de contrats décrochent.&lt;/p&gt;</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Les quatre questions à pouvoir poser</h2><div class="section"><ul><li>Combien de dossiers sont incomplets, et de quoi manquent-ils ?</li><li>Quelles échéances arrivent dans les 90 jours ?</li><li>Quels contrats n'ont plus d'activité ?</li><li>Combien de devis sont en attente depuis plus de deux semaines ?</li></ul></div><h2>Structurer avant d'outiller</h2><div class="section"><p>Un inventaire (clients, contrats, échéances) précède toute segmentation. Segmenter un portefeuille dont on ne connaît pas l'état revient à ranger un désordre.</p></div><h2>Ce que COURTIARK affiche</h2><div class="section"><table><thead><tr><th>Indicateur</th><th>Ce qu'il permet de décider</th></tr></thead><tbody><tr><td>Dossiers incomplets</td><td>Quelles pièces demander, à qui, cette semaine.</td></tr><tr><td>Échéances proches</td><td>Quels renouvellements préparer.</td></tr><tr><td>Santé du portefeuille</td><td>Quels contrats sont à risque de départ.</td></tr><tr><td>Devis en attente</td><td>Ce qu'il faut relancer immédiatement.</td></tr></tbody></table></div><h2>Le rythme</h2><div class="section"><div class="etape"><b>Quotidien</b><span>Le brief du matin.</span></div><div class="etape"><b>Hebdomadaire</b><span>Revue des dossiers bloqués.</span></div><div class="etape"><b>Mensuel</b><span>Lecture du reporting d'activité.</span></div></div>
 <div class="section"><p>Un <a href="/logiciel-courtier-assurance">CRM pour courtier</a> applique cette organisation en continu, sans repasser par un tableur.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Par où commencer ?</h3><p>Par l&#x27;inventaire : un import permet de partir d&#x27;un fichier existant plutôt que de tout ressaisir.</p><h3>Faut-il tout nettoyer avant de démarrer ?</h3><p>Non. Le nettoyage se fait au fil de l&#x27;eau, en traitant les dossiers que l&#x27;outil fait remonter.</p><h3>Combien de temps cela prend-il ?</h3><p>Cela dépend de la taille et de la qualité du fichier de départ ; nous ne donnons pas de chiffre non mesuré.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/gestion-portefeuille-assurance">Gestion de portefeuille</a></li><li><a href="/outils">Outils gratuits</a></li></ul></div>
 </main>

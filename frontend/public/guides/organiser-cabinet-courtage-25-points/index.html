@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/guides">Guides</a> › 25 points pour organiser un cabinet</p>
 <h1>25 points pour organiser un cabinet de courtage</h1>
 <p class="chapeau">Cette liste est utilisable telle quelle, dès aujourd&#x27;hui, sans logiciel. Elle sert aussi de grille de contrôle si vous évaluez un outil de gestion.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>La liste</h2><div class="section"><ol><li>Un seul endroit pour la fiche client : contacts, contrats, échéances, documents, historique.</li><li>Une convention de nommage des dossiers, appliquée par tous</li><li>Une règle écrite pour la première relance d'un devis</li><li>Un responsable désigné par type de relance</li><li>Une revue hebdomadaire des dossiers bloqués</li><li>Les pièces attendues standardisées par type de dossier</li><li>Un lien de dépôt pour que le client envoie ses documents sans compte</li><li>La liste des pièces manquantes mise à jour à chaque réception</li><li>Les échéances saisies au moment de la souscription, pas plus tard</li><li>Une vue des échéances à 90 jours</li><li>Une préparation de renouvellement démarrée 60 jours avant</li><li>Un compte rendu consigné après chaque échange client</li><li>Les décimales et les unités fixées une fois pour toutes (euros, francs, HT/TTC)</li><li>Un import du portefeuille existant plutôt qu'une ressaisie</li><li>Aucun dossier sans échéance ni sans prochaine action</li><li>Les commissions suivies par dossier, pas en fin d'année</li><li>Les accès nominatifs, jamais de compte partagé</li><li>Les départs de collaborateur anticipés : rien ne doit vivre dans une seule tête</li><li>Un contrôle mensuel des dossiers incomplets</li><li>Une mesure simple de l'activité : devis en cours, gagnés, perdus</li><li>Les données de santé exclues de toute prospection</li><li>Une procédure claire d'opposition à la prospection</li><li>Les documents exportables à tout moment (pas de dépendance à l'éditeur)</li><li>Une revue de portefeuille annuelle planifiée</li><li>Un point de sortie écrit : ce que fait le cabinet quand il change d'outil</li></ol><p><a class="principal" href="/ressources/checklist-25-points-organiser-cabinet-courtage.pdf">Télécharger la version PDF (sans formulaire)</a></p></div><h2>Comment s'en servir</h2><div class="section"><div class="etape"><b>Aujourd'hui</b><span>Cochez ce qui est déjà en place. Ne cherchez pas à tout corriger.</span></div><div class="etape"><b>Cette semaine</b><span>Traitez les deux points qui bloquent le plus le suivi au quotidien.</span></div><div class="etape"><b>Ce mois</b><span>Transformez trois points en règle écrite, connue de l'équipe.</span></div><div class="etape"><b>Ensuite</b><span>Relisez la liste une fois par trimestre : elle vieillit avec le cabinet.</span></div></div><h2>Le point qui compte le plus</h2><div class="section"><p>Aucun dossier ne doit vivre dans la tête d'une seule personne. Tout le reste en découle : si l'information est dans l'outil et datée, les relances, les échéances et les pièces suivent.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Faut-il un logiciel pour appliquer cette liste ?</h3><p>Non, la liste fonctionne avec un tableur. Un outil spécialisé rend simplement ces règles permanentes au lieu d&#x27;être des résolutions.</p><h3>Le PDF demande-t-il mes coordonnées ?</h3><p>Non : le téléchargement est direct, sans formulaire.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/outils/checklist-dossier-courtier-assurance">Checklist dossier</a></li><li><a href="/guides/organiser-portefeuille-assurance">Guide : organiser un portefeuille</a></li><li><a href="/crm-courtier-assurance">Le CRM courtier assurance</a></li></ul></div>
 </main>

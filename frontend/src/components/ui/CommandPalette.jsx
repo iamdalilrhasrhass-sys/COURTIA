@@ -9,6 +9,7 @@ import api from '../../api'
 // Même source de libellés que la barre latérale : la palette (Cmd+K) et le menu
 // nomment chaque écran de la même façon, en français (voir lib/libelles.js).
 import { LIBELLES } from '../../lib/libelles'
+import { estModeDemo } from '../../demo/modeDemo'
 
 const ACTIONS = [
   { id: 'dashboard',     label: LIBELLES.tableauDeBord, desc: 'Vue d\'ensemble de votre activité',   path: '/dashboard',     icon: LayoutDashboard, cat: 'Navigation' },
@@ -22,7 +23,7 @@ const ACTIONS = [
   { id: 'rapports',      label: 'Rapports',          desc: 'Rapports et exports PDF',             path: '/rapports',      icon: PieChart,        cat: 'Navigation' },
   { id: 'commissions',   label: 'Commissions',       desc: 'Suivi par compagnie et apporteur',    path: '/commissions',   icon: Euro,            cat: 'Navigation' },
   { id: 'parametres',    label: 'Paramètres',        desc: 'Configuration du compte',             path: '/parametres',    icon: Settings,        cat: 'Navigation' },
-  { id: 'ark',           label: 'Ouvrir ARK',        desc: 'Lancer l\'assistant IA COURTIA',      action: () => window.dispatchEvent(new Event('ark:open')), icon: Zap, cat: 'Action' },
+  { id: 'ark',           label: 'Ouvrir ARK',        desc: 'Lancer l\'assistant IA COURTIARK',      action: () => window.dispatchEvent(new Event('ark:open')), icon: Zap, cat: 'Action' },
 ]
 
 function fuzzy(query, text) {
@@ -95,7 +96,8 @@ export default function CommandPalette({ open, onClose }) {
 
   const execute = useCallback((action) => {
     onClose()
-    if (action.path) navigate(action.path)
+    // Meme regle que la navigation laterale : sous /demo, on reste dans la demonstration.
+    if (action.path) navigate(estModeDemo() ? '/demo' + action.path : action.path)
     else if (action.action) action.action()
   }, [navigate, onClose])
 

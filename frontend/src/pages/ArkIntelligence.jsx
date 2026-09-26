@@ -452,7 +452,7 @@ function RenewalOptimizer() {
             fontSize: 12, fontWeight: 600,
           }}>
             {data.total_potential_saving_eur === null || data.total_potential_saving_eur === undefined
-              ? 'Économie potentielle : non calculée — COURTIA ne dispose d\'aucun tarif de marché vérifié'
+              ? 'Économie potentielle : non calculée — COURTIARK ne dispose d\'aucun tarif de marché vérifié'
               : `Économie potentielle : ${fmtMontantArk(data.total_potential_saving_eur)}`}
           </div>
         )}

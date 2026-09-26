@@ -1,13 +1,13 @@
 /* ============================================================================
-   COURTIA — Démonstration : bloc de conversion de fin de parcours
+   COURTIARK — Démonstration : bloc de conversion de fin de parcours
    ----------------------------------------------------------------------------
    Remplace le bandeau final « À vous de jouer ». Intégré au produit, PAS une
-   popup : aucun voile, aucun fond plein écran — le cockpit COURTIA reste
+   popup : aucun voile, aucun fond plein écran — le cockpit COURTIARK reste
    visible et utilisable derrière (le panneau est borné en hauteur et peut être
    réduit d'un clic).
 
    Trois actions, chacune envoie un événement au service de capture :
-     « Essayer COURTIA avec mon cabinet »      → trial_requested
+     « Essayer COURTIARK avec mon cabinet »      → trial_requested
      « Réserver une présentation de 15 min »   → meeting_requested
      « J'ai une question »                     → contact_requested
 
@@ -28,7 +28,7 @@ import {
 } from './evenementsConversion'
 
 const LIBELLES = {
-  essai: 'Essayer COURTIA avec mon cabinet',
+  essai: 'Essayer COURTIARK avec mon cabinet',
   presentation: 'Réserver une présentation de 15 min',
   question: 'J\'ai une question',
 }
@@ -80,7 +80,7 @@ export default function ConversionFin({ titre, onExplorer, onRejouer }) {
     <section
       className="dt-conv dt-final"
       data-reduit={reduit ? 'true' : 'false'}
-      aria-label="Passer à COURTIA avec votre cabinet"
+      aria-label="Passer à COURTIARK avec votre cabinet"
       role="region"
     >
       <div className="dt-conv-tete">
@@ -206,7 +206,7 @@ export default function ConversionFin({ titre, onExplorer, onRejouer }) {
 
           <div className="dt-conv-pied">
             <button type="button" className="dt-btn dt-btn-fort" onClick={onExplorer}>
-              <MousePointerClick size={13} /> Continuer à explorer COURTIA
+              <MousePointerClick size={13} /> Continuer à explorer COURTIARK
             </button>
             <button type="button" className="dt-btn" onClick={onRejouer}>
               <RotateCcw size={13} /> Revoir la visite

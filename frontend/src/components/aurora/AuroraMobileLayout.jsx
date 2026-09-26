@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    AuroraMobileLayout — Responsive Layout Wrapper for V2 Pages
-   COURTIA V2 • Mobile bottom nav + optional header
+   COURTIARK V2 • Mobile bottom nav + optional header
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import React, { useState, useEffect, useCallback } from 'react';

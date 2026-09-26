@@ -1,7 +1,7 @@
 /* ============================================================================
-   COURTIA — Mode démonstration : plomberie réseau
+   COURTIARK — Mode démonstration : plomberie réseau
    ----------------------------------------------------------------------------
-   Objectif : faire tourner LES VRAIS COMPOSANTS COURTIA sur des données
+   Objectif : faire tourner LES VRAIS COMPOSANTS COURTIARK sur des données
    synthétiques, sans jamais toucher à l'API ni à la base de données.
 
    Deux clients réseau coexistent dans le produit :
@@ -29,7 +29,7 @@ const PREFIXE_DEMO = '/demo'
 /* ------------------------------------------------------- sortie autorisée
    La conversion de fin de parcours n'est PAS une donnée de démonstration :
    c'est une demande réelle. Ces chemins ne sont donc pas résolus par la couche
-   synthétique — ils atteignent le service de capture COURTIA
+   synthétique — ils atteignent le service de capture COURTIARK
    (POST /api/leads/events, qui répond 202). Rien d'autre ne sort. */
 const CHEMINS_CAPTURE = [/^\/leads\/events$/, /^\/leads\/demo-request$/]
 
@@ -149,7 +149,7 @@ export function installerDemo() {
 
     const chemin = cheminApi(url)
     /* Capture commerciale : la demande de conversion SORT réellement
-       (service de capture COURTIA, 202). Elle n'est jamais simulée : une
+       (service de capture COURTIARK, 202). Elle n'est jamais simulée : une
        demande perdue ne doit pas ressembler à une demande reçue. */
     if (estCheminCapture(chemin)) return fetchOrigine(ressource, options)
 

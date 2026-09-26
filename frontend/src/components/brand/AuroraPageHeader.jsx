@@ -2,7 +2,7 @@ import React from 'react'
 import AuroraBadge from '../../components/AuroraBadge'
 
 /**
- * AuroraPageHeader — En-tête de page cohérent COURTIA
+ * AuroraPageHeader — En-tête de page cohérent COURTIARK
  * 
  * Structure commune pour toutes les pages dashboard/admin.
  * 

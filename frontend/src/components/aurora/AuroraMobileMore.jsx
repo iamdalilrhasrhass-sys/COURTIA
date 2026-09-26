@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    AuroraMobileMore — "Plus" Drawer Content for Bottom Nav
-   COURTIA V2 • Quick access to secondary features
+   COURTIARK V2 • Quick access to secondary features
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import React from 'react';
+import { estModeDemo } from '../../demo/modeDemo';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -186,7 +187,7 @@ export function AuroraMobileMore({
     if (item.action === 'logout') {
       onLogout?.();
     } else if (item.path) {
-      navigate(item.path);
+      navigate(estModeDemo() ? '/demo' + item.path : item.path);
     }
     onClose?.();
   };
@@ -229,7 +230,7 @@ export function AuroraMobileMore({
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 600, fontSize: 'var(--aurora-text-base)' }}>
-            COURTIA Pro
+            COURTIARK Pro
           </div>
           <div style={{ fontSize: 'var(--aurora-text-sm)', opacity: 0.9 }}>
             Accès complet aux fonctionnalités IA
@@ -316,7 +317,7 @@ export function AuroraMobileMore({
           color: 'var(--aurora-text-muted)',
         }}
       >
-        COURTIA V2 • Aurora Design System
+        COURTIARK V2 • Aurora Design System
       </motion.div>
     </motion.div>
   );

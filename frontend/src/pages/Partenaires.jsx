@@ -345,7 +345,7 @@ export default function Partenaires() {
             ? <>
                 <strong style={{ color: '#a78bfa' }}>ARK</strong> — {plusGrosPartenaire.nom} concentre le plus grand nombre de contrats
                 rattachés ({fmtNombre(contratsLigne(plusGrosPartenaire))}). Aucune progression n&apos;est affichée :
-                COURTIA ne mesure pas encore la tendance d&apos;un partenaire d&apos;un mois sur l&apos;autre.
+                COURTIARK ne mesure pas encore la tendance d&apos;un partenaire d&apos;un mois sur l&apos;autre.
               </>
             : <>
                 <strong style={{ color: '#a78bfa' }}>ARK</strong> — aucun partenaire avec des contrats rattachés :

@@ -45,7 +45,7 @@ export default function Auth({ onAuthSuccess, mode = 'login' }) {
   return (
     <div style={{minHeight:'100vh',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',fontFamily:'Arial,sans-serif'}}>
       <div style={{padding:'48px',borderRadius:'10px',width:'100%',maxWidth:'420px',border:'0.5px solid #f0f0f0'}}>
-        <h1 style={{fontSize:'32px',fontWeight:900,textAlign:'center',color:'#0a0a0a',marginBottom:'8px'}}>COURTIA</h1>
+        <h1 style={{fontSize:'32px',fontWeight:900,textAlign:'center',color:'#0a0a0a',marginBottom:'8px'}}>COURTIARK</h1>
         <p style={{textAlign:'center',color:'#999',marginBottom:'32px',fontSize:'13px'}}>CRM d'assurance avec IA native</p>
 
         <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:'20px'}}>

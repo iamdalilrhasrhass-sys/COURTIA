@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Logiciel de courtage assurance</p>
 <h1>Logiciel de courtage : suivre le flux du devis à la commission</h1>
 <p class="chapeau">Un cabinet de courtage vit d&#x27;un flux continu : un besoin, un devis, un contrat, une échéance, une commission. Ce flux se perd quand chaque étape vit dans un outil différent.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le flux, étape par étape</h2><div class="section"><table><thead><tr><th>Étape</th><th>Ce qui se passe en cabinet</th><th>Ce que COURTIARK suit</th></tr></thead><tbody><tr><td>Besoin</td><td>Le client exprime un besoin, souvent incomplet</td><td>Fiche client créée, informations consignées</td></tr><tr><td>Devis</td><td>Un ou plusieurs devis sont préparés et transmis</td><td>Registre des devis et étape en cours</td></tr><tr><td>Décision</td><td>Le client accepte, négocie ou disparaît</td><td>Suivi des relances et des réponses</td></tr><tr><td>Contrat</td><td>Le contrat est émis par l'assureur</td><td>Contrat rattaché au client, avec son échéance</td></tr><tr><td>Vie du contrat</td><td>Changements de situation, avenants, sinistres</td><td>Historique du dossier et pièces</td></tr><tr><td>Échéance</td><td>Le renouvellement se prépare</td><td>Vue portefeuille et brief du matin</td></tr><tr><td>Commission</td><td>La rémunération est attendue puis encaissée</td><td>Suivi des commissions et rétrocessions</td></tr></tbody></table></div><h2>Où le flux se casse dans la pratique</h2><div class="section"><ul><li>Le devis part et personne ne sait s'il a été lu.</li><li>Le contrat est émis mais l'échéance n'est enregistrée nulle part.</li><li>Le client change de situation et le dossier ne le reflète pas.</li><li>La commission est attendue mais rattachée à aucun dossier.</li></ul></div><h2>Ce qui reste votre métier</h2><div class="section"><p>Le conseil, la négociation avec l'assureur, l'analyse des garanties et la relation client ne se délèguent pas à un logiciel. COURTIARK organise le suivi de ce que vous décidez, et garde la trace de vos décisions.</p></div><h2>Mettre un flux en place sans tout changer</h2><div class="section"><div class="etape"><b>Semaine 1</b><span>Importer le portefeuille existant et cadrer les dossiers.</span></div><div class="etape"><b>Semaine 2</b><span>Enregistrer les échéances et les devis en cours.</span></div><div class="etape"><b>Semaine 3</b><span>Activer les relances et les listes de travail quotidiennes.</span></div><div class="etape"><b>Ensuite</b><span>Ajuster la méthode selon ce que les listes font remonter.</span></div><p>Essai de 7 jours sans carte bancaire ; France 89 € ou 159 € HT/mois, Suisse 199 ou 349 CHF HT/mois.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Le logiciel génère-t-il les devis ?</h3><p>COURTIARK suit les devis et leur étape ; la production du document tarifaire dépend de votre outil d&#x27;assurance.</p><h3>Peut-on suivre un contrat sans échéance connue ?</h3><p>Oui, mais l&#x27;intérêt est limité : l&#x27;échéance est ce qui permet de préparer le renouvellement. Sans elle, le contrat reste invisible jusqu&#x27;au contact du client.</p><h3>Les commissions sont-elles calculées automatiquement ?</h3><p>Le suivi et le calcul d&#x27;appoint existent ; les barèmes restent ceux de vos conventions avec les assureurs.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/logiciel-courtier-assurance">Logiciel courtier assurance : les critères</a></li><li><a href="/fonctionnalites/gestion-contrats">Gestion des contrats</a></li><li><a href="/fonctionnalites/renouvellements-assurance">Renouvellements</a></li><li><a href="/guides/automatiser-renouvellements-assurance">Guide : suivre les renouvellements</a></li></ul></div>
 </main>

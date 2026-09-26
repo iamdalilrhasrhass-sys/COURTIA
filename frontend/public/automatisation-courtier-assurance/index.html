@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Automatisation courtier assurance</p>
 <h1>Automatisation d&#x27;un cabinet de courtage : la frontière</h1>
 <p class="chapeau">Automatiser, dans un cabinet d&#x27;assurance, ce n&#x27;est pas envoyer des messages en série. C&#x27;est faire en sorte qu&#x27;aucune action nécessaire ne dépende de la mémoire d&#x27;une personne.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Les tâches qui peuvent être organisées automatiquement</h2><div class="section"><table><thead><tr><th>Tâche</th><th>Ce que l'outil peut faire</th><th>Ce qui reste humain</th></tr></thead><tbody><tr><td>Repérer un devis sans suite</td><td>Le faire remonter dans une liste de travail</td><td>Décider du contenu et du moment de la relance</td></tr><tr><td>Signaler une pièce manquante</td><td>Marquer le dossier comme incomplet et préparer le lien de dépôt</td><td>Demander la pièce au client</td></tr><tr><td>Voir une échéance approcher</td><td>Remonter le contrat dans la vue portefeuille et le brief du matin</td><td>Préparer et mener le rendez-vous</td></tr><tr><td>Préparer un message</td><td>Proposer un texte à partir du dossier</td><td>Relire, corriger, envoyer</td></tr><tr><td>Lire un document</td><td>Extraire les informations et les proposer avec leur origine</td><td>Valider ou corriger avant écriture</td></tr></tbody></table></div><h2>Les tâches à ne jamais automatiser</h2><div class="section"><ul><li>Envoyer un message au client sans relecture humaine.</li><li>Décider d'un conseil ou d'une garantie.</li><li>Modifier un contrat ou une échéance sans validation.</li><li>Contacter une personne qui s'est opposée à tout contact.</li></ul></div><h2>Avant / après, sur un cas réel de cabinet</h2><div class="section"><div class="bascule"><div><h3>Sans COURTIARK</h3><ul><li>Le devis part et on attend</li><li>La pièce manquante est redemandée trois fois</li><li>L'échéance se découvre à l'arrivée</li><li>Le reporting se reconstitue en fin d'année</li></ul></div><div><h3>Avec COURTIARK</h3><ul><li>Les devis sans suite apparaissent dans une liste</li><li>Le dossier incomplet le dit lui-même</li><li>Les échéances sont visibles 90 jours avant</li><li>L'activité se lit dans les données du cabinet</li></ul></div></div></div><h2>Combien ça coûte et ce que ça ne promet pas</h2><div class="section"><p>France : 89 € ou 159 € HT/mois ; Suisse : 199 ou 349 CHF HT/mois ; essai de 7 jours. Nous n'annonçons aucun pourcentage de temps gagné : cette mesure dépend de votre organisation, et nous ne disposons pas de donnée représentative.</p><p><a href="/outils/calculateur-productivite-courtier">Estimer la charge administrative de votre cabinet</a></p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK envoie-t-il des relances automatiquement ?</h3><p>Non. L&#x27;outil organise les rappels et les listes de travail ; l&#x27;envoi reste une action du cabinet.</p><h3>Peut-on automatiser la lecture des documents ?</h3><p>ARK peut lire un document et proposer les informations détectées avec leur origine ; rien n&#x27;est écrit sans validation.</p><h3>L&#x27;automatisation remplace-t-elle un collaborateur ?</h3><p>Non : elle supprime les oublis et les recherches, pas le travail de conseil.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/automatisation-relances">Automatisation des relances</a></li><li><a href="/fr/comparatif/automatisation-vs-gestion-manuelle">Comparatif : automatisation ou gestion manuelle</a></li><li><a href="/fr/whatsapp-courtier-assurance">WhatsApp dans un cabinet de courtage</a></li><li><a href="/fonctionnalites/assistant-ark">Assistant ARK</a></li><li><a href="/guides/reduire-saisie-manuelle-courtier">Guide : réduire la saisie manuelle</a></li><li><a href="/comparatifs/excel-vs-crm-courtier-assurance">Comparatif : tableur ou CRM courtier</a></li></ul></div>
 </main>

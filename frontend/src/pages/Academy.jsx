@@ -17,7 +17,7 @@ import api from '../api'
 const LEVEL_NAMES = [
   'Découverte', 'Organisé', 'Courtier Actif', 'Pilote de Portefeuille',
   'Expert Relance', 'Chasseur d\'Opportunités', 'Stratège Commercial',
-  'Courtier Augmenté', 'Architecte de Cabinet', 'Elite COURTIA'
+  'Courtier Augmenté', 'Architecte de Cabinet', 'Elite COURTIARK'
 ]
 
 /**
@@ -91,7 +91,7 @@ export default function Academy() {
   }
 
   async function handleShare(card) {
-    const text = `Je viens de débloquer la compétence "${card.title}" sur COURTIA.\n\n${card.description}\n\nMon objectif : progresser chaque jour dans la maîtrise de mon portefeuille et de ma relation client.\n\n#Courtier #Assurance #CRM #COURTIA #Progression`
+    const text = `Je viens de débloquer la compétence "${card.title}" sur COURTIARK.\n\n${card.description}\n\nMon objectif : progresser chaque jour dans la maîtrise de mon portefeuille et de ma relation client.\n\n#Courtier #Assurance #CRM #COURTIARK #Progression`
     try {
       await api.post(`/academy/cards/${card.id}/share`)
     } catch (_err) {
@@ -134,7 +134,7 @@ export default function Academy() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-2.5 mb-2">
             <Award size={22} className="text-purple-400" />
-            <h1 className="text-xl font-bold">COURTIA Academy</h1>
+            <h1 className="text-xl font-bold">COURTIARK Academy</h1>
           </div>
           <p className="text-sm text-white/40">Développez vos compétences de courtier, débloquez des cartes rares et pilotez votre progression.</p>
         </motion.div>
@@ -165,7 +165,7 @@ export default function Academy() {
               <EtatVideAcademy
                 icon={BarChart}
                 titre="Aucune progression enregistrée pour ce cabinet."
-                texte="COURTIA Academy n'affiche que la progression réellement mesurée par vos actions. Commencez une formation : votre niveau, vos XP et vos cartes apparaîtront ici."
+                texte="COURTIARK Academy n'affiche que la progression réellement mesurée par vos actions. Commencez une formation : votre niveau, vos XP et vos cartes apparaîtront ici."
                 actionLibelle="Voir les formations"
                 onAction={() => setTab('courses')}
               />
@@ -278,7 +278,7 @@ export default function Academy() {
                     icon={Award}
                     titre={cards.length === 0 ? 'Aucune compétence disponible pour le moment.' : 'Aucune compétence dans ce filtre.'}
                     texte={cards.length === 0
-                      ? 'Les compétences se débloquent par vos actions réelles dans COURTIA : relaisser, signer, compléter un dossier. Aucune carte d\u2019exemple n\u2019est affichée.'
+                      ? 'Les compétences se débloquent par vos actions réelles dans COURTIARK : relaisser, signer, compléter un dossier. Aucune carte d\u2019exemple n\u2019est affichée.'
                       : 'Changez de rareté ou d\u2019état pour retrouver vos compétences.'}
                     actionLibelle={cards.length === 0 ? 'Voir les formations' : 'Réinitialiser les filtres'}
                     onAction={cards.length === 0
@@ -302,7 +302,7 @@ export default function Academy() {
                   <EtatVideAcademy
                     icon={BookOpen}
                     titre="Aucune formation disponible pour le moment."
-                    texte="Les formations COURTIA sont servies par le cabinet : aucune n'est encore ouverte ici. Aucune formation d'exemple n'est affichée."
+                    texte="Les formations COURTIARK sont servies par le cabinet : aucune n'est encore ouverte ici. Aucune formation d'exemple n'est affichée."
                     actionLibelle="Voir mes compétences"
                     onAction={() => setTab('skills')}
                   />
@@ -368,7 +368,7 @@ export default function Academy() {
                         <Copy size={16} />
                       </button>
                       <button onClick={() => {
-                        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referral.shareUrl)}&text=${encodeURIComponent('Découvrez COURTIA, le CRM intelligent pour courtiers en assurance.')}`
+                        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referral.shareUrl)}&text=${encodeURIComponent('Découvrez COURTIARK, le CRM intelligent pour courtiers en assurance.')}`
                         window.open(linkedinUrl, '_blank')
                       }}
                         className="p-2.5 rounded-lg bg-blue-500/10 text-blue-300 border border-blue-400/20 hover:bg-blue-500/20 transition-all"

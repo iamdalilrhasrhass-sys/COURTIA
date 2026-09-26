@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -98,8 +101,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -107,9 +111,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Guides</p>
 <h1>Guides pratiques pour cabinets de courtage</h1>
 <p class="chapeau">Chaque guide part d&#x27;un problème de cabinet, décrit ce qui se passe quand rien n&#x27;est organisé, puis renvoie à la fonctionnalité de COURTIARK qui traite ce point.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Les guides disponibles</h2><div class="section"><ul><li><a href="/guides/comment-ne-plus-oublier-relances-courtier">Ne plus oublier les relances</a></li><li><a href="/guides/automatiser-renouvellements-assurance">Automatiser les renouvellements</a></li><li><a href="/guides/centraliser-documents-clients-assurance">Centraliser les documents clients</a></li><li><a href="/guides/organiser-portefeuille-assurance">Organiser un portefeuille</a></li><li><a href="/guides/reduire-saisie-manuelle-courtier">Réduire la saisie manuelle</a></li><li><a href="/guides/automatiser-suivi-prospects-assurance">Automatiser le suivi des prospects</a></li><li><a href="/guides/devoir-de-conseil-suivi-dossier">Devoir de conseil : ce qu'il faut pouvoir montrer</a></li><li><a href="/guides/donnees-clients-assurance-france-suisse">Données clients : France et Suisse</a></li><li><a href="/guides/organiser-cabinet-courtage-25-points">25 points pour organiser un cabinet</a> — la liste de contrôle complète, également disponible en PDF</li><li><a href="/glossaire">Glossaire du courtage</a> — dix-neuf notions définies, France et Suisse</li></ul></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites">Fonctionnalités</a></li><li><a href="/outils">Outils gratuits</a></li><li><a href="/comparatifs">Comparatifs</a></li></ul></div>
 </main>
 <footer class="pied">

@@ -69,9 +69,9 @@ export default function ReachProspectDetail() {
     setConverting(true);
     const res = await convertToClient(data);
     if (res?.success) {
-      toast.success(res.message || 'Prospect converti en client COURTIA');
+      toast.success(res.message || 'Prospect converti en client COURTIARK');
     } else if (res.already_client) {
-      toast('Déjà client COURTIA', { icon: '✅' });
+      toast('Déjà client COURTIARK', { icon: '✅' });
     } else {
       toast.error('Conversion impossible pour le moment.');
     }
@@ -277,7 +277,7 @@ export default function ReachProspectDetail() {
           style={{ ...REACH.boutonPrincipal, borderRadius: RAYON.md }}
         >
           {isConverted ? <CheckSquare size={14} /> : converting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
-          {isConverted ? 'Déjà client COURTIA' : 'Convertir en client'}
+          {isConverted ? 'Déjà client COURTIARK' : 'Convertir en client'}
         </button>
         <button
           onClick={async () => {

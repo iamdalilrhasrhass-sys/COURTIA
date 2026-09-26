@@ -63,13 +63,13 @@ export default function InviteAccept() {
           <Badge tone="success">Invitation cabinet</Badge>
         </div>
         {loading ? (
-          <EmptyState title="Lecture de l’invitation" description="COURTIA vérifie le lien sécurisé." />
+          <EmptyState title="Lecture de l’invitation" description="COURTIARK vérifie le lien sécurisé." />
         ) : error ? (
           <EmptyState title="Invitation non disponible" description={error} action={<Button onClick={() => navigate('/login')}>Se connecter</Button>} />
         ) : (
           <div style={{ display: 'grid', gap: 18 }}>
             <div>
-              <h1 style={titleStyle}>Rejoindre {invitation?.cabinet_name || 'un cabinet COURTIA'}</h1>
+              <h1 style={titleStyle}>Rejoindre {invitation?.cabinet_name || 'un cabinet COURTIARK'}</h1>
               <p style={leadStyle}>Vous êtes invité à accéder au cockpit cabinet avec un rôle encadré et traçable.</p>
             </div>
             <div style={summaryStyle}>

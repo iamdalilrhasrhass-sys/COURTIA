@@ -268,9 +268,9 @@ export default function Commissions() {
 
           <aside className="rounded-3xl border border-white/15 bg-white/[0.07] p-5 backdrop-blur-2xl">
             <h2 className="mb-2 flex items-center gap-2 text-lg font-black"><Building2 size={18} /> Saisie rapide</h2>
-            <p className="mb-5 text-sm text-white/55">Ajoutez une commission sur un contrat existant via son identifiant COURTIA ou son numéro côté import CSV.</p>
+            <p className="mb-5 text-sm text-white/55">Ajoutez une commission sur un contrat existant via son identifiant COURTIARK ou son numéro côté import CSV.</p>
             <form className="space-y-3" onSubmit={handleSaveManual}>
-              <input value={manual.contractId} onChange={(e) => setManual({ ...manual, contractId: e.target.value })} placeholder="ID contrat COURTIA" className="w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
+              <input value={manual.contractId} onChange={(e) => setManual({ ...manual, contractId: e.target.value })} placeholder="ID contrat COURTIARK" className="w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
               <input value={manual.insurer} onChange={(e) => setManual({ ...manual, insurer: e.target.value })} placeholder="Compagnie" className="w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
               <input value={manual.period} onChange={(e) => setManual({ ...manual, period: e.target.value })} placeholder="Période YYYY-MM" className="w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35" />
               <div className="grid grid-cols-2 gap-3">

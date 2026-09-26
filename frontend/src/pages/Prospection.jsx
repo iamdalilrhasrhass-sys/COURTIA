@@ -57,7 +57,7 @@ export default function Prospection() {
         const statut = err?.response?.status
         setDisponible(false)
         setErreur(statut === 404
-          ? "Le module de prospection n'est pas livré dans COURTIA : aucune route /api/prospection n'existe. Aucun prospect n'est affiché, et aucun ne sera inventé."
+          ? "Le module de prospection n'est pas livré dans COURTIARK : aucune route /api/prospection n'existe. Aucun prospect n'est affiché, et aucun ne sera inventé."
           : `Le module de prospection est injoignable (${statut ? `HTTP ${statut}` : 'réseau'}). Aucun prospect n'est affiché tant que le chargement n'a pas abouti.`)
       })
     return () => { actif = false }

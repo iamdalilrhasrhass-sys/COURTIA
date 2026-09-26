@@ -26,7 +26,7 @@ const PRESETS = [
   {
     id: 'test-connexion',
     name: 'Test de connexion',
-    description: 'Navigue vers COURTIA et vérifie le chargement',
+    description: 'Navigue vers COURTIARK et vérifie le chargement',
     actions: [
       { type: 'navigate', url: 'https://courtiark.fr' },
       { type: 'wait', timeout: 3000 },

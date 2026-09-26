@@ -222,7 +222,7 @@ export default function DemoRequestForm({ compact = false }) {
           <textarea
             value={form.message}
             onChange={(e) => updateField('message', e.target.value)}
-            placeholder="Quels enjeux souhaitez-vous résoudre avec COURTIA ?"
+            placeholder="Quels enjeux souhaitez-vous résoudre avec COURTIARK ?"
           />
         </label>
         <label className="full" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -266,13 +266,13 @@ export default function DemoRequestForm({ compact = false }) {
             style={{ width: 15, height: 15, marginTop: 2 }}
           />
           <span style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(236,242,255,0.74)' }}>
-            J'accepte d'être recontacté(e) par COURTIA au sujet de ma demande de démo (prospection B2B, opt-out possible à tout moment).
+            J'accepte d'être recontacté(e) par COURTIARK au sujet de ma demande de démo (prospection B2B, opt-out possible à tout moment).
           </span>
         </label>
       </div>
 
       <p className="mk-inline-note" style={{ margin: '10px 0 0' }}>
-        COURTIA traite uniquement les données nécessaires à votre demande. Aucune cession à des tiers.
+        COURTIARK traite uniquement les données nécessaires à votre demande. Aucune cession à des tiers.
       </p>
 
       <button

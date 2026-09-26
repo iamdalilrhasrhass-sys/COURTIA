@@ -21,8 +21,8 @@ const FEATURES = [
 export default function FonctionnalitesPublic() {
   useEffect(() => {
     applySeo({
-      title: 'Fonctionnalités COURTIA — Cockpit IA courtier',
-      description: 'Découvrez les fonctionnalités COURTIA pour piloter portefeuille, échéances, risques, tâches et ARK métier.',
+      title: 'Fonctionnalités COURTIARK — Cockpit IA courtier',
+      description: 'Découvrez les fonctionnalités COURTIARK pour piloter portefeuille, échéances, risques, tâches et ARK métier.',
       canonicalPath: '/fonctionnalites',
     })
   }, [])
@@ -31,9 +31,9 @@ export default function FonctionnalitesPublic() {
     <MarketingShell activePath="/fonctionnalites">
       <section className="mk-section">
         <span className="mk-eyebrow">Fonctionnalités</span>
-        <h1 className="mk-section-title">Tout le cockpit COURTIA, orienté action courtier</h1>
+        <h1 className="mk-section-title">Tout le cockpit COURTIARK, orienté action courtier</h1>
         <p className="mk-section-sub">
-          COURTIA organise vos données de cabinet pour répondre à une seule question: que faut-il faire aujourd\'hui pour protéger et développer le portefeuille.
+          COURTIARK organise vos données de cabinet pour répondre à une seule question: que faut-il faire aujourd\'hui pour protéger et développer le portefeuille.
         </p>
         <div className="mk-grid">
           {FEATURES.map((feature) => (
@@ -48,7 +48,7 @@ export default function FonctionnalitesPublic() {
 
       <section className="mk-section">
         <div className="mk-card">
-          <h2 className="mk-section-title" style={{ marginTop: 0 }}>Envie de voir COURTIA sur un vrai parcours métier ?</h2>
+          <h2 className="mk-section-title" style={{ marginTop: 0 }}>Envie de voir COURTIARK sur un vrai parcours métier ?</h2>
           <p className="mk-section-sub">Nous vous montrons dashboard, fiche client 360, contrats, tâches, morning brief et admin costs en conditions réelles.</p>
           <div className="mk-hero-actions">
             <Link to="/demo" className="mk-button primary">Demander une démo <ArrowRight size={14} /></Link>

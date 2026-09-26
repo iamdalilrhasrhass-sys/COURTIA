@@ -5,7 +5,7 @@ import { applySeo } from '../lib/seo'
 const rows = [
   ['Vercel', 'Frontend et déploiement web', 'UE/États-Unis selon configuration fournisseur'],
   ['Render/VPS', 'API backend et exploitation', 'Europe selon infrastructure configurée'],
-  ['PostgreSQL', 'Base de données applicative', 'Infrastructure COURTIA'],
+  ['PostgreSQL', 'Base de données applicative', 'Infrastructure COURTIARK'],
   ['Stripe', 'Paiement, factures et portail billing', 'Stripe'],
   ['Resend', 'Email transactionnel si configuré', 'Resend'],
   ['Google/Microsoft', 'OAuth calendrier/email si connecté', 'Google/Microsoft'],
@@ -17,8 +17,8 @@ const rows = [
 export default function LegalSubprocessors() {
   useEffect(() => {
     applySeo({
-      title: 'Sous-traitants — COURTIA',
-      description: 'Liste indicative des sous-traitants techniques COURTIA.',
+      title: 'Sous-traitants — COURTIARK',
+      description: 'Liste indicative des sous-traitants techniques COURTIARK.',
       canonicalPath: '/legal/sous-traitants',
     })
   }, [])

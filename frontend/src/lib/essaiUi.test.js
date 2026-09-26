@@ -32,7 +32,7 @@ describe('decisionEssai — une seule vérité, celle du serveur', () => {
     const d = decisionEssai(EXPIRE)
     expect(d.etat).toBe('TRIAL_EXPIRED')
     expect(d.bandeau).toBeNull()
-    expect(d.paywall.titre).toMatch(/essai COURTIA de 7 jours est terminé/)
+    expect(d.paywall.titre).toMatch(/essai COURTIARK de 7 jours est terminé/)
     expect(d.paywall.message).toMatch(/conservés/)
     expect(d.paywall.ctaPrincipal).toBe('Choisir mon abonnement')
   })

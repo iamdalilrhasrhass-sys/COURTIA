@@ -1,11 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   AuroraMobileTopbar — Topbar mobile COURTIA
+   AuroraMobileTopbar — Topbar mobile COURTIARK
    Burger left + CourtiaMiniLogo center + Bell right
    Aurora-Bubble C • premium glass
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { estModeDemo } from '../../demo/modeDemo';
 import { Menu, Bell } from 'lucide-react';
 import CourtiaMiniLogo from '../brand/CourtiaMiniLogo';
 
@@ -21,7 +22,7 @@ export function AuroraMobileTopbar({
 
   const handleBell = () => {
     if (onBellClick) onBellClick();
-    else navigate('/taches');
+    else navigate(estModeDemo() ? '/demo/taches' : '/taches');
   };
 
   return (
@@ -70,8 +71,8 @@ export function AuroraMobileTopbar({
 
       <button
         type="button"
-        onClick={() => navigate(logoTo)}
-        aria-label="Accueil COURTIA"
+        onClick={() => navigate(estModeDemo() && logoTo === '/' ? '/demo/dashboard' : logoTo)}
+        aria-label="Accueil COURTIARK"
         style={{
           background: 'transparent',
           border: 'none',

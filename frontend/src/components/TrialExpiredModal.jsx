@@ -59,7 +59,7 @@ export default function TrialExpiredModal({ paywall, onClose, onVoirTarifs }) {
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
-            aria-label="Fin de l'essai COURTIA"
+            aria-label="Fin de l'essai COURTIARK"
           >
             <div style={{ padding: '22px 24px 8px' }}>
               <div style={{ fontSize: 30, marginBottom: 8 }}>⏳</div>
@@ -115,7 +115,7 @@ export default function TrialExpiredModal({ paywall, onClose, onVoirTarifs }) {
                 {paywall.ctaPrincipal}
               </button>
               <a
-                href="mailto:contact@courtiark.fr?subject=Activation%20de%20mon%20abonnement%20COURTIA"
+                href="mailto:contact@courtiark.fr?subject=Activation%20de%20mon%20abonnement%20COURTIARK"
                 style={{
                   flex: '1 1 150px', padding: '11px 16px', borderRadius: 10, textAlign: 'center',
                   background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',

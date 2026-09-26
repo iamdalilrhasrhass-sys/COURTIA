@@ -1,5 +1,5 @@
 /**
- * planStore.js — Store unifié des plans COURTIA
+ * planStore.js — Store unifié des plans COURTIARK
  *
  * Les MONTANTS et les CODES des offres viennent de market/plansReference.js
  * (référentiel unique des offres publiques, aux codes du BACKEND) — jamais d'un

@@ -29,7 +29,7 @@ export function DesignSystem() {
 
   return (
     <div style={{ padding: 'var(--aurora-space-6)', maxWidth: 1200, margin: '0 auto' }}>
-      <AuroraPageHeader title="Aurora Design System" subtitle="Tous les composants COURTIA V2" />
+      <AuroraPageHeader title="Aurora Design System" subtitle="Tous les composants COURTIARK V2" />
       <AuroraBreadcrumb items={[{ label: 'Design System' }]} />
       <AuroraDivider spacing="lg" />
 

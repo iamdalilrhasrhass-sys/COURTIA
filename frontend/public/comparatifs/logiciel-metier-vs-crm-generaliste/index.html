@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/comparatifs">Comparatifs</a> › Logiciel métier ou CRM générique</p>
 <h1>Logiciel métier ou CRM générique</h1>
 <p class="chapeau">Réponse courte : la question n&#x27;est pas la catégorie de l&#x27;outil, c&#x27;est de savoir si vos objets métier (contrats, échéances, commissions) y existent nativement.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Les questions qui tranchent</h2><div class="section"><ul><li>Mes contrats et leurs échéances existent-ils comme objets dans l'outil, ou seulement comme texte libre ?</li><li>Puis-je confier une pièce à mon client sans lui créer un compte ?</li><li>Puis-je savoir en trois secondes quels dossiers bloquent ?</li><li>Mes commissions se suivent-elles par dossier ?</li><li>Puis-je repartir avec mes données si je change d'outil ?</li></ul></div><h2>Les deux pièges symétriques</h2><div class="section"><div class="bascule"><div><h3>Logiciel métier figé</h3><ul><li>Un logiciel lourd qu'on n'utilise qu'à moitié</li><li>Des champs obligatoires qui ne servent à personne</li><li>Des migrations coûteuses</li></ul></div><div><h3>CRM générique vide</h3><ul><li>Un CRM souple où tout est à reconstruire</li><li>Des objets métier absents (contrats, échéances)</li><li>Une conformité non prise en compte</li></ul></div></div></div><h2>Notre position</h2><div class="section"><p>COURTIARK est un outil de gestion du courtage : il apporte les objets métier sans imposer un paramétrage lourd. Nous ne prétendons pas remplacer un logiciel de tarification ni un outil comptable.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK remplace-t-il un logiciel de tarification ?</h3><p>Non : il organise le suivi du cabinet, il ne produit pas de tarifs d&#x27;assureurs.</p><h3>Est-ce un CRM générique configuré ?</h3><p>Non : les objets contrats, échéances, commissions et les repères de conformité sont natifs.</p><h3>Puis-je essayer avant de m&#x27;engager ?</h3><p>Oui, l&#x27;essai dure 7 jours et ne demande pas de carte bancaire.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/comparatifs/crm-assurance-vs-crm-generaliste">CRM assurance ou CRM généraliste</a></li><li><a href="/fonctionnalites">Fonctionnalités</a></li></ul></div>
 </main>

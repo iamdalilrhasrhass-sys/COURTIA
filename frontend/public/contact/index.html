@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -97,8 +100,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -106,7 +110,7 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Contact</p>
 <h1>Contacter COURTIARK</h1>
 <p class="chapeau">Une question sur le produit, une demande de démonstration ou un sujet de sécurité : écrivez-nous ou laissez vos coordonnées.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Nous écrire</h2><div class="section"><p>Par e-mail : <a href="mailto:contact@courtiark.fr">contact@courtiark.fr</a> — c'est le canal le plus direct pour une question technique ou un signalement de sécurité.</p></div><h2>Demander une démonstration</h2><div class="section">
 <form id="form-demo" novalidate>
   <div class="champ"><label for="f-prenom">Prénom *</label><input id="f-prenom" name="first_name" autocomplete="given-name" required></div>
@@ -125,7 +129,7 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <script src="/js/formulaire-demo.js" defer></script>
 
 </div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/demo">Démonstration</a></li><li><a href="/securite">Sécurité</a></li><li><a href="/a-propos">À propos</a></li></ul></div>
 </main>
 <footer class="pied">

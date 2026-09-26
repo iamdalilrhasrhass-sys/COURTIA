@@ -104,7 +104,7 @@ const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'))
 function RouteFallback() {
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#02030b', color: '#f8f8ff', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      Chargement COURTIA...
+      Chargement COURTIARK...
     </div>
   )
 }
@@ -145,11 +145,11 @@ function PrivateRoute({ children }) {
 // Enveloppe des routes purement applicatives (connexion, onboarding, design system…) :
 // elles ne doivent jamais être indexées. Sans cette consigne, elles héritaient du
 // `index, follow` du shell HTML et pouvaient apparaître dans les SERP.
-function NoIndex({ children, title = 'COURTIA' }) {
+function NoIndex({ children, title = 'COURTIARK' }) {
   useEffect(() => {
     applySeo({
       title,
-      description: 'Espace applicatif COURTIA — accès réservé.',
+      description: 'Espace applicatif COURTIARK — accès réservé.',
       canonicalUrl: absoluteUrl(window.location.pathname),
       robots: 'noindex, follow',
     })
@@ -160,7 +160,7 @@ function NoIndex({ children, title = 'COURTIA' }) {
 function PublicNotFound() {
   useEffect(() => {
     applySeo({
-      title: 'Page introuvable (404) — COURTIA',
+      title: 'Page introuvable (404) — COURTIARK',
       description: 'Cette page n’existe pas ou n’existe plus.',
       canonicalUrl: absoluteUrl(window.location.pathname),
       robots: 'noindex, follow',
@@ -171,7 +171,7 @@ function PublicNotFound() {
       <main style={{ maxWidth: 620, textAlign: 'center' }}>
         <p style={{ margin: 0, color: '#8fe7ff', letterSpacing: '.14em', textTransform: 'uppercase', fontSize: 12, fontWeight: 800 }}>404</p>
         <h1 style={{ margin: '16px 0 12px', fontSize: 'clamp(2.4rem, 8vw, 5rem)', lineHeight: .95, letterSpacing: '-.06em' }}>Page introuvable</h1>
-        <p style={{ margin: '0 auto 28px', color: '#c7c9da', lineHeight: 1.65 }}>Cette route n’existe pas. Vous pouvez revenir au cockpit public COURTIA ou consulter les tarifs.</p>
+        <p style={{ margin: '0 auto 28px', color: '#c7c9da', lineHeight: 1.65 }}>Cette route n’existe pas. Vous pouvez revenir au cockpit public COURTIARK ou consulter les tarifs.</p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <a href="/" style={{ minHeight: 46, display: 'inline-flex', alignItems: 'center', padding: '0 22px', borderRadius: 999, background: 'linear-gradient(135deg,#a9f1ff,#ff71bd)', color: '#060717', fontWeight: 800, textDecoration: 'none' }}>Retour accueil</a>
           <a href="/tarifs" style={{ minHeight: 46, display: 'inline-flex', alignItems: 'center', padding: '0 22px', borderRadius: 999, border: '1px solid rgba(255,255,255,.18)', color: '#f8f8ff', fontWeight: 800, textDecoration: 'none' }}>Voir les tarifs</a>
@@ -243,12 +243,12 @@ const ROUTES_PRIVEES = [
 ]
 
 // ── Titre d'onglet de l'espace privé (§33) ───────────────────────────────────
-// Chaque route du cockpit annonce son propre titre (« Tableau de bord — COURTIA »,
-// « Clients — COURTIA »…), sans emoji. Les noms d'écrans de la barre latérale,
+// Chaque route du cockpit annonce son propre titre (« Tableau de bord — COURTIARK »,
+// « Clients — COURTIARK »…), sans emoji. Les noms d'écrans de la barre latérale,
 // de la palette (Cmd+K), de l'onglet et du titre de l'écran viennent de la MÊME
 // source (lib/libelles.js) : une notion = un seul mot (UX-024/UX-025/UX-037).
 // Sans cela, l'onglet conservait le dernier titre public — « Connexion —
-// COURTIA » — après la connexion : le courtier lisait le nom d'une page qu'il
+// COURTIARK » — après la connexion : le courtier lisait le nom d'une page qu'il
 // avait déjà quittée. Ces routes ne sont jamais indexables (noindex).
 const TITRES_PRIVES = [
   ['/admin/users', 'Courtiers'],
@@ -315,8 +315,8 @@ function TitreEspacePrive({ children }) {
   const { pathname } = useLocation()
   useEffect(() => {
     applySeo({
-      title: `${titreEspacePrive(pathname)} — COURTIA`,
-      description: 'Espace applicatif COURTIA — accès réservé.',
+      title: `${titreEspacePrive(pathname)} — COURTIARK`,
+      description: 'Espace applicatif COURTIARK — accès réservé.',
       canonicalUrl: absoluteUrl(pathname),
       robots: 'noindex, follow',
     })
@@ -331,14 +331,14 @@ export default function App() {
       <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
       <Suspense fallback={<RouteFallback />}><Routes>
         {/* Routes publiques */}
-        <Route path="/login" element={<NoIndex title="Connexion — COURTIA"><LoginPage /></NoIndex>} />
+        <Route path="/login" element={<NoIndex title="Connexion — COURTIARK"><LoginPage /></NoIndex>} />
         {/* CORRECTION 2026-09-19 : /register affichait la page de CONNEXION
             (LoginPage ne poste que /api/auth/login). Tous les CTA « essai » de la
             landing aboutissaient donc sur une page ou le visiteur ne pouvait pas
             creer de compte. On monte AuthPremium, qui appelle deja
             authStore.register -> POST /api/auth/register. */}
         <Route path="/register" element={
-          <NoIndex title="Créer un compte — COURTIA">
+          <NoIndex title="Créer un compte — COURTIARK">
             <Suspense fallback={null}>
               <AuthInscription mode="register" onAuthSuccess={() => { window.location.href = '/prise-en-main' }} />
             </Suspense>
@@ -349,7 +349,7 @@ export default function App() {
             pas (boucle 400 : impossible d'accepter les conditions, donc impossible
             de payer). La page existe deja et poste /billing/legal-acceptance. */}
         <Route path="/onboarding/billing" element={
-          <NoIndex title="Mise en place de l'abonnement — COURTIA">
+          <NoIndex title="Mise en place de l'abonnement — COURTIARK">
             <Suspense fallback={null}><BillingOnboarding /></Suspense>
           </NoIndex>
         } />
@@ -357,8 +357,8 @@ export default function App() {
             /billing/cancel ; ces URL n'existaient pas dans le SPA (404 apres paiement). */}
         <Route path="/billing/success" element={<PaiementSucces />} />
         <Route path="/billing/cancel" element={<PaiementAnnule />} />
-        <Route path="/forgot-password" element={<NoIndex title="Mot de passe oublié — COURTIA"><ForgotPasswordPage /></NoIndex>} />
-        <Route path="/reset-password" element={<NoIndex title="Réinitialiser le mot de passe — COURTIA"><ResetPasswordPage /></NoIndex>} />
+        <Route path="/forgot-password" element={<NoIndex title="Mot de passe oublié — COURTIARK"><ForgotPasswordPage /></NoIndex>} />
+        <Route path="/reset-password" element={<NoIndex title="Réinitialiser le mot de passe — COURTIARK"><ResetPasswordPage /></NoIndex>} />
         {/* /connexion : l'URL française de la page de connexion répondait le 404
             du SPA. Elle mène désormais à /login — l'écran unique de connexion,
             dont les libellés suivent le marché du visiteur (lib/marche.js). */}
@@ -366,7 +366,7 @@ export default function App() {
         {/* Le lien d'invitation d'un collaborateur (page Équipe) pointait vers
             /invite/<jeton> alors qu'aucune route n'existait : la première
             personne invitée tombait sur un 404. */}
-        <Route path="/invite/:token" element={<NoIndex title="Invitation — COURTIA"><InviteAccept /></NoIndex>} />
+        <Route path="/invite/:token" element={<NoIndex title="Invitation — COURTIARK"><InviteAccept /></NoIndex>} />
         <Route path="/landing" element={<Navigate to="/landing/page.html" replace />} />
         <Route path="/tarifs" element={<Tarifs />} />
         {/* POURQUOI ces deux routes ne sont plus publiques : /design-system
@@ -382,10 +382,10 @@ export default function App() {
         <Route path="/demo-public" element={<DemoPublic />} />
         {/* Dépôt de pièces par le CLIENT, via lien tokenisé — aucune authentification
             utilisateur : c'est le token (32 octets aléatoires, valable 72 h) qui fait foi. */}
-        <Route path="/upload/:token" element={<NoIndex title="Dépôt de documents — COURTIA"><PublicDocumentUpload /></NoIndex>} />
+        <Route path="/upload/:token" element={<NoIndex title="Dépôt de documents — COURTIARK"><PublicDocumentUpload /></NoIndex>} />
         <Route path="/contact" element={<ContactPublic />} />
         <Route path="/" element={<LandingPublic />} />
-        <Route path="/onboarding" element={<NoIndex title="Onboarding — COURTIA"><Onboarding /></NoIndex>} />
+        <Route path="/onboarding" element={<NoIndex title="Onboarding — COURTIARK"><Onboarding /></NoIndex>} />
 
         {/* Pages légales et de confiance : présentes dans le dépôt mais jusqu'ici
             non routées, alors que sitemap.xml et les liens de pied de page les
@@ -421,7 +421,7 @@ export default function App() {
               désormais accessible dans le cockpit, hors démo — la progression
               affichée est celle du cabinet connecté, pas un exemple. */}
           <Route path="/prise-en-main" element={<OnboardingGamified />} />
-          {/* ACQUISITION COURTIA — écran interne, administrateurs uniquement.
+          {/* ACQUISITION COURTIARK — écran interne, administrateurs uniquement.
               Monté à la racine SEULEMENT (jamais sous /demo) : il lit le
               service de capture réel, jamais des données synthétiques. */}
           <Route path="/acquisition" element={<AdminRoute><AcquisitionCourtia /></AdminRoute>} />

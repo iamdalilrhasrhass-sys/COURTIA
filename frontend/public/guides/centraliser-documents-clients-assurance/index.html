@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -99,8 +102,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -108,9 +112,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › <a href="/guides">Guides</a> › Centraliser les documents clients</p>
 <h1>Centraliser les documents clients</h1>
 <p class="chapeau">&lt;p&gt;Réponse courte : un document se retrouve quand il est rattaché au dossier au moment où il arrive. Tout ce qui arrive par e-mail et finit dans un dossier local est un document perdu en puissance.&lt;/p&gt;</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Le coût invisible</h2><div class="section"><ul><li>Relire des fils d'e-mails pour retrouver une pièce.</li><li>Redemander au client ce qu'il a déjà envoyé.</li><li>Découvrir une pièce manquante au moment d'un sinistre.</li></ul></div><h2>La méthode</h2><div class="section"><div class="etape"><b>Une liste par dossier</b><span>Les pièces attendues sont définies une fois pour toutes par type de dossier.</span></div><div class="etape"><b>Un lien de dépôt</b><span>Le client dépose lui-même, sans compte à créer.</span></div><div class="etape"><b>Un classement automatique</b><span>Le document arrive dans le bon dossier, à la bonne place.</span></div><div class="etape"><b>Une vérification</b><span>Les documents illisibles ou incomplets sont signalés, pas devinés.</span></div></div><h2>Ce que COURTIARK fait</h2><div class="section"><ul><li>Génère un lien de dépôt par demande.</li><li>Rattache le document au dossier concerné.</li><li>Permet à ARK de lire un document et d'en proposer les informations, après validation humaine.</li><li>Signale les pièces manquantes dans la liste des dossiers incomplets.</li></ul></div><h2>Données sensibles</h2><div class="section"><p>Les données de santé relèvent de catégories particulières. Elles ne servent jamais à de la prospection dans COURTIARK, et l'accès reste limité aux utilisateurs du cabinet.</p></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>Le client doit-il créer un compte ?</h3><p>Non : il dépose via un lien, sans compte ni installation.</p><h3>Où sont stockés les documents ?</h3><p>Dans l&#x27;espace du cabinet, accessible aux seuls utilisateurs de ce cabinet.</p><h3>ARK lit-il les documents automatiquement ?</h3><p>ARK peut les lire et proposer des informations ; rien n&#x27;est enregistré sans validation.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/fonctionnalites/gestion-documents-assurance">Gestion des documents</a></li><li><a href="/fonctionnalites/assistant-ark">Assistant ARK</a></li></ul></div>
 </main>

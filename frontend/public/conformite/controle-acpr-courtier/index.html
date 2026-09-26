@@ -41,6 +41,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -98,8 +101,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
     <a href="/comparatifs">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo">Voir une démo</a>
-    <a class="principal" href="/register">Essayer 7 jours</a>
+    <a class="secondaire" href="/demo">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer 7 jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -107,9 +111,9 @@ button.principal{background:var(--accent);color:#04211c;border:0;border-radius:9
 <p class="fil"><a href="/">Accueil</a> › Conformité › Contrôle</p>
 <h1>Les preuves à présenter, et où elles sont conservées</h1>
 <p class="chapeau">Un contrôle se prépare en amont : ce qui compte est de retrouver rapidement la trace du conseil, des vérifications et des documents de chaque dossier.</p>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Ce qu'un contrôle vient chercher</h2><div class="section"><p>Nous ne reproduisons pas ici le détail des textes : les obligations elles-mêmes se lisent aux sources officielles, citées plus bas. Ce que nous documentons, c'est la partie sur laquelle un logiciel peut aider : retrouver et présenter les preuves.</p><table><thead><tr><th>Preuve attendue</th><th>Où la chercher dans COURTIARK</th></tr></thead><tbody><tr><td>Trace du conseil donné</td><td>Dossier client : propositions comparées, décision retenue, échanges rattachés.</td></tr><tr><td>Vérifications du client</td><td>Fiche KYC du client, avec la date et le résultat de la vérification.</td></tr><tr><td>Checklist réglementaire</td><td>Checklist par client : les points cochés et leur date.</td></tr><tr><td>Mandats et documents signés</td><td>Mandats et documents générés, rattachés au dossier.</td></tr><tr><td>Journal des actions</td><td>Journal d'audit : qui a fait quoi, et quand.</td></tr></tbody></table></div><h2>Comment le module conformité fonctionne</h2><div class="section"><ul><li>Tableau de bord de conformité : l'état des dossiers du cabinet, pas une note de conformité.</li><li>Checklist par client : les points sont cochés au dossier, avec la date.</li><li>KYC : la vérification du client est enregistrée sur sa fiche, avec son résultat.</li><li>Mandats et documents : consulter les mandats du cabinet et les documents signés.</li><li>Journal d'audit : les actions tracées, consultables pour reconstituer un dossier.</li><li>Quiz DDA : les parcours de formation et leur progression, pour l'obligation de compétence.</li></ul><p>Ce que COURTIARK n'est pas : un outil de conseil juridique. Il ne certifie rien et n'est certifié par aucun régulateur. C'est un outil de gestion qui conserve et présente les preuves que le cabinet produit lui-même.</p></div><h2>Sources officielles</h2><div class="section"><ul><li>France — ACPR, autorité de contrôle prudentiel et de résolution : acpr.banque-france.fr</li><li>France — ORIAS, registre unique des intermédiaires en assurance : orias.fr</li><li>Suisse — FINMA, autorité fédérale de surveillance des marchés financiers : finma.ch</li></ul></div>
-<div class="cta"><a class="principal" href="/register">Essayer 7 jours</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
+<div class="cta"><a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a><a class="secondaire" href="/demo">Demander une démonstration</a></div>
 <h2>Questions fréquentes</h2><div class="section"><h3>COURTIARK est-il conforme DDA ou certifié ?</h3><p>Non. COURTIARK est un outil de gestion : il conserve et présente les preuves, mais il ne fournit pas de conseil juridique et n&#x27;est certifié par aucun régulateur.</p><h3>Que retrouve-t-on dans le journal d&#x27;audit ?</h3><p>Les actions tracées dans l&#x27;application, avec leur date, ce qui permet de reconstituer ce qui s&#x27;est passé sur un dossier.</p><h3>Où lire les obligations qui s&#x27;appliquent à mon cabinet ?</h3><p>Aux sources officielles : ACPR et ORIAS en France, FINMA en Suisse. Nous ne reformulons pas les textes réglementaires.</p></div>
 <h2>À lire ensuite</h2><div class="section"><ul><li><a href="/conformite/lcb-ft-courtier">LCB-FT</a></li><li><a href="/conformite/ipid-document-information">IPID</a></li><li><a href="/logiciel-courtier-assurance">Logiciel pour courtier en assurance</a></li></ul></div>
 </main>

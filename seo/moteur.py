@@ -57,6 +57,9 @@ nav.principal{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
 nav.principal a{color:var(--doux);font-weight:500;font-size:15px;text-decoration:none}
 nav.principal a:hover{color:var(--texte)}
 .actions-entete{display:flex;gap:10px;align-items:center}
+a.lien-essai{font-size:14px;color:var(--doux);text-decoration:none;white-space:nowrap}
+a.lien-essai:hover{color:var(--accent)}
+@media (max-width:820px){a.lien-essai{display:none}}
 h1{font-size:clamp(30px,4.6vw,48px);line-height:1.12;margin:26px 0 12px;letter-spacing:-.02em}
 h2{font-size:clamp(22px,2.9vw,30px);margin:40px 0 10px;letter-spacing:-.01em}
 h3{font-size:19px;margin:26px 0 8px}
@@ -148,8 +151,9 @@ def tete(page: dict, fil: list, jsonld: list) -> str:
     <a href="/comparatifs/">Comparatifs</a>
   </nav>
   <div class="actions-entete">
-    <a class="secondaire" href="/demo/">Voir une démo</a>
-    <a class="principal" href="/register">Essayer {TRIAL_DAYS} jours</a>
+    <a class="secondaire" href="/demo/">Demander une démonstration</a>
+    <a class="principal" href="/demo/dashboard">Voir COURTIARK en action</a>
+    <a class="lien-essai" href="/register">Essayer {TRIAL_DAYS} jours</a>
   </div>
 </header>
 <main id="contenu">
@@ -213,7 +217,7 @@ def jsonld_article(page: dict) -> dict:
             "publisher": {"@type": "Organization", "name": BRAND, "logo": {"@type": "ImageObject", "url": f"{SITE}/og-courtiark.png"}},
             "dateModified": page.get('updated', '2026-09-26')}
 
-def cta(principal=('/register', f'Essayer {TRIAL_DAYS} jours'), secondaire=('/demo/', 'Demander une démonstration')) -> str:
+def cta(principal=('/demo/dashboard', 'Voir COURTIARK en action'), secondaire=('/demo/', 'Demander une démonstration')) -> str:
     return (f'<div class="cta"><a class="principal" href="{principal[0]}">{esc(principal[1])}</a>'
             f'<a class="secondaire" href="{secondaire[0]}">{esc(secondaire[1])}</a></div>')
 
@@ -371,7 +375,7 @@ def rendre(page: dict) -> str:
     corps.append(cta(secondaire=page.get('cta2', ('/demo/', 'Demander une démonstration'))))
     corps.append(page.get('corps', ''))
     corps.append(bloc_money(page))
-    corps.append(cta(principal=page.get('cta_final', ('/register', f'Essayer {TRIAL_DAYS} jours'))))
+    corps.append(cta(principal=page.get('cta_final', ('/demo/dashboard', 'Voir COURTIARK en action'))))
     corps.append(bloc_faq(page.get('faq', [])))
     corps.append(bloc_lire(page.get('lire', [])))
     corps.append(pied())

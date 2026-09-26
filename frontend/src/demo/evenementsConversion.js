@@ -1,8 +1,8 @@
 /* ============================================================================
-   COURTIA — Démonstration : conversion de fin de parcours (plomberie)
+   COURTIARK — Démonstration : conversion de fin de parcours (plomberie)
    ----------------------------------------------------------------------------
    TROIS actions, UN seul service : POST /api/leads/events
-   (service de capture COURTIA — il répond 202). Aucun autre service n'est
+   (service de capture COURTIARK — il répond 202). Aucun autre service n'est
    appelé, aucun autre endpoint n'est inventé.
 
    AUCUNE condition commerciale n'est écrite ici : pas de durée d'essai, pas de

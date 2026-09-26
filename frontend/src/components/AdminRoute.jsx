@@ -106,7 +106,7 @@ export default function AdminRoute({ children }) {
             Admin Center protégé
           </h1>
           <p style={{ margin: '0 auto 24px', maxWidth: 410, fontSize: 14, lineHeight: 1.65, color: 'rgba(255,255,255,0.66)' }}>
-            Votre session COURTIA est valide, mais elle ne dispose pas des droits administrateur nécessaires pour piloter cette zone.
+            Votre session COURTIARK est valide, mais elle ne dispose pas des droits administrateur nécessaires pour piloter cette zone.
           </p>
           <AuroraButton href="/dashboard" variant="secondary" size="md">
             Retour au cockpit

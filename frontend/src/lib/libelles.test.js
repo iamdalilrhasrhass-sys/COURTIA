@@ -1,7 +1,7 @@
 /* ============================================================================
    libelles.test.js — garde-fou des défauts d'INTERFACE de la matrice d'audit.
    ----------------------------------------------------------------------------
-   POURQUOI CE TEST : six constats de la matrice d'audit COURTIA (UX-023,
+   POURQUOI CE TEST : six constats de la matrice d'audit COURTIARK (UX-023,
    UX-024/025/037, UX-026, UX-031/044, UX-032, UX-038) étaient en échec parce
    que l'écran et le code divergeaient :
      - le même écran portait plusieurs noms (menu / palette / titre) ;

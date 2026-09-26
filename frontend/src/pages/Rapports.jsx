@@ -1,5 +1,5 @@
 /* ============================================================================
-   COURTIA — Écran « Rapports »
+   COURTIARK — Écran « Rapports »
    ----------------------------------------------------------------------------
    POURQUOI cette réécriture : cet écran était ENTIÈREMENT fabriqué. Il gardait
    en constantes des chiffres de démonstration (124 clients actifs, 312 contrats,
@@ -35,7 +35,7 @@ import {
 import api from '../api'
 import { fmtMontant, fmtNombre, fmtDate } from '../lib/monnaie'
 
-// ─── Jetons de thème (inchangés : design system COURTIA) ───────────────────
+// ─── Jetons de thème (inchangés : design system COURTIARK) ───────────────────
 const T = {
   bg: '#050510',
   cardBg: 'rgba(255,255,255,0.03)',
@@ -624,7 +624,7 @@ export default function Rapports() {
                             {o.product_current ? ` · actuel : ${o.product_current}` : ''}
                           </div>
                           <div style={{ fontSize: 10.5, color: T.textMuted, marginTop: 4 }}>
-                            Montant estimé : non mesuré par COURTIA (aucun calcul réel ne remplace l&apos;estimation historique).
+                            Montant estimé : non mesuré par COURTIARK (aucun calcul réel ne remplace l&apos;estimation historique).
                           </div>
                         </div>
                       )
@@ -640,7 +640,7 @@ export default function Rapports() {
 
             {/* ── CE QUE L'ÉCRAN NE MESURE PAS (dit explicitement) ── */}
             <Carte delay={0.35}>
-              <SectionHeader icon={Sparkles} title="Ce que COURTIA ne mesure pas encore" badge="aucune valeur d'exemple" />
+              <SectionHeader icon={Sparkles} title="Ce que COURTIARK ne mesure pas encore" badge="aucune valeur d'exemple" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
                 {[
                   ['Prévisions de commissions', "elles demandent une série de commissions réellement enregistrées ; l'écran Commissions les présente."],
@@ -682,7 +682,7 @@ export default function Rapports() {
         <div style={{ textAlign: 'center', paddingTop: 20 }}>
           <p style={{ fontSize: 11, color: T.textMuted, margin: 0 }}>
             Chiffres issus des données de votre cabinet (/api/dashboard/stats, /api/clients, /api/opportunites) ·
-            mise à jour au chargement de la page · COURTIA
+            mise à jour au chargement de la page · COURTIARK
           </p>
         </div>
 

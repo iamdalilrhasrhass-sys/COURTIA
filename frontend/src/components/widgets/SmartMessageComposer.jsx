@@ -89,7 +89,7 @@ export default function SmartMessageComposer({
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 300,
-          system: 'Tu es ARK, assistant IA de COURTIA. Tu rédiges des messages professionnels, chaleureux et concis pour courtiers en assurance. Réponds UNIQUEMENT avec le message, sans guillemets ni commentaires.',
+          system: 'Tu es ARK, assistant IA de COURTIARK. Tu rédiges des messages professionnels, chaleureux et concis pour courtiers en assurance. Réponds UNIQUEMENT avec le message, sans guillemets ni commentaires.',
           messages: [{
             role: 'user',
             content: `Rédige un message ${channel} de relance pour ce client en assurance ${dossier.branchCode}.
