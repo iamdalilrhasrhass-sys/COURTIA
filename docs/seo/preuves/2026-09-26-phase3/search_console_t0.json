@@ -1,0 +1,279 @@
+{
+ "date": "2026-09-26",
+ "propriete": "https://courtiark.fr/",
+ "type_propriete": "prefixe d'URL",
+ "compte": "iamdalilrhasrhass@gmail.com",
+ "etat": "deja validee avant cette session",
+ "fenetre_mesure": "25/06/2026 au 24/09/2026",
+ "derniere_mise_a_jour_donnees": "il y a 4 heures (au moment du releve)",
+ "clics": 15,
+ "impressions": 382,
+ "ctr": "3,9 %",
+ "position_moyenne": 12.3,
+ "requetes_distinctes": 17,
+ "pages_distinctes": 67,
+ "pays_distincts": 58,
+ "requetes": [
+  [
+   "courtia",
+   8,
+   250
+  ],
+  [
+   "logiciel courtier iard",
+   0,
+   10
+  ],
+  [
+   "courtier assurance lausanne",
+   0,
+   9
+  ],
+  [
+   "(requete longue issue d'un modele de langage)",
+   0,
+   5
+  ],
+  [
+   "cortia",
+   0,
+   3
+  ],
+  [
+   "courtier cahors",
+   0,
+   2
+  ],
+  [
+   "logiciel pour courtier en assurance",
+   0,
+   1
+  ],
+  [
+   "courtier mulhouse",
+   0,
+   1
+  ],
+  [
+   "logiciel pour courtier",
+   0,
+   1
+  ],
+  [
+   "wintimenow",
+   0,
+   1
+  ]
+ ],
+ "pages": [
+  [
+   "https://courtiark.fr/",
+   15,
+   288
+  ],
+  [
+   "https://courtiark.fr/ch/fr/comparatif-logiciels-courtiers-assurance-suisse",
+   0,
+   18
+  ],
+  [
+   "https://courtiark.fr/ch/fr/logiciel-courtier-assurance-lausanne",
+   0,
+   9
+  ],
+  [
+   "https://courtiark.fr/ch/fr/logiciel-courtier-assurance-suisse",
+   0,
+   7
+  ],
+  [
+   "https://courtiark.fr/fr/logiciel-courtier-iard-metz",
+   0,
+   6
+  ],
+  [
+   "https://courtiark.fr/fr/logiciel-courtier-assurance-cergy",
+   0,
+   5
+  ],
+  [
+   "https://courtiark.fr/fr/logiciel-courtier-iard-moulins",
+   0,
+   5
+  ],
+  [
+   "https://courtiark.fr/fr/logiciel-courtier-iard-pessac",
+   0,
+   5
+  ],
+  [
+   "https://courtiark.fr/fr/logiciel-courtier-mandataire",
+   0,
+   4
+  ],
+  [
+   "https://courtiark.fr/fr/logiciel-courtier-emprunteur-bordeaux",
+   0,
+   4
+  ]
+ ],
+ "pays": [
+  [
+   "Suisse",
+   9,
+   36
+  ],
+  [
+   "France",
+   5,
+   129
+  ],
+  [
+   "Canada",
+   1,
+   8
+  ],
+  [
+   "Etats-Unis",
+   0,
+   42
+  ],
+  [
+   "Republique democratique du Congo",
+   0,
+   36
+  ],
+  [
+   "Inde",
+   0,
+   30
+  ]
+ ],
+ "appareils": [
+  [
+   "Ordinateur",
+   10,
+   186
+  ],
+  [
+   "Mobile",
+   5,
+   192
+  ],
+  [
+   "Tablette",
+   0,
+   4
+  ]
+ ],
+ "indexation": {
+  "dans_index": 1100,
+  "non_indexees": 40,
+  "mise_a_jour": "21/09/2026",
+  "motifs": [
+   [
+    "Detectee, actuellement non indexee",
+    27
+   ],
+   [
+    "Autre page avec balise canonique correcte",
+    7
+   ],
+   [
+    "Exploree, actuellement non indexee",
+    3
+   ],
+   [
+    "Soft 404",
+    2
+   ],
+   [
+    "Exclue par la balise noindex",
+    1
+   ]
+  ]
+ },
+ "exemples_non_indexees": {
+  "Soft 404": [
+   "/fr/relance-client-assurance",
+   "/fr/logiciel-gestion-cabinet-courtage"
+  ],
+  "noindex": [
+   "/ch/fr/logiciel-courtier-assurance-fribourg"
+  ],
+  "canonique": [
+   "/fonctionnalites",
+   "/legal/confidentialite",
+   "/fr/crm-courtier-assurance",
+   "/legal/mentions-legales",
+   "/fr/logiciel-courtier-assurance",
+   "/contact",
+   "/demo"
+  ],
+  "exploree_non_indexee": [
+   "/fr/ia-courtier-assurance",
+   "/fr/gestion-portefeuille-courtier",
+   "/fr/comparateur-assurance-courtier"
+  ]
+ },
+ "sitemaps": [
+  [
+   "/sitemap-seo.xml",
+   134,
+   "28/08/2026",
+   "25/09/2026",
+   "Operation effectuee (ancien fichier, supprime depuis)"
+  ],
+  [
+   "/sitemap.xml",
+   26,
+   "28/08/2026",
+   "21/09/2026",
+   "Operation effectuee (ancienne version)"
+  ]
+ ],
+ "sitemap_envoye": "/sitemap.xml (26/09/2026, index de 10 sitemaps de section, 80 URL)",
+ "url_inspectees": [
+  [
+   "https://courtiark.fr/",
+   "indexee (288 impressions, 15 clics)"
+  ],
+  [
+   "https://courtiark.fr/crm-courtier-assurance",
+   "non indexee -> indexation demandee"
+  ],
+  [
+   "https://courtiark.fr/fonctionnalites/assistant-ark",
+   "non indexee -> indexation demandee"
+  ],
+  [
+   "https://courtiark.fr/fonctionnalites/gestion-portefeuille-assurance",
+   "non indexee -> indexation demandee"
+  ],
+  [
+   "https://courtiark.fr/fonctionnalites/relance-devis-assurance",
+   "non indexee -> indexation demandee"
+  ],
+  [
+   "https://courtiark.fr/fonctionnalites/renouvellements-assurance",
+   "non indexee -> indexation demandee"
+  ],
+  [
+   "https://courtiark.fr/france",
+   "non indexee -> indexation demandee"
+  ],
+  [
+   "https://courtiark.fr/suisse",
+   "non indexee -> indexation demandee"
+  ],
+  [
+   "https://courtiark.fr/suisse/geneve",
+   "non indexee -> indexation demandee"
+  ],
+  [
+   "https://courtiark.fr/suisse/lausanne",
+   "non indexee -> indexation demandee"
+  ]
+ ],
+ "note": "Aucune page de la nouvelle architecture n'etait indexee au moment du releve : Google connait le domaine (1 100 URL indexees, essentiellement l'ancien plan /fr et /ch) mais pas encore les 80 pages publiques actuelles. Les 9 demandes d'indexation et le sitemap en 10 sections ont ete soumis le 26/09/2026."
+}

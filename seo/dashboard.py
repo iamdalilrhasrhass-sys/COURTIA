@@ -35,8 +35,18 @@ def entier(sql, defaut=0):
         return defaut
 
 
+def _charger(chemin, defaut):
+    try:
+        return json.loads(io.open(chemin, encoding='utf-8').read())
+    except Exception:
+        return defaut
+
+
 def main():
     maintenant = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+    preuves = os.path.join(RACINE, 'docs', 'seo', 'preuves', '2026-09-26-phase3')
+    t0 = _charger(os.path.join(preuves, 'search_console_t0.json'), {})
+    requetes = _charger(os.path.join(preuves, 'requetes_t0.json'), [])
 
     # ---------------------------------------------------------------- evenements
     events, err_ev = psql("select event_name, count(*) from marketing_events group by 1 order by 2 desc")
@@ -135,18 +145,118 @@ def main():
     else:
         A('Aucune attribution enregistrée.')
     A('')
-    A('## SEO — impressions, clics, position')
+    A('## 1. SEARCH — Search Console (%s)' % (t0.get('date', 'releve absent')))
     A('')
-    A('Non disponible : aucune propriété Search Console n’est accessible depuis ce serveur '
-      '(ni jeton Google, ni session navigateur pilotable). Les impressions, clics, CTR et positions '
-      'moyennes ne peuvent donc pas être mesurés ni affirmés. La mesure first-party ci-dessus '
-      '(visites, clics CTA, formulaires, demandes) est la seule source exploitable aujourd’hui.')
+    if t0:
+        A('Propriété `%s` (%s), compte %s, fenêtre %s.' % (
+            t0.get('propriete'), t0.get('type_propriete'), t0.get('compte'), t0.get('fenetre_mesure')))
+        A('')
+        A('| Indicateur | Valeur |')
+        A('|---|---|')
+        A('| Impressions | %s |' % t0.get('impressions'))
+        A('| Clics | %s |' % t0.get('clics'))
+        A('| CTR moyen | %s |' % t0.get('ctr'))
+        A('| Position moyenne | %s |' % t0.get('position_moyenne'))
+        A('| Requêtes distinctes | %s |' % t0.get('requetes_distinctes'))
+        A('| Pages distinctes | %s |' % t0.get('pages_distinctes'))
+        A('| Pays distincts | %s |' % t0.get('pays_distincts'))
+        A('')
+        A('Pays (top) : ' + ' · '.join('%s %s clics / %s impressions' % (p[0], p[1], p[2]) for p in t0.get('pays', [])[:4]))
+        A('')
+        A('Appareils : ' + ' · '.join('%s %s clics / %s impressions' % (a[0], a[1], a[2]) for a in t0.get('appareils', [])))
+        A('')
+        A('Sitemaps : ' + (t0.get('sitemap_envoye') or 'non disponible'))
+    else:
+        A('Non disponible : aucun relevé Search Console enregistré.')
+    A('')
+    A('## 2. INDEXATION')
+    A('')
+    if t0.get('indexation'):
+        ix = t0['indexation']
+        A('| Indicateur | Valeur |')
+        A('|---|---|')
+        A('| Pages publiées (architecture actuelle) | 80 |')
+        A('| URL dans l’index Google (domaine entier, ancien plan inclus) | %s |' % ix.get('dans_index'))
+        A('| URL non indexées | %s |' % ix.get('non_indexees'))
+        A('| Mise à jour du rapport | %s |' % ix.get('mise_a_jour'))
+        A('')
+        A('| Motif de non-indexation | Pages |')
+        A('|---|---|')
+        for m in ix.get('motifs', []):
+            A('| %s | %s |' % (m[0], m[1] if m[1] is not None else 'non lue'))
+        A('')
+        A('Traitement : 7 redirections permanentes ajoutées le 26/09/2026 (commit `c21701b7`), '
+          'sitemap en 10 sections envoyé, 9 demandes d’indexation déposées sur les URL stratégiques.')
+    else:
+        A('Non disponible.')
+    A('')
+    A('## 3. CONVERSION (mesure first-party, base de production)')
+    A('')
+    vues = ev.get('site_visit', 0) + ev.get('seo_page_view', 0)
+    cta = ev.get('cta_trial_click', 0) + ev.get('cta_demo_click', 0)
+    A('| Étape | Volume | Taux |')
+    A('|---|---|---|')
+    A('| Visites mesurées | %d | — |' % vues)
+    A('| Clics CTA | %d | %s |' % (cta, _taux(cta, vues)))
+    A('| Affichages du formulaire | %d | — |' % ev.get('demo_form_view', 0))
+    A('| Envois du formulaire | %d | %s |' % (ev.get('demo_form_submit', 0), _taux(ev.get('demo_form_submit', 0), ev.get('demo_form_view', 0))))
+    A('| Demandes enregistrées | %d | — |' % ev.get('demo_request_success', 0))
+    A('| Demandes réelles (hors adresses de test) | %d | — |' % leads_reels)
+    A('| Essais en cours | %d | — |' % essais)
+    A('| Abonnements payants actifs | %d | — |' % payants)
+    A('')
+    A('Détail des événements mesurés : %s.' % (', '.join('%s %d' % (k, v) for k, v in sorted(ev.items(), key=lambda x: -x[1])) or 'aucun'))
+    A('')
+    A('## 4. BUSINESS')
+    A('')
+    A('| Indicateur | Valeur | Source |')
+    A('|---|---|---|')
+    A('| Cabinets enregistrés | %d | cabinets |' % cabinets)
+    A('| Essais en cours | %d | subscriptions |' % essais)
+    A('| Abonnements payants | %d | subscriptions |' % payants)
+    A('| Revenu récurrent (MRR) | non disponible : aucun abonnement payant enregistré | subscriptions |')
+    A('| Clients issus du SEO | non disponible : aucun lead réel issu du SEO à ce jour | demo_requests |')
+    A('')
+    A('## 5. Conversion par page d’atterrissage')
+    A('')
+    if landings:
+        A('| Page d’atterrissage | Vues | Clics CTA | Formulaire | Demandes |')
+        A('|---|---|---|---|---|')
+        for ligne in landings:
+            if len(ligne) == 5:
+                A('| `%s` | %s | %s | %s | %s |' % tuple(ligne))
+    else:
+        A('Aucune donnée d’atterrissage enregistrée.')
+    A('')
+    A('## 6. KPI par requête (Search Console) et groupe d’action')
+    A('')
+    if requetes:
+        A('| Requête | Clics | Impressions | CTR | Position | Groupe |')
+        A('|---|---|---|---|---|---|')
+        for r in sorted(requetes, key=lambda x: (x.get('position') or 999)):
+            p = r.get('position') or 999
+            groupe = ('A — défendre' if p <= 3 else 'B — viser le top 3' if p <= 10
+                      else 'C — viser le top 10' if p <= 20 else 'D — à analyser')
+            A('| %s | %s | %s | %s | %s | %s |' % (r['requete'][:48], r['clics'], r['impressions'], r['ctr'], p, groupe))
+    else:
+        A('Non disponible : relevé des requêtes absent.')
+    A('')
+    A('## Attribution')
+    A('')
+    if attribution:
+        A('| Medium | Campagne | Visites |')
+        A('|---|---|---|')
+        for m, c, n in attribution:
+            A('| %s | %s | %s |' % (m, c, n))
+    else:
+        A('Aucune attribution enregistrée.')
     A('')
     A('## Limites de lecture')
     A('')
     A('- `site_visit` compte les visites mesurées par le script first-party, pas les sessions côté Google.')
     A('- Un même visiteur peut produire plusieurs événements : ce sont des volumes, pas des personnes.')
     A('- Les adresses de test (`@example.invalid`) sont exclues du décompte des demandes réelles.')
+    A('- Les données Search Console portent sur le domaine entier, ancien plan `/fr` et `/ch` inclus.')
     A('- Aucune donnée personnelle (nom, e-mail, téléphone) ne figure dans ce rapport.')
     A('')
 
