@@ -48,6 +48,8 @@ const ALLOWED_EVENT_NAMES = new Set([
   'tool_complete',
   'tool_cta_click',
   'cta_demo_interactive_click',
+  'demo_page_view',
+  'demo_form_start',
 ])
 
 function requireAdmin(req, res, next) {
@@ -127,9 +129,11 @@ router.post('/demo-request', async (req, res) => {
       `INSERT INTO demo_requests (
          first_name, last_name, company_name, email, phone, city, team_size,
          current_tools, wants_google_calendar, wants_whatsapp, wants_email_sync,
-         message, consent, source
+         message, consent, source,
+         session_id, first_touch_source, first_touch_medium, first_touch_campaign, first_touch_landing,
+         first_touch_referrer, last_touch_source, last_touch_medium, last_touch_landing, is_test
        )
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
        RETURNING id, first_name, last_name, company_name, email, city, team_size, current_tools,
                  wants_google_calendar, wants_whatsapp, wants_email_sync, status, source, created_at`,
       [
@@ -147,6 +151,21 @@ router.post('/demo-request', async (req, res) => {
         payload.message,
         payload.consent,
         payload.source,
+        // Attribution : identifiant de visite et premier / dernier contact (voir /js/mesure.js).
+        normalizeString(payload.session_id, 64) || null,
+        normalizeString(payload.first_touch_source, 120) || null,
+        normalizeString(payload.first_touch_medium, 120) || null,
+        normalizeString(payload.first_touch_campaign, 160) || null,
+        normalizeString(payload.first_touch_landing, 255) || null,
+        normalizeString(payload.first_touch_referrer, 255) || null,
+        normalizeString(payload.last_touch_source, 120) || null,
+        normalizeString(payload.last_touch_medium, 120) || null,
+        normalizeString(payload.last_touch_landing, 255) || null,
+        // Les essais de recette ne doivent jamais compter comme des leads : le dashboard les exclut.
+        String(payload.source || '').indexOf('test_') === 0
+          || String(payload.message || '').indexOf('test_master_acquisition') > -1
+          || String(payload.message || '').indexOf('test_seo_phase4') > -1
+          || String(payload.message || '').indexOf('test_ark_seo') > -1,
       ]
     )
 

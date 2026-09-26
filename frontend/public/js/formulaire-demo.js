@@ -5,6 +5,11 @@
   var utm = {};
   ['utm_source','utm_medium','utm_campaign','utm_content','ref'].forEach(function(k){ if (q.get(k)) utm[k] = q.get(k); });
   if (window.courtiaTrack) { try { window.courtiaTrack('demo_form_view'); } catch(e){} }
+  /* Debut de saisie : premiere interaction reelle avec un champ (pas au chargement). */
+  var debut = 0;
+  f.addEventListener('input', function(){
+    if (!debut) { debut = 1; if (window.courtiaTrack) { try { window.courtiaTrack('demo_form_start'); } catch(e){} } }
+  }, true);
   f.addEventListener('submit', function(ev){
     ev.preventDefault();
     var d = {};
@@ -17,6 +22,11 @@
     d.source = utm.utm_source || 'site-courtiark';
     d.city = d.city || (d.pays === 'CH' ? 'Suisse' : 'France');
     d.message = (d.message || '') + ' [page: ' + location.pathname + ']' + (Object.keys(utm).length ? ' [utm: ' + JSON.stringify(utm) + ']' : '');
+    /* Attribution : premier contact et dernier contact, calcules cote site (aucun tiers). */
+    if (typeof window.courtiaAttribution === 'function') {
+      var att = window.courtiaAttribution();
+      for (var k in att) { if (Object.prototype.hasOwnProperty.call(att, k)) d[k] = att[k]; }
+    }
     if (window.courtiaTrack) { try { window.courtiaTrack('demo_form_submit'); } catch(e){} }
     if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
     fetch('/api/leads/demo-request', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(d)})
@@ -26,7 +36,7 @@
         var id = (b.lead_id !== undefined && b.lead_id !== null) ? b.lead_id : (b.lead ? b.lead.id : undefined);
         var ok = (b.ok === true) || (b.success === true && id);
         if (ok) {
-          msg.textContent = "Demande enregistrée. Nous revenons vers vous avec une proposition de créneau.";
+          msg.textContent = "Votre demande est bien enregistrée. L'équipe COURTIARK dispose maintenant des informations nécessaires pour vous recontacter.";
           if (window.courtiaTrack) { try { window.courtiaTrack('demo_request_success', {identifiant: id}); } catch(e){} }
           f.reset();
         } else {
