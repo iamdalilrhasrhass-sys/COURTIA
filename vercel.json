@@ -897,6 +897,11 @@
       "source": "/fr/workflows/sinistre",
       "destination": "/automatisation-courtier-assurance",
       "permanent": true
+    },
+    {
+      "source": "/sitemaps/features.xml",
+      "destination": "/sitemaps/features-v2.xml",
+      "permanent": true
     }
   ],
   "rewrites": [

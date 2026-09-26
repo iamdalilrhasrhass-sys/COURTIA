@@ -17,7 +17,7 @@ Sitemap: https://courtiark.fr/sitemap.xml
 Sitemap: https://courtiark.fr/sitemaps/assurances.xml
 Sitemap: https://courtiark.fr/sitemaps/comparatifs.xml
 Sitemap: https://courtiark.fr/sitemaps/core.xml
-Sitemap: https://courtiark.fr/sitemaps/features.xml
+Sitemap: https://courtiark.fr/sitemaps/features-v2.xml
 Sitemap: https://courtiark.fr/sitemaps/france.xml
 Sitemap: https://courtiark.fr/sitemaps/resources.xml
 Sitemap: https://courtiark.fr/sitemaps/solutions.xml

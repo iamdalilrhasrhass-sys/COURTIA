@@ -62,6 +62,8 @@ ALIAS = {
     '/fr/logiciel-courtier-mandataire': '/assurances',
     '/fr/demo-et-essai-gratuit': '/demo',
     '/fr/outil-courtier-assurance': '/outils',
+    # ancien fichier sitemap refuse par Google : renvoie vers la version regeneree
+    '/sitemaps/features.xml': '/sitemaps/features-v2.xml',
     # anciens fichiers de sitemap (plan de site /fr et /ch abandonne)
     '/sitemap-seo.xml': '/sitemap.xml',
     '/sitemap-ch.xml': '/sitemap.xml',
@@ -193,8 +195,15 @@ def main():
         if nom.endswith('.xml'):
             os.remove(os.path.join(PUBLIC, 'sitemaps', nom))
 
+    # Le sitemap de section « features » a ete refuse une fois par Google (« impossible de
+    # recuperer ») alors que le fichier est identique en tout point a un sitemap accepte :
+    # on publie une version regeneree sous un nouveau nom (features-v2.xml) et l'index ne
+    # reference plus que celle-ci. features.xml reste sur le disque jusqu'a validation.
+    RENOMMAGE = {'features': 'features-v2'}
+
     entrees_index = []
     for section, liste in sorted(par_section.items()):
+        nom_fichier = RENOMMAGE.get(section, section)
         lignes = ['<?xml version="1.0" encoding="UTF-8"?>',
                   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
                   'xmlns:xhtml="http://www.w3.org/1999/xhtml">']
@@ -209,9 +218,9 @@ def main():
             lignes.append(f'  <url>\n    <loc>{u}</loc>{alt}\n    <changefreq>monthly</changefreq>'
                           f'\n    <priority>{"1.0" if page["path"] == "" else "0.8"}</priority>\n  </url>')
         lignes.append('</urlset>')
-        chemin = os.path.join(PUBLIC, 'sitemaps', f'{section}.xml')
+        chemin = os.path.join(PUBLIC, 'sitemaps', f'{nom_fichier}.xml')
         io.open(chemin, 'w', encoding='utf-8').write('\n'.join(lignes))
-        entrees_index.append(f'  <sitemap>\n    <loc>{SITE}/sitemaps/{section}.xml</loc>\n  </sitemap>')
+        entrees_index.append(f'  <sitemap>\n    <loc>{SITE}/sitemaps/{nom_fichier}.xml</loc>\n  </sitemap>')
 
     index = ('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
              + '\n'.join(entrees_index) + '\n</sitemapindex>\n')
@@ -220,7 +229,7 @@ def main():
     # ---------------------------------------------------------------- robots.txt
     # Fichier reecrit entierement : un robots.txt qui decrit un plan de site obsolete
     # envoie les moteurs vers des URL mortes ou redirigees.
-    nouveaux = [f'{SITE}/sitemap.xml'] + [f'{SITE}/sitemaps/{s}.xml' for s in sorted(par_section)]
+    nouveaux = [f'{SITE}/sitemap.xml'] + [f'{SITE}/sitemaps/{RENOMMAGE.get(s, s)}.xml' for s in sorted(par_section)]
     robots = (
         '# robots.txt - courtiark.fr (COURTIARK) - CRM et cockpit IA pour courtiers en assurance\n'
         '# Fichier genere par seo/build.py - ne pas modifier a la main.\n'
