@@ -68,7 +68,12 @@ def pages_core():
                              ["Assistant ARK", "ARK lit un document, en propose les informations, vous validez : rien n'est écrit sans votre accord."],
                              ["Prospection", "Recherche de prospects, campagnes, séquences et suivi des réponses dans le même outil."]]) +
                     p('<a href="/crm-courtier-assurance">Voir le détail du CRM courtier assurance</a> · '
-                        '<a href="/fonctionnalites/">Toutes les fonctionnalités</a>')),
+                        '<a href="/fonctionnalites/">Toutes les fonctionnalités</a>')
+                    + p('<a href="/logiciel-courtier-assurance">Choisir un logiciel de courtier</a> · '
+                        '<a href="/automatisation-courtier-assurance">Ce qui peut être automatisé</a> · '
+                        '<a href="/tarifs">Tarifs France et Suisse</a> · '
+                        '<a href="/outils/calculateur-taux-transformation-assurance">Calculateur de taux de transformation</a> · '
+                        '<a href="/glossaire">Glossaire du courtage</a>')),
             section("ARK, l'assistant du cabinet",
                     p("ARK n'est pas un chatbot décoratif. Il travaille sur les données de votre cabinet : "
                       "lecture d'un document déposé (facture, RIB, attestation), proposition des informations détectées "
@@ -228,10 +233,17 @@ def pages_core():
                         '<a href="/fonctionnalites/reporting-courtier">Reporting</a> — ce que produit l\'activité.'])),
             section("Administratif et documents",
                     ul(['<a href="/fonctionnalites/gestion-documents-assurance">Gestion des documents</a> — collecte par lien, pièces classées.',
-                        '<a href="/fonctionnalites/assistant-ark">Assistant ARK</a> — lecture de document, proposition, validation.'])),
+                        '<a href="/fonctionnalites/assistant-ark">Assistant ARK</a> — lecture de document, proposition, validation.',
+                        '<a href="/fonctionnalites/compte-rendu-clients">Comptes rendus clients</a> — consigner chaque échange dans le dossier.'])),
+            section("Voir aussi",
+                    ul(['<a href="/logiciel-courtier-assurance">Logiciel courtier assurance</a> — périmètre, modules et critères de choix.',
+                        '<a href="/logiciel-courtage-assurance">Logiciel de courtage</a> — le flux devis, contrat, commission.',
+                        '<a href="/automatisation-courtier-assurance">Automatisation</a> — ce qui peut être organisé, ce qui reste humain.',
+                        '<a href="/tarifs">Tarifs</a> — France et Suisse, essai de 7 jours.'])),
         ]),
         faq=[],
         lire=[("Le CRM courtier assurance", "/crm-courtier-assurance"), ("Guides pratiques", "/guides/"),
+              ("Formation de l'équipe", "/fr/formation-equipe-courtier-assurance"),
               ("Outils gratuits", "/outils/")],
     ))
 
@@ -304,7 +316,8 @@ def pages_core():
         [("Puis-je reprendre un portefeuille existant ?", "Oui, un import permet de partir d'un fichier existant."),
          ("Combien de clients puis-je suivre ?", "COURTIARK n'impose pas de plafond fonctionnel ; le choix d'offre dépend surtout du nombre d'utilisateurs et du suivi commercial."),
          ("La vue portefeuille remplace-t-elle les rapports ?", "Non, elle sert au pilotage quotidien ; les rapports servent à l'analyse d'activité.")],
-        [("Gestion des clients", "/fonctionnalites/gestion-clients"), ("Renouvellements", "/fonctionnalites/renouvellements-assurance"),
+        [("Gestion des clients", "/fonctionnalites/gestion-clients"), ("Comptes rendus clients", "/fonctionnalites/compte-rendu-clients"),
+         ("Renouvellements", "/fonctionnalites/renouvellements-assurance"),
          ("Guide : organiser un portefeuille d'assurance", "/guides/organiser-portefeuille-assurance")]))
 
     P.append(feature(

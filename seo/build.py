@@ -19,11 +19,83 @@ from moteur import SITE, rendre, url_of  # noqa: E402
 from contenu_core import pages_core  # noqa: E402
 from contenu_geo import pages_geo  # noqa: E402
 from contenu_ressources import pages_ressources, TRACK_JS  # noqa: E402
-from scripts_js import MESURE_JS, FORMULAIRE_JS, OUTIL_JS  # noqa: E402
+from contenu_villes import pages_villes  # noqa: E402
+from contenu_intentions import pages_intentions  # noqa: E402
+from contenu_outils import pages_outils  # noqa: E402
+from contenu_glossaire import pages_glossaire  # noqa: E402
+from scripts_js import (MESURE_JS, FORMULAIRE_JS, OUTIL_JS, TRANSFORMATION_JS,  # noqa: E402
+                        CHECKLIST_DOSSIER_JS, CHECKLIST_RENOUV_JS)
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PUBLIC = os.path.join(RACINE, 'frontend', 'public')
 VERCEL = os.path.join(RACINE, 'vercel.json')
+
+
+# Redirections permanentes : les variantes d'une meme intention pointent vers UNE page canonique.
+# Objectif : repondre aux URL attendues sans creer de contenu en double (cannibalisation).
+ALIAS = {
+    # variantes d'intention couvertes par une page canonique existante
+    '/crm-assurance': '/crm-courtier-assurance',
+    '/gestion-portefeuille-assurance': '/fonctionnalites/gestion-portefeuille-assurance',
+    '/logiciel-relance-devis-assurance': '/fonctionnalites/relance-devis-assurance',
+    '/logiciel-renouvellement-assurance': '/fonctionnalites/renouvellements-assurance',
+    '/logiciel-gestion-documents-assurance': '/fonctionnalites/gestion-documents-assurance',
+    '/crm-courtier-independant': '/solutions/courtier-assurance-independant',
+    '/crm-cabinet-courtage': '/solutions/cabinet-courtage-assurance',
+    '/crm-assurance-suisse': '/suisse/crm-courtier-assurance',
+    '/logiciel-courtier-suisse': '/suisse/crm-courtier-assurance',
+    '/crm-courtier-geneve': '/suisse/geneve',
+    '/crm-courtier-lausanne': '/suisse/lausanne',
+    '/guides/comment-relancer-devis-assurance': '/guides/comment-ne-plus-oublier-relances-courtier',
+    '/guides/comment-organiser-portefeuille-assurance': '/guides/organiser-portefeuille-assurance',
+    '/guides/comment-suivre-renouvellements-assurance': '/guides/automatiser-renouvellements-assurance',
+    '/guides/comment-centraliser-documents-clients-assurance': '/guides/centraliser-documents-clients-assurance',
+    '/guides/comment-reduire-saisie-courtier': '/guides/reduire-saisie-manuelle-courtier',
+    '/guides/comment-suivre-prospects-assurance': '/guides/automatiser-suivi-prospects-assurance',
+    # pages historiques de marque ou de branche sans equivalent dans le nouveau moteur
+    '/fr/alternative-courtigo': '/comparatifs/crm-assurance-vs-crm-generaliste',
+    '/fr/alternative-kase': '/comparatifs/crm-assurance-vs-crm-generaliste',
+    '/fr/alternative-lya': '/comparatifs/crm-assurance-vs-crm-generaliste',
+    '/fr/alternative-oggo-data': '/comparatifs/crm-assurance-vs-crm-generaliste',
+    '/fr/logiciel-courtier-habitation': '/assurances',
+    '/fr/logiciel-courtier-grossiste': '/assurances',
+    '/fr/logiciel-courtier-mandataire': '/assurances',
+    '/fr/demo-et-essai-gratuit': '/demo',
+    '/fr/outil-courtier-assurance': '/outils',
+    # hubs historiques : consolidation vers les hubs de marque COURTIARK
+    '/fr': '/france',
+    '/ch': '/suisse',
+    '/fr/evaluer-crm-courtier-assurance': '/comparatifs/crm-assurance-vs-crm-generaliste',
+    '/fr/guide/choisir-crm-cabinet-courtage': '/logiciel-courtier-assurance',
+    # page d'atterrissage historique : meme intention que l'accueil, marque anterieure
+    '/landing': '/',
+    # consolidation : anciens clusters et doublons /fr et /ch
+    '/ch/glossaire': '/glossaire',
+    '/ch/crm-courtier-assurance-suisse': '/suisse/crm-courtier-assurance',
+    '/ch/logiciel-courtier-assurance-suisse': '/suisse/crm-courtier-assurance',
+    '/ch/logiciel-intermediaire-assurance-suisse': '/suisse/crm-courtier-assurance',
+    '/ch/gestion-portefeuille-assurance-suisse': '/fonctionnalites/gestion-portefeuille-assurance',
+    '/ch/gestion-documentaire-courtier-assurance-suisse': '/fonctionnalites/gestion-documents-assurance',
+    '/ch/relances-courtier-assurance-suisse': '/fonctionnalites/relance-devis-assurance',
+    '/ch/logiciel-devis-courtier-assurance-suisse': '/fonctionnalites/relance-devis-assurance',
+    '/ch/outils/calculateur-temps-administratif-suisse': '/outils/calculateur-productivite-courtier',
+    '/ch/tarifs-logiciel-courtier-chf': '/tarifs',
+    '/fr/tarifs-logiciel-courtier': '/tarifs',
+    '/fr/outils/calculateur-temps-administratif': '/outils/calculateur-productivite-courtier',
+    '/fr/outils/calculateur-manipulations-administratives': '/outils/calculateur-productivite-courtier',
+    '/fr/guide/centraliser-dossiers-clients': '/guides/centraliser-documents-clients-assurance',
+    '/fr/gestion-documentaire-courtier-assurance': '/fonctionnalites/gestion-documents-assurance',
+    '/fr/gestion-commissions-courtier-assurance': '/fonctionnalites/gestion-clients',
+    '/fr/comparatif/crm-courtier-vs-excel': '/comparatifs/excel-vs-crm-courtier-assurance',
+    '/fr/comparatif/crm-specialise-vs-crm-generaliste': '/comparatifs/crm-assurance-vs-crm-generaliste',
+    # consolidation : les anciennes pages /fr redondantes renvoient vers la page canonique
+    '/fr/crm-courtier-assurance': '/crm-courtier-assurance',
+    '/fr/logiciel-courtier-assurance': '/logiciel-courtier-assurance',
+    '/fr/automatisation-courtier-assurance': '/automatisation-courtier-assurance',
+    '/fr/courtia-logiciel-courtage-assurance': '/logiciel-courtage-assurance',
+    '/fr/gestion-portefeuille-courtier': '/fonctionnalites/gestion-portefeuille-assurance',
+    '/fr/glossaire': '/glossaire',
+}
 
 SECTIONS = {
     'core': ['', '/crm-courtier-assurance'],
@@ -49,6 +121,10 @@ def section_de(path: str) -> str:
         return 'core'
     if path in TRUST:
         return 'trust'
+    if path == '/glossaire':
+        return 'resources'
+    if path == '/tarifs':
+        return 'core'
     for nom, motif in [('features', '/fonctionnalites/'), ('solutions', '/solutions/'), ('assurances', '/assurances/'),
                        ('france', '/france/'), ('switzerland', '/suisse/'), ('resources', '/guides/'),
                        ('tools', '/outils/'), ('comparatifs', '/comparatifs/')]:
@@ -58,7 +134,8 @@ def section_de(path: str) -> str:
 
 
 def main():
-    pages = pages_core() + pages_geo() + pages_ressources()
+    pages = (pages_core() + pages_geo() + pages_villes() + pages_intentions() + pages_outils()
+             + pages_glossaire() + pages_ressources())
     chemins = [p['path'] for p in pages]
     doublons = [c for c, n in Counter(chemins).items() if n > 1]
     if doublons:
@@ -85,7 +162,8 @@ def main():
     # chaque script est donc un fichier, ce qui le rend aussi cacheable.
     os.makedirs(os.path.join(PUBLIC, 'js'), exist_ok=True)
     for nom, contenu in (('mesure.js', MESURE_JS), ('formulaire-demo.js', FORMULAIRE_JS),
-                         ('outil-calculateur.js', OUTIL_JS)):
+                         ('outil-calculateur.js', OUTIL_JS), ('outil-transformation.js', TRANSFORMATION_JS),
+                         ('checklist-dossier.js', CHECKLIST_DOSSIER_JS), ('checklist-renouvellement.js', CHECKLIST_RENOUV_JS)):
         io.open(os.path.join(PUBLIC, 'js', nom), 'w', encoding='utf-8').write(contenu.strip() + '\n')
     print('scripts externes ecrits : mesure.js, formulaire-demo.js, outil-calculateur.js')
 
@@ -158,6 +236,18 @@ def main():
     rewrites.append({'source': '/fr', 'destination': '/fr/index.html'})
     rewrites.append({'source': '/(.*)', 'destination': '/app.html'})
     cfg['rewrites'] = rewrites
+
+    # Redirections : on conserve celles deja declarees et on ajoute les alias
+    existantes = {r['source'] for r in cfg.get('redirects', [])}
+    for source, cible in ALIAS.items():
+        if source in existantes:
+            continue
+        cfg.setdefault('redirects', []).append({'source': source, 'destination': cible, 'permanent': True})
+
+    # Ancien cluster de glossaire : toutes les entrees pointent vers le glossaire unique
+    for joker in [{'source': '/fr/glossaire/:chemin*', 'destination': '/glossaire', 'permanent': True}]:
+        if joker['source'] not in existantes:
+            cfg['redirects'].append(joker)
     io.open(VERCEL, 'w', encoding='utf-8').write(json.dumps(cfg, ensure_ascii=False, indent=2) + '\n')
 
     # ---------------------------------------------------------------- rapport

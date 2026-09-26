@@ -13,12 +13,57 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://courtiark.fr/suisse/fribourg</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://courtiark.fr/suisse/geneve</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://courtiark.fr/suisse/lausanne</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/suisse/montreux</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/suisse/neuchatel</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/suisse/nyon</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/suisse/sion</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/suisse/suisse-romande</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/suisse/valais</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/suisse/vaud</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/suisse/vevey</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

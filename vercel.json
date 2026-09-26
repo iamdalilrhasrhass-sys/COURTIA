@@ -87,6 +87,286 @@
       "source": "/fr/logiciel-courtier-sant%C3%A9",
       "destination": "/fr/logiciel-courtier-sante",
       "permanent": true
+    },
+    {
+      "source": "/crm-assurance",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/gestion-portefeuille-assurance",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/logiciel-relance-devis-assurance",
+      "destination": "/fonctionnalites/relance-devis-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/logiciel-renouvellement-assurance",
+      "destination": "/fonctionnalites/renouvellements-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/logiciel-gestion-documents-assurance",
+      "destination": "/fonctionnalites/gestion-documents-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/crm-courtier-independant",
+      "destination": "/solutions/courtier-assurance-independant",
+      "permanent": true
+    },
+    {
+      "source": "/crm-cabinet-courtage",
+      "destination": "/solutions/cabinet-courtage-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/crm-assurance-suisse",
+      "destination": "/suisse/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/logiciel-courtier-suisse",
+      "destination": "/suisse/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/crm-courtier-geneve",
+      "destination": "/suisse/geneve",
+      "permanent": true
+    },
+    {
+      "source": "/crm-courtier-lausanne",
+      "destination": "/suisse/lausanne",
+      "permanent": true
+    },
+    {
+      "source": "/guides/comment-relancer-devis-assurance",
+      "destination": "/guides/comment-ne-plus-oublier-relances-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/guides/comment-organiser-portefeuille-assurance",
+      "destination": "/guides/organiser-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/guides/comment-suivre-renouvellements-assurance",
+      "destination": "/guides/automatiser-renouvellements-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/guides/comment-centraliser-documents-clients-assurance",
+      "destination": "/guides/centraliser-documents-clients-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/guides/comment-reduire-saisie-courtier",
+      "destination": "/guides/reduire-saisie-manuelle-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/guides/comment-suivre-prospects-assurance",
+      "destination": "/guides/automatiser-suivi-prospects-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/crm-courtier-assurance",
+      "destination": "/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-assurance",
+      "destination": "/logiciel-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/automatisation-courtier-assurance",
+      "destination": "/automatisation-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/courtia-logiciel-courtage-assurance",
+      "destination": "/logiciel-courtage-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/gestion-portefeuille-courtier",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire",
+      "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/landing",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/ch/glossaire",
+      "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/ch/crm-courtier-assurance-suisse",
+      "destination": "/suisse/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/logiciel-courtier-assurance-suisse",
+      "destination": "/suisse/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/logiciel-intermediaire-assurance-suisse",
+      "destination": "/suisse/crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/gestion-portefeuille-assurance-suisse",
+      "destination": "/fonctionnalites/gestion-portefeuille-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/gestion-documentaire-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/gestion-documents-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/relances-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/relance-devis-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/logiciel-devis-courtier-assurance-suisse",
+      "destination": "/fonctionnalites/relance-devis-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/ch/outils/calculateur-temps-administratif-suisse",
+      "destination": "/outils/calculateur-productivite-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/ch/tarifs-logiciel-courtier-chf",
+      "destination": "/tarifs",
+      "permanent": true
+    },
+    {
+      "source": "/fr/tarifs-logiciel-courtier",
+      "destination": "/tarifs",
+      "permanent": true
+    },
+    {
+      "source": "/fr/outils/calculateur-temps-administratif",
+      "destination": "/outils/calculateur-productivite-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/fr/outils/calculateur-manipulations-administratives",
+      "destination": "/outils/calculateur-productivite-courtier",
+      "permanent": true
+    },
+    {
+      "source": "/fr/guide/centraliser-dossiers-clients",
+      "destination": "/guides/centraliser-documents-clients-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/gestion-documentaire-courtier-assurance",
+      "destination": "/fonctionnalites/gestion-documents-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/gestion-commissions-courtier-assurance",
+      "destination": "/fonctionnalites/gestion-clients",
+      "permanent": true
+    },
+    {
+      "source": "/fr/comparatif/crm-courtier-vs-excel",
+      "destination": "/comparatifs/excel-vs-crm-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/comparatif/crm-specialise-vs-crm-generaliste",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/glossaire/:chemin*",
+      "destination": "/glossaire",
+      "permanent": true
+    },
+    {
+      "source": "/fr/alternative-courtigo",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/alternative-kase",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/alternative-lya",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/alternative-oggo-data",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-habitation",
+      "destination": "/assurances",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-grossiste",
+      "destination": "/assurances",
+      "permanent": true
+    },
+    {
+      "source": "/fr/logiciel-courtier-mandataire",
+      "destination": "/assurances",
+      "permanent": true
+    },
+    {
+      "source": "/fr/demo-et-essai-gratuit",
+      "destination": "/demo",
+      "permanent": true
+    },
+    {
+      "source": "/fr/evaluer-crm-courtier-assurance",
+      "destination": "/comparatifs/crm-assurance-vs-crm-generaliste",
+      "permanent": true
+    },
+    {
+      "source": "/fr/guide/choisir-crm-cabinet-courtage",
+      "destination": "/logiciel-courtier-assurance",
+      "permanent": true
+    },
+    {
+      "source": "/fr/outil-courtier-assurance",
+      "destination": "/outils",
+      "permanent": true
+    },
+    {
+      "source": "/fr",
+      "destination": "/france",
+      "permanent": true
+    },
+    {
+      "source": "/ch",
+      "destination": "/suisse",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -105,6 +385,14 @@
     {
       "source": "/api/(.*)",
       "destination": "https://courtia.onrender.com/api/$1"
+    },
+    {
+      "source": "/outils/calculateur-taux-transformation-assurance",
+      "destination": "/outils/calculateur-taux-transformation-assurance/index.html"
+    },
+    {
+      "source": "/outils/calculateur-taux-transformation-assurance/",
+      "destination": "/outils/calculateur-taux-transformation-assurance/index.html"
     },
     {
       "source": "/guides/comment-ne-plus-oublier-relances-courtier",
@@ -179,6 +467,22 @@
       "destination": "/fonctionnalites/gestion-documents-assurance/index.html"
     },
     {
+      "source": "/outils/checklist-dossier-courtier-assurance",
+      "destination": "/outils/checklist-dossier-courtier-assurance/index.html"
+    },
+    {
+      "source": "/outils/checklist-dossier-courtier-assurance/",
+      "destination": "/outils/checklist-dossier-courtier-assurance/index.html"
+    },
+    {
+      "source": "/guides/organiser-cabinet-courtage-25-points",
+      "destination": "/guides/organiser-cabinet-courtage-25-points/index.html"
+    },
+    {
+      "source": "/guides/organiser-cabinet-courtage-25-points/",
+      "destination": "/guides/organiser-cabinet-courtage-25-points/index.html"
+    },
+    {
       "source": "/comparatifs/excel-vs-crm-courtier-assurance",
       "destination": "/comparatifs/excel-vs-crm-courtier-assurance/index.html"
     },
@@ -193,6 +497,14 @@
     {
       "source": "/fonctionnalites/renouvellements-assurance/",
       "destination": "/fonctionnalites/renouvellements-assurance/index.html"
+    },
+    {
+      "source": "/outils/checklist-renouvellement-assurance",
+      "destination": "/outils/checklist-renouvellement-assurance/index.html"
+    },
+    {
+      "source": "/outils/checklist-renouvellement-assurance/",
+      "destination": "/outils/checklist-renouvellement-assurance/index.html"
     },
     {
       "source": "/solutions/courtier-assurance-independant",
@@ -299,6 +611,14 @@
       "destination": "/fonctionnalites/reporting-courtier/index.html"
     },
     {
+      "source": "/automatisation-courtier-assurance",
+      "destination": "/automatisation-courtier-assurance/index.html"
+    },
+    {
+      "source": "/automatisation-courtier-assurance/",
+      "destination": "/automatisation-courtier-assurance/index.html"
+    },
+    {
       "source": "/fonctionnalites/gestion-contrats",
       "destination": "/fonctionnalites/gestion-contrats/index.html"
     },
@@ -329,6 +649,22 @@
     {
       "source": "/suisse/crm-courtier-assurance/",
       "destination": "/suisse/crm-courtier-assurance/index.html"
+    },
+    {
+      "source": "/logiciel-courtier-assurance",
+      "destination": "/logiciel-courtier-assurance/index.html"
+    },
+    {
+      "source": "/logiciel-courtier-assurance/",
+      "destination": "/logiciel-courtier-assurance/index.html"
+    },
+    {
+      "source": "/logiciel-courtage-assurance",
+      "destination": "/logiciel-courtage-assurance/index.html"
+    },
+    {
+      "source": "/logiciel-courtage-assurance/",
+      "destination": "/logiciel-courtage-assurance/index.html"
     },
     {
       "source": "/solutions/reseau-courtage",
@@ -371,6 +707,22 @@
       "destination": "/assurances/prevoyance/index.html"
     },
     {
+      "source": "/suisse/suisse-romande",
+      "destination": "/suisse/suisse-romande/index.html"
+    },
+    {
+      "source": "/suisse/suisse-romande/",
+      "destination": "/suisse/suisse-romande/index.html"
+    },
+    {
+      "source": "/france/montpellier",
+      "destination": "/france/montpellier/index.html"
+    },
+    {
+      "source": "/france/montpellier/",
+      "destination": "/france/montpellier/index.html"
+    },
+    {
       "source": "/assurances/rc-pro",
       "destination": "/assurances/rc-pro/index.html"
     },
@@ -379,12 +731,36 @@
       "destination": "/assurances/rc-pro/index.html"
     },
     {
+      "source": "/france/strasbourg",
+      "destination": "/france/strasbourg/index.html"
+    },
+    {
+      "source": "/france/strasbourg/",
+      "destination": "/france/strasbourg/index.html"
+    },
+    {
       "source": "/fonctionnalites",
       "destination": "/fonctionnalites/index.html"
     },
     {
       "source": "/fonctionnalites/",
       "destination": "/fonctionnalites/index.html"
+    },
+    {
+      "source": "/france/marseille",
+      "destination": "/france/marseille/index.html"
+    },
+    {
+      "source": "/france/marseille/",
+      "destination": "/france/marseille/index.html"
+    },
+    {
+      "source": "/suisse/neuchatel",
+      "destination": "/suisse/neuchatel/index.html"
+    },
+    {
+      "source": "/suisse/neuchatel/",
+      "destination": "/suisse/neuchatel/index.html"
     },
     {
       "source": "/mentions-legales",
@@ -403,6 +779,38 @@
       "destination": "/suisse/lausanne/index.html"
     },
     {
+      "source": "/france/toulouse",
+      "destination": "/france/toulouse/index.html"
+    },
+    {
+      "source": "/france/toulouse/",
+      "destination": "/france/toulouse/index.html"
+    },
+    {
+      "source": "/france/bordeaux",
+      "destination": "/france/bordeaux/index.html"
+    },
+    {
+      "source": "/france/bordeaux/",
+      "destination": "/france/bordeaux/index.html"
+    },
+    {
+      "source": "/suisse/montreux",
+      "destination": "/suisse/montreux/index.html"
+    },
+    {
+      "source": "/suisse/montreux/",
+      "destination": "/suisse/montreux/index.html"
+    },
+    {
+      "source": "/suisse/fribourg",
+      "destination": "/suisse/fribourg/index.html"
+    },
+    {
+      "source": "/suisse/fribourg/",
+      "destination": "/suisse/fribourg/index.html"
+    },
+    {
       "source": "/confidentialite",
       "destination": "/confidentialite/index.html"
     },
@@ -417,6 +825,46 @@
     {
       "source": "/suisse/geneve/",
       "destination": "/suisse/geneve/index.html"
+    },
+    {
+      "source": "/france/nantes",
+      "destination": "/france/nantes/index.html"
+    },
+    {
+      "source": "/france/nantes/",
+      "destination": "/france/nantes/index.html"
+    },
+    {
+      "source": "/suisse/valais",
+      "destination": "/suisse/valais/index.html"
+    },
+    {
+      "source": "/suisse/valais/",
+      "destination": "/suisse/valais/index.html"
+    },
+    {
+      "source": "/france/paris",
+      "destination": "/france/paris/index.html"
+    },
+    {
+      "source": "/france/paris/",
+      "destination": "/france/paris/index.html"
+    },
+    {
+      "source": "/france/lille",
+      "destination": "/france/lille/index.html"
+    },
+    {
+      "source": "/france/lille/",
+      "destination": "/france/lille/index.html"
+    },
+    {
+      "source": "/suisse/vevey",
+      "destination": "/suisse/vevey/index.html"
+    },
+    {
+      "source": "/suisse/vevey/",
+      "destination": "/suisse/vevey/index.html"
     },
     {
       "source": "/comparatifs",
@@ -435,12 +883,60 @@
       "destination": "/assurances/index.html"
     },
     {
+      "source": "/france/lyon",
+      "destination": "/france/lyon/index.html"
+    },
+    {
+      "source": "/france/lyon/",
+      "destination": "/france/lyon/index.html"
+    },
+    {
+      "source": "/france/nice",
+      "destination": "/france/nice/index.html"
+    },
+    {
+      "source": "/france/nice/",
+      "destination": "/france/nice/index.html"
+    },
+    {
+      "source": "/suisse/nyon",
+      "destination": "/suisse/nyon/index.html"
+    },
+    {
+      "source": "/suisse/nyon/",
+      "destination": "/suisse/nyon/index.html"
+    },
+    {
+      "source": "/suisse/sion",
+      "destination": "/suisse/sion/index.html"
+    },
+    {
+      "source": "/suisse/sion/",
+      "destination": "/suisse/sion/index.html"
+    },
+    {
+      "source": "/suisse/vaud",
+      "destination": "/suisse/vaud/index.html"
+    },
+    {
+      "source": "/suisse/vaud/",
+      "destination": "/suisse/vaud/index.html"
+    },
+    {
       "source": "/solutions",
       "destination": "/solutions/index.html"
     },
     {
       "source": "/solutions/",
       "destination": "/solutions/index.html"
+    },
+    {
+      "source": "/glossaire",
+      "destination": "/glossaire/index.html"
+    },
+    {
+      "source": "/glossaire/",
+      "destination": "/glossaire/index.html"
     },
     {
       "source": "/changelog",
@@ -505,6 +1001,14 @@
     {
       "source": "/contact/",
       "destination": "/contact/index.html"
+    },
+    {
+      "source": "/tarifs",
+      "destination": "/tarifs/index.html"
+    },
+    {
+      "source": "/tarifs/",
+      "destination": "/tarifs/index.html"
     },
     {
       "source": "/demo",

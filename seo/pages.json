@@ -9,7 +9,7 @@
   "h1": "Le cockpit IA des courtiers en assurance",
   "chapeau": "COURTIARK centralise votre portefeuille, vos contrats, vos dossiers, vos documents et vos relances dans un CRM conçu spécifiquement pour les cabinets de courtage — en France et en Suisse.",
   "fil": [],
-  "corps": "<h2>Le problème que COURTIARK règle</h2><div class=\"section\"><p>Un cabinet de courtage vit sur un portefeuille : des clients, des contrats, des échéances, des devis à suivre, des pièces à récupérer et des renouvellements à ne pas manquer. Quand ces éléments vivent dans un tableur, une boîte e-mail et un agenda, le suivi dépend de la mémoire de chacun — et les occasions de revenir vers un client se perdent.</p><ul><li>Les dossiers sont dispersés entre plusieurs outils et plusieurs personnes.</li><li>Les relances se font quand on y pense, pas quand l'échéance l'exige.</li><li>Les pièces manquantes (RIB, attestation, carte verte) sont redemandées trois fois.</li><li>Les renouvellements arrivent sans préparation.</li><li>Le temps administratif passe avant le temps commercial.</li></ul></div><h2>Ce que fait COURTIARK</h2><div class=\"section\"><table><thead><tr><th>Besoin métier</th><th>Ce que COURTIARK fait</th></tr></thead><tbody><tr><td>Portefeuille</td><td>Fiche client complète : coordonnées, contrats, échéances, documents, historique d'échanges.</td></tr><tr><td>Contrats</td><td>Contrats et échéances de renouvellement, avec les statuts du dossier.</td></tr><tr><td>Devis</td><td>Registre des devis, suivi de l'étape en cours et actions de relance à mener.</td></tr><tr><td>Documents</td><td>Collecte par lien : le client dépose ses pièces lui-même, sans compte à créer.</td></tr><tr><td>Relances</td><td>Relances organisées, rattachées au dossier concerné, avec la trace des demandes.</td></tr><tr><td>Commissions</td><td>Suivi des commissions et rétrocessions, avec un calculateur d'appoint.</td></tr><tr><td>Conformité</td><td>Repères France (DDA, ORIAS, RGPD) et Suisse (LSA, FINMA, nLPD) dans le suivi du dossier.</td></tr><tr><td>Priorités</td><td>Un brief du matin et une santé de portefeuille pour trier ce qui mérite votre attention.</td></tr><tr><td>Assistant ARK</td><td>ARK lit un document, en propose les informations, vous validez : rien n'est écrit sans votre accord.</td></tr><tr><td>Prospection</td><td>Recherche de prospects, campagnes, séquences et suivi des réponses dans le même outil.</td></tr></tbody></table><p><a href=\"/crm-courtier-assurance\">Voir le détail du CRM courtier assurance</a> · <a href=\"/fonctionnalites/\">Toutes les fonctionnalités</a></p></div><h2>ARK, l'assistant du cabinet</h2><div class=\"section\"><p>ARK n'est pas un chatbot décoratif. Il travaille sur les données de votre cabinet : lecture d'un document déposé (facture, RIB, attestation), proposition des informations détectées avec la page source, comparaison avec la fiche client, puis écriture uniquement après votre validation.</p><div class=\"etape\"><b>Entrée</b><span>Un document, une question, ou la situation d'un dossier.</span></div><div class=\"etape\"><b>Analyse</b><span>ARK lit le document et propose des valeurs avec leur origine.</span></div><div class=\"etape\"><b>Validation</b><span>Vous confirmez, corrigez ou refusez chaque ligne.</span></div><div class=\"etape\"><b>Résultat</b><span>La fiche client est à jour, l'action d'audit est enregistrée.</span></div><p><a href=\"/fonctionnalites/assistant-ark\">Comment fonctionne ARK</a></p></div><h2>Avant / après</h2><div class=\"section\"><div class=\"bascule\"><div><h3>Sans COURTIARK</h3><ul><li>Classeur par client mis à jour à la main</li><li>Relances sur mémoire et post-it</li><li>Pièces redemandées par téléphone</li><li>Échéances découvertes au moment du renouvellement</li></ul></div><div><h3>Avec COURTIARK</h3><ul><li>Fiche client unique, mise à jour au fil de l'eau</li><li>Relances rattachées au dossier et suivies</li><li>Lien de dépôt : le client envoie ses pièces</li><li>Renouvellements visibles en amont</li></ul></div></div></div><h2>France et Suisse, deux marchés traités séparément</h2><div class=\"section\"><p>Le vocabulaire et le cadre ne sont pas les mêmes : en France on parle d'intermédiaire d'assurance, de DDA et d'ORIAS ; en Suisse, d'intermédiaire au sens de la LSA, de surveillance FINMA et de protection des données (LPD). COURTIARK intègre ces repères et facture en euros comme en francs suisses.</p><p><a href=\"/france/\">COURTIARK en France</a> · <a href=\"/suisse/\">COURTIARK en Suisse</a> · <a href=\"/suisse/geneve\">Genève</a> · <a href=\"/suisse/lausanne\">Lausanne</a></p></div><h2>Sécurité et confidentialité</h2><div class=\"section\"><p>Les données d'un cabinet sont cloisonnées : un cabinet ne voit que ses propres dossiers, ce cloisonnement est vérifié par des tests d'isolation exécutés sur la production. Les données clients ne sont ni revendues ni utilisées pour alimenter un autre cabinet.</p><p><a href=\"/securite\">Sécurité</a> · <a href=\"/confidentialite\">Confidentialité</a></p></div><h2>Essayer COURTIARK</h2><div class=\"section\"><p>L'essai dure 7 jours et ne demande pas de carte bancaire. À la fin de l'essai, un compte expiré reste consultable : aucune donnée n'est supprimée, les écritures sont simplement suspendues jusqu'à la souscription.</p><p>France : Starter 89 € HT/mois, Pro 159 € HT/mois. Suisse : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div><h2>Questions fréquentes</h2><div class=\"section\"><p>Les réponses détaillées se trouvent sur la page <a href=\"/crm-courtier-assurance\">CRM courtier assurance</a>.</p></div>",
+  "corps": "<h2>Le problème que COURTIARK règle</h2><div class=\"section\"><p>Un cabinet de courtage vit sur un portefeuille : des clients, des contrats, des échéances, des devis à suivre, des pièces à récupérer et des renouvellements à ne pas manquer. Quand ces éléments vivent dans un tableur, une boîte e-mail et un agenda, le suivi dépend de la mémoire de chacun — et les occasions de revenir vers un client se perdent.</p><ul><li>Les dossiers sont dispersés entre plusieurs outils et plusieurs personnes.</li><li>Les relances se font quand on y pense, pas quand l'échéance l'exige.</li><li>Les pièces manquantes (RIB, attestation, carte verte) sont redemandées trois fois.</li><li>Les renouvellements arrivent sans préparation.</li><li>Le temps administratif passe avant le temps commercial.</li></ul></div><h2>Ce que fait COURTIARK</h2><div class=\"section\"><table><thead><tr><th>Besoin métier</th><th>Ce que COURTIARK fait</th></tr></thead><tbody><tr><td>Portefeuille</td><td>Fiche client complète : coordonnées, contrats, échéances, documents, historique d'échanges.</td></tr><tr><td>Contrats</td><td>Contrats et échéances de renouvellement, avec les statuts du dossier.</td></tr><tr><td>Devis</td><td>Registre des devis, suivi de l'étape en cours et actions de relance à mener.</td></tr><tr><td>Documents</td><td>Collecte par lien : le client dépose ses pièces lui-même, sans compte à créer.</td></tr><tr><td>Relances</td><td>Relances organisées, rattachées au dossier concerné, avec la trace des demandes.</td></tr><tr><td>Commissions</td><td>Suivi des commissions et rétrocessions, avec un calculateur d'appoint.</td></tr><tr><td>Conformité</td><td>Repères France (DDA, ORIAS, RGPD) et Suisse (LSA, FINMA, nLPD) dans le suivi du dossier.</td></tr><tr><td>Priorités</td><td>Un brief du matin et une santé de portefeuille pour trier ce qui mérite votre attention.</td></tr><tr><td>Assistant ARK</td><td>ARK lit un document, en propose les informations, vous validez : rien n'est écrit sans votre accord.</td></tr><tr><td>Prospection</td><td>Recherche de prospects, campagnes, séquences et suivi des réponses dans le même outil.</td></tr></tbody></table><p><a href=\"/crm-courtier-assurance\">Voir le détail du CRM courtier assurance</a> · <a href=\"/fonctionnalites/\">Toutes les fonctionnalités</a></p><p><a href=\"/logiciel-courtier-assurance\">Choisir un logiciel de courtier</a> · <a href=\"/automatisation-courtier-assurance\">Ce qui peut être automatisé</a> · <a href=\"/tarifs\">Tarifs France et Suisse</a> · <a href=\"/outils/calculateur-taux-transformation-assurance\">Calculateur de taux de transformation</a> · <a href=\"/glossaire\">Glossaire du courtage</a></p></div><h2>ARK, l'assistant du cabinet</h2><div class=\"section\"><p>ARK n'est pas un chatbot décoratif. Il travaille sur les données de votre cabinet : lecture d'un document déposé (facture, RIB, attestation), proposition des informations détectées avec la page source, comparaison avec la fiche client, puis écriture uniquement après votre validation.</p><div class=\"etape\"><b>Entrée</b><span>Un document, une question, ou la situation d'un dossier.</span></div><div class=\"etape\"><b>Analyse</b><span>ARK lit le document et propose des valeurs avec leur origine.</span></div><div class=\"etape\"><b>Validation</b><span>Vous confirmez, corrigez ou refusez chaque ligne.</span></div><div class=\"etape\"><b>Résultat</b><span>La fiche client est à jour, l'action d'audit est enregistrée.</span></div><p><a href=\"/fonctionnalites/assistant-ark\">Comment fonctionne ARK</a></p></div><h2>Avant / après</h2><div class=\"section\"><div class=\"bascule\"><div><h3>Sans COURTIARK</h3><ul><li>Classeur par client mis à jour à la main</li><li>Relances sur mémoire et post-it</li><li>Pièces redemandées par téléphone</li><li>Échéances découvertes au moment du renouvellement</li></ul></div><div><h3>Avec COURTIARK</h3><ul><li>Fiche client unique, mise à jour au fil de l'eau</li><li>Relances rattachées au dossier et suivies</li><li>Lien de dépôt : le client envoie ses pièces</li><li>Renouvellements visibles en amont</li></ul></div></div></div><h2>France et Suisse, deux marchés traités séparément</h2><div class=\"section\"><p>Le vocabulaire et le cadre ne sont pas les mêmes : en France on parle d'intermédiaire d'assurance, de DDA et d'ORIAS ; en Suisse, d'intermédiaire au sens de la LSA, de surveillance FINMA et de protection des données (LPD). COURTIARK intègre ces repères et facture en euros comme en francs suisses.</p><p><a href=\"/france/\">COURTIARK en France</a> · <a href=\"/suisse/\">COURTIARK en Suisse</a> · <a href=\"/suisse/geneve\">Genève</a> · <a href=\"/suisse/lausanne\">Lausanne</a></p></div><h2>Sécurité et confidentialité</h2><div class=\"section\"><p>Les données d'un cabinet sont cloisonnées : un cabinet ne voit que ses propres dossiers, ce cloisonnement est vérifié par des tests d'isolation exécutés sur la production. Les données clients ne sont ni revendues ni utilisées pour alimenter un autre cabinet.</p><p><a href=\"/securite\">Sécurité</a> · <a href=\"/confidentialite\">Confidentialité</a></p></div><h2>Essayer COURTIARK</h2><div class=\"section\"><p>L'essai dure 7 jours et ne demande pas de carte bancaire. À la fin de l'essai, un compte expiré reste consultable : aucune donnée n'est supprimée, les écritures sont simplement suspendues jusqu'à la souscription.</p><p>France : Starter 89 € HT/mois, Pro 159 € HT/mois. Suisse : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div><h2>Questions fréquentes</h2><div class=\"section\"><p>Les réponses détaillées se trouvent sur la page <a href=\"/crm-courtier-assurance\">CRM courtier assurance</a>.</p></div>",
   "faq": [
    [
     "Qu'est-ce qu'un CRM pour courtier en assurance ?",
@@ -55,7 +55,7 @@
    ]
   ],
   "slug": "",
-  "_octets": 20174,
+  "_octets": 20541,
   "_section": "core"
  },
  {
@@ -140,7 +140,7 @@
     null
    ]
   ],
-  "corps": "<h2>Portefeuille et dossiers clients</h2><div class=\"section\"><ul><li><a href=\"/fonctionnalites/gestion-clients\">Gestion des clients</a> — la fiche qui remplace le tableur.</li><li><a href=\"/fonctionnalites/gestion-portefeuille-assurance\">Gestion de portefeuille</a> — piloter l'ensemble du portefeuille.</li><li><a href=\"/fonctionnalites/gestion-contrats\">Gestion des contrats</a> — contrats, échéances, statuts.</li><li><a href=\"/fonctionnalites/renouvellements-assurance\">Renouvellements</a> — anticiper avant l'échéance.</li></ul></div><h2>Suivi commercial</h2><div class=\"section\"><ul><li><a href=\"/fonctionnalites/relance-devis-assurance\">Relance des devis</a> — ne plus laisser un devis sans suite.</li><li><a href=\"/fonctionnalites/automatisation-relances\">Automatisation des relances</a> — organiser les demandes récurrentes.</li><li><a href=\"/fonctionnalites/prospection-assurance\">Prospection</a> — recherche de prospects et campagnes.</li><li><a href=\"/fonctionnalites/reporting-courtier\">Reporting</a> — ce que produit l'activité.</li></ul></div><h2>Administratif et documents</h2><div class=\"section\"><ul><li><a href=\"/fonctionnalites/gestion-documents-assurance\">Gestion des documents</a> — collecte par lien, pièces classées.</li><li><a href=\"/fonctionnalites/assistant-ark\">Assistant ARK</a> — lecture de document, proposition, validation.</li></ul></div>",
+  "corps": "<h2>Portefeuille et dossiers clients</h2><div class=\"section\"><ul><li><a href=\"/fonctionnalites/gestion-clients\">Gestion des clients</a> — la fiche qui remplace le tableur.</li><li><a href=\"/fonctionnalites/gestion-portefeuille-assurance\">Gestion de portefeuille</a> — piloter l'ensemble du portefeuille.</li><li><a href=\"/fonctionnalites/gestion-contrats\">Gestion des contrats</a> — contrats, échéances, statuts.</li><li><a href=\"/fonctionnalites/renouvellements-assurance\">Renouvellements</a> — anticiper avant l'échéance.</li></ul></div><h2>Suivi commercial</h2><div class=\"section\"><ul><li><a href=\"/fonctionnalites/relance-devis-assurance\">Relance des devis</a> — ne plus laisser un devis sans suite.</li><li><a href=\"/fonctionnalites/automatisation-relances\">Automatisation des relances</a> — organiser les demandes récurrentes.</li><li><a href=\"/fonctionnalites/prospection-assurance\">Prospection</a> — recherche de prospects et campagnes.</li><li><a href=\"/fonctionnalites/reporting-courtier\">Reporting</a> — ce que produit l'activité.</li></ul></div><h2>Administratif et documents</h2><div class=\"section\"><ul><li><a href=\"/fonctionnalites/gestion-documents-assurance\">Gestion des documents</a> — collecte par lien, pièces classées.</li><li><a href=\"/fonctionnalites/assistant-ark\">Assistant ARK</a> — lecture de document, proposition, validation.</li><li><a href=\"/fonctionnalites/compte-rendu-clients\">Comptes rendus clients</a> — consigner chaque échange dans le dossier.</li></ul></div><h2>Voir aussi</h2><div class=\"section\"><ul><li><a href=\"/logiciel-courtier-assurance\">Logiciel courtier assurance</a> — périmètre, modules et critères de choix.</li><li><a href=\"/logiciel-courtage-assurance\">Logiciel de courtage</a> — le flux devis, contrat, commission.</li><li><a href=\"/automatisation-courtier-assurance\">Automatisation</a> — ce qui peut être organisé, ce qui reste humain.</li><li><a href=\"/tarifs\">Tarifs</a> — France et Suisse, essai de 7 jours.</li></ul></div>",
   "faq": [],
   "lire": [
    [
@@ -152,12 +152,16 @@
     "/guides/"
    ],
    [
+    "Formation de l'équipe",
+    "/fr/formation-equipe-courtier-assurance"
+   ],
+   [
     "Outils gratuits",
     "/outils/"
    ]
   ],
   "slug": "/fonctionnalites/",
-  "_octets": 12999,
+  "_octets": 13716,
   "_section": "features"
  },
  {
@@ -256,6 +260,10 @@
     "/fonctionnalites/gestion-clients"
    ],
    [
+    "Comptes rendus clients",
+    "/fonctionnalites/compte-rendu-clients"
+   ],
+   [
     "Renouvellements",
     "/fonctionnalites/renouvellements-assurance"
    ],
@@ -265,7 +273,7 @@
    ]
   ],
   "slug": "/fonctionnalites/gestion-portefeuille-assurance",
-  "_octets": 14601,
+  "_octets": 14684,
   "_section": "features"
  },
  {
@@ -716,7 +724,7 @@
     null
    ]
   ],
-  "corps": "<h2>Ce que le marché français impose au suivi</h2><div class=\"section\"><ul><li>La loi impose au distributeur d'assurance un devoir de conseil documenté et une information précontractuelle claire (DDA).</li><li>L'activité d'intermédiaire suppose une immatriculation au registre unique (ORIAS).</li><li>Les données clients relèvent du RGPD, avec des exclusions fortes pour les données de santé.</li></ul><p class=\"note\">Sources consultées : <a href=\"https://www.orias.fr/\" rel=\"nofollow noopener\" target=\"_blank\">orias.fr</a> (registre unique des intermédiaires en assurance) · <a href=\"https://www.legifrance.gouv.fr/\" rel=\"nofollow noopener\" target=\"_blank\">legifrance.gouv.fr</a> (Code des assurances) · <a href=\"https://www.cnil.fr/\" rel=\"nofollow noopener\" target=\"_blank\">cnil.fr</a> (RGPD). Ces repères sont documentaires et ne constituent pas un conseil juridique.</p></div><h2>Ce que COURTIARK apporte</h2><div class=\"section\"><table><thead><tr><th>Besoin français</th><th>Réponse COURTIARK</th></tr></thead><tbody><tr><td>Devoir de conseil</td><td>La fiche client, l'historique et les documents restent attachés au dossier, ce qui rend l'instruction défendable.</td></tr><tr><td>Suivi des renouvellements</td><td>Les échéances sont visibles en amont, avant l'avis de l'assureur.</td></tr><tr><td>Pièces justificatives</td><td>Collecte par lien, classée dans le dossier.</td></tr><tr><td>Commisions et rétrocessions</td><td>Suivi par dossier, avec un calculateur d'appoint.</td></tr><tr><td>Prospection encadrée</td><td>Séquences suivies, oppositions gérées, trace des contacts.</td></tr></tbody></table></div><h2>Prix en France</h2><div class=\"section\"><table><thead><tr><th>Offre</th><th>Prix</th><th>Cible</th></tr></thead><tbody><tr><td>Starter</td><td>89 € HT/mois</td><td>Courtier indépendant qui organise son portefeuille.</td></tr><tr><td>Pro</td><td>159 € HT/mois</td><td>Cabinet avec plusieurs collaborateurs.</td></tr><tr><td>Cabinet</td><td>Sur devis</td><td>Volumes et besoins spécifiques, reprise de données.</td></tr></tbody></table><p>Essai de 7 jours sans carte bancaire. À l'expiration, aucune donnée n'est supprimée : le compte reste consultable, les écritures sont suspendues.</p></div><h2>Villes et régions</h2><div class=\"section\"><p>Les pages locales et régionales sont publiées progressivement, uniquement lorsqu'elles apportent un contenu propre à la zone. Aucune page de ville vide n'est mise en ligne.</p><ul><li><a href=\"/suisse/geneve\">Genève</a> et <a href=\"/suisse/lausanne\">Lausanne</a> pour la Suisse romande.</li><li>Les agglomérations françaises seront publiées par vagues, avec un contenu local réel.</li></ul></div><h2>Et la Suisse ?</h2><div class=\"section\"><p>Le marché suisse est traité séparément, avec son vocabulaire et ses repères : <a href=\"/suisse/\">COURTIARK en Suisse</a>.</p></div>",
+  "corps": "<h2>Ce que le marché français impose au suivi</h2><div class=\"section\"><ul><li>La loi impose au distributeur d'assurance un devoir de conseil documenté et une information précontractuelle claire (DDA).</li><li>L'activité d'intermédiaire suppose une immatriculation au registre unique (ORIAS).</li><li>Les données clients relèvent du RGPD, avec des exclusions fortes pour les données de santé.</li></ul><p class=\"note\">Sources consultées : <a href=\"https://www.orias.fr/\" rel=\"nofollow noopener\" target=\"_blank\">orias.fr</a> (registre unique des intermédiaires en assurance) · <a href=\"https://www.legifrance.gouv.fr/\" rel=\"nofollow noopener\" target=\"_blank\">legifrance.gouv.fr</a> (Code des assurances) · <a href=\"https://www.cnil.fr/\" rel=\"nofollow noopener\" target=\"_blank\">cnil.fr</a> (RGPD). Ces repères sont documentaires et ne constituent pas un conseil juridique.</p></div><h2>Ce que COURTIARK apporte</h2><div class=\"section\"><table><thead><tr><th>Besoin français</th><th>Réponse COURTIARK</th></tr></thead><tbody><tr><td>Devoir de conseil</td><td>La fiche client, l'historique et les documents restent attachés au dossier, ce qui rend l'instruction défendable.</td></tr><tr><td>Suivi des renouvellements</td><td>Les échéances sont visibles en amont, avant l'avis de l'assureur.</td></tr><tr><td>Pièces justificatives</td><td>Collecte par lien, classée dans le dossier.</td></tr><tr><td>Commisions et rétrocessions</td><td>Suivi par dossier, avec un calculateur d'appoint.</td></tr><tr><td>Prospection encadrée</td><td>Séquences suivies, oppositions gérées, trace des contacts.</td></tr></tbody></table></div><h2>Prix en France</h2><div class=\"section\"><table><thead><tr><th>Offre</th><th>Prix</th><th>Cible</th></tr></thead><tbody><tr><td>Starter</td><td>89 € HT/mois</td><td>Courtier indépendant qui organise son portefeuille.</td></tr><tr><td>Pro</td><td>159 € HT/mois</td><td>Cabinet avec plusieurs collaborateurs.</td></tr><tr><td>Cabinet</td><td>Sur devis</td><td>Volumes et besoins spécifiques, reprise de données.</td></tr></tbody></table><p>Essai de 7 jours sans carte bancaire. À l'expiration, aucune donnée n'est supprimée : le compte reste consultable, les écritures sont suspendues.</p></div><h2>Villes</h2><div class=\"section\"><p>Chaque page de ville porte les chiffres réels du courtage local (établissements immatriculés au code NAF 66.22Z, densité pour 10 000 habitants) et les conséquences concrètes pour un cabinet de cette agglomération. Aucune page de ville sans donnée propre n'est publiée.</p><ul><li><a href=\"/france/paris\">Paris</a> — 4 347 établissements, 20,7 pour 10 000 habitants</li><li><a href=\"/france/lyon\">Lyon</a> · <a href=\"/france/marseille\">Marseille</a> · <a href=\"/france/toulouse\">Toulouse</a> · <a href=\"/france/bordeaux\">Bordeaux</a></li><li><a href=\"/france/lille\">Lille</a> · <a href=\"/france/nantes\">Nantes</a> · <a href=\"/france/strasbourg\">Strasbourg</a> · <a href=\"/france/montpellier\">Montpellier</a> · <a href=\"/france/nice\">Nice</a></li></ul><p>Source de référence et méthode : <a href=\"/france/densite-courtage-grandes-villes-france\">densité du courtage dans les grandes villes françaises</a> (base SIRENE, extraction du 19/09/2026).</p></div><h2>Régions et départements</h2><div class=\"section\"><p>Les pages de région ne sont pas publiées tant qu'elles ne portent pas de donnée propre : les départements sont traités depuis les villes et depuis la page de densité, où figure la répartition réelle par département.</p></div><h2>Et la Suisse ?</h2><div class=\"section\"><p>Le marché suisse est traité séparément, avec son vocabulaire et ses repères : <a href=\"/suisse/\">COURTIARK en Suisse</a>.</p></div>",
   "faq": [
    [
     "COURTIARK est-il immatriculé ORIAS ?",
@@ -746,7 +754,7 @@
    ]
   ],
   "slug": "/france/",
-  "_octets": 16999,
+  "_octets": 17852,
   "_section": "france"
  },
  {
@@ -765,7 +773,7 @@
     null
    ]
   ],
-  "corps": "<h2>Ce qui distingue le marché suisse</h2><div class=\"section\"><ul><li>L'activité d'intermédiaire d'assurance est encadrée par la loi sur le contrat d'assurance (LSA) ; selon son statut, l'intermédiaire doit satisfaire aux exigences et figurer le cas échéant au registre des intermédiaires d'assurance.</li><li>La surveillance prudentielle relève de la FINMA ; le registre public des intermédiaires permet de vérifier un statut.</li><li>La protection des données répond à un cadre fédéral propre, avec des exigences de transparence sur le traitement.</li><li>Le marché mêle assurance maladie (LAMal), assurance-vie et prévoyance (LPP, 3e pilier) et assurances de choses pour les entreprises.</li></ul><p class=\"note\">Sources consultées : <a href=\"https://www.finma.ch/fr/\" rel=\"nofollow noopener\" target=\"_blank\">finma.ch</a> (surveillance et intermédiaires d'assurance) · <a href=\"https://www.fedlex.admin.ch/fr/cc/internal-law\" rel=\"nofollow noopener\" target=\"_blank\">fedlex.admin.ch</a> (loi sur le contrat d'assurance, protection des données) · <a href=\"https://www.admin.ch/opc/fr/\" rel=\"nofollow noopener\" target=\"_blank\">admin.ch</a>. Ces repères sont documentaires et ne constituent pas un conseil juridique.</p></div><h2>Ce que COURTIARK apporte à un cabinet suisse</h2><div class=\"section\"><table><thead><tr><th>Besoin suisse</th><th>Réponse COURTIARK</th></tr></thead><tbody><tr><td>Portefeuille pluriannuel</td><td>Contrats et échéances, avec un suivi qui ne dépend pas d'un tableur.</td></tr><tr><td>Clientèle entreprises (PME)</td><td>Fiches clients entreprises et particuliers, avec tags et historique.</td></tr><tr><td>Pièces et documents</td><td>Collecte par lien, classement dans le dossier, lecture assistée par ARK.</td></tr><tr><td>Prévoyance et risque</td><td>Suivi des dossiers et des échéances, sans promesse de tarification.</td></tr><tr><td>Protection des données</td><td>Cloisonnement par cabinet, accès limité aux utilisateurs du cabinet.</td></tr></tbody></table></div><h2>Facturation en francs suisses</h2><div class=\"section\"><table><thead><tr><th>Offre (Suisse)</th><th>Prix</th><th>Cible</th></tr></thead><tbody><tr><td>Indépendant</td><td>199 CHF HT/mois</td><td>Intermédiaire seul, portefeuille à organiser.</td></tr><tr><td>Cabinet</td><td>349 CHF HT/mois</td><td>Cabinet avec plusieurs collaborateurs.</td></tr><tr><td>Sur devis</td><td>Sur devis</td><td>Structures et volumes spécifiques.</td></tr></tbody></table><p>Essai de 7 jours sans carte bancaire.</p></div><h2>Suisse romande : Genève, Vaud, Valais, Neuchâtel, Fribourg</h2><div class=\"section\"><ul><li><a href=\"/suisse/geneve\">COURTIARK à Genève</a></li><li><a href=\"/suisse/lausanne\">COURTIARK à Lausanne</a></li><li>Le reste de la Romandie (Nyon, Vevey, Montreux, Sion, Neuchâtel, Fribourg) sera publié par vagues, avec un contenu propre à chaque zone.</li></ul><p>Les régions alémaniques et italophones sont documentées dans notre analyse, mais aucune page n'est promise sans contenu vérifié.</p></div><h2>Voir la version suisse du CRM</h2><div class=\"section\"><p>La page <a href=\"/suisse/crm-courtier-assurance\">CRM courtier assurance en Suisse</a> détaille le suivi, le vocabulaire et les repères.</p></div>",
+  "corps": "<h2>Ce qui distingue le marché suisse</h2><div class=\"section\"><ul><li>L'activité d'intermédiaire d'assurance est encadrée par la loi sur le contrat d'assurance (LSA) ; selon son statut, l'intermédiaire doit satisfaire aux exigences et figurer le cas échéant au registre des intermédiaires d'assurance.</li><li>La surveillance prudentielle relève de la FINMA ; le registre public des intermédiaires permet de vérifier un statut.</li><li>La protection des données répond à un cadre fédéral propre, avec des exigences de transparence sur le traitement.</li><li>Le marché mêle assurance maladie (LAMal), assurance-vie et prévoyance (LPP, 3e pilier) et assurances de choses pour les entreprises.</li></ul><p class=\"note\">Sources consultées : <a href=\"https://www.finma.ch/fr/\" rel=\"nofollow noopener\" target=\"_blank\">finma.ch</a> (surveillance et intermédiaires d'assurance) · <a href=\"https://www.fedlex.admin.ch/fr/cc/internal-law\" rel=\"nofollow noopener\" target=\"_blank\">fedlex.admin.ch</a> (loi sur le contrat d'assurance, protection des données) · <a href=\"https://www.admin.ch/opc/fr/\" rel=\"nofollow noopener\" target=\"_blank\">admin.ch</a>. Ces repères sont documentaires et ne constituent pas un conseil juridique.</p></div><h2>Ce que COURTIARK apporte à un cabinet suisse</h2><div class=\"section\"><table><thead><tr><th>Besoin suisse</th><th>Réponse COURTIARK</th></tr></thead><tbody><tr><td>Portefeuille pluriannuel</td><td>Contrats et échéances, avec un suivi qui ne dépend pas d'un tableur.</td></tr><tr><td>Clientèle entreprises (PME)</td><td>Fiches clients entreprises et particuliers, avec tags et historique.</td></tr><tr><td>Pièces et documents</td><td>Collecte par lien, classement dans le dossier, lecture assistée par ARK.</td></tr><tr><td>Prévoyance et risque</td><td>Suivi des dossiers et des échéances, sans promesse de tarification.</td></tr><tr><td>Protection des données</td><td>Cloisonnement par cabinet, accès limité aux utilisateurs du cabinet.</td></tr></tbody></table></div><h2>Facturation en francs suisses</h2><div class=\"section\"><table><thead><tr><th>Offre (Suisse)</th><th>Prix</th><th>Cible</th></tr></thead><tbody><tr><td>Indépendant</td><td>199 CHF HT/mois</td><td>Intermédiaire seul, portefeuille à organiser.</td></tr><tr><td>Cabinet</td><td>349 CHF HT/mois</td><td>Cabinet avec plusieurs collaborateurs.</td></tr><tr><td>Sur devis</td><td>Sur devis</td><td>Structures et volumes spécifiques.</td></tr></tbody></table><p>Essai de 7 jours sans carte bancaire.</p></div><h2>Suisse romande : Genève, Vaud, Valais, Neuchâtel, Fribourg</h2><div class=\"section\"><ul><li><a href=\"/suisse/geneve\">Genève</a> · <a href=\"/suisse/nyon\">Nyon</a> · <a href=\"/suisse/lausanne\">Lausanne</a> · <a href=\"/suisse/vevey\">Vevey</a> · <a href=\"/suisse/montreux\">Montreux</a></li><li><a href=\"/suisse/sion\">Sion</a> · <a href=\"/suisse/neuchatel\">Neuchâtel</a> · <a href=\"/suisse/fribourg\">Fribourg</a></li><li>Vue d'ensemble : <a href=\"/suisse/vaud\">Vaud</a> · <a href=\"/suisse/valais\">Valais</a> · <a href=\"/suisse/suisse-romande\">Suisse romande</a></li><li>Sujet connexe : <a href=\"/ch/partenaires-apporteurs-courtier-assurance-suisse\">apporteurs d'affaires en Suisse</a> · <a href=\"/ch/sinistres-courtier-assurance-suisse\">suivi des sinistres</a> · <a href=\"/ch/workflows-courtier-assurance-suisse\">workflows de cabinet</a></li></ul><p>Les régions alémaniques et italophones sont documentées dans notre analyse, mais aucune page n'est promise sans contenu vérifié.</p></div><h2>Voir la version suisse du CRM</h2><div class=\"section\"><p>La page <a href=\"/suisse/crm-courtier-assurance\">CRM courtier assurance en Suisse</a> détaille le suivi, le vocabulaire et les repères.</p></div>",
   "faq": [
    [
     "COURTIARK remplace-t-il l'inscription au registre des intermédiaires ?",
@@ -799,7 +807,7 @@
    ]
   ],
   "slug": "/suisse/",
-  "_octets": 17252,
+  "_octets": 17746,
   "_section": "switzerland"
  },
  {
@@ -1460,6 +1468,1606 @@
   "_section": "assurances"
  },
  {
+  "path": "/france/paris",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Paris",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Paris | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Paris : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 4347 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Paris",
+  "chapeau": "Un cabinet de courtage à Paris tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Paris",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Paris cumule la plus forte densité de courtage du pays dans notre relevé : 20,7 établissements pour 10 000 habitants, très au-dessus de la moyenne des autres villes. Un cabinet parisien travaille donc dans un marché saturé où la différenciation ne vient plus du produit vendu mais du suivi.</p><p><b>Paris</b> : 4 347 établissements de courtage d'assurances recensés  2 103 778 habitants  soit <b>20 7 établissements pour 10 000 habitants</b> (département : Paris  région : Île-de-France).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Un portefeuille souvent composé de clientèle mixte : professions libérales, dirigeants, entreprises.</li><li>Des clients qui changent de situation fréquemment (mobilité, création d'activité) : les mises à jour de dossier s'accumulent.</li><li>Une pression sur les délais de réponse, dans un marché où plusieurs cabinets peuvent être consultés en parallèle.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Clientèle mixte (particuliers, dirigeants, entreprises)</td><td>Un dossier client unique, avec l'historique des échanges et des contrats</td></tr><tr><td>Changements de situation fréquents</td><td>Mise à jour consignée : ce qui a changé, quand, avec quelle pièce</td></tr><tr><td>Réactivité attendue</td><td>Brief du matin et dossiers en attente visibles dès la connexion</td></tr><tr><td>Plusieurs collaborateurs</td><td>Rôles distincts et cloisonnement des données par cabinet</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Paris</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un dirigeant qui change de société : sa prévoyance doit être réexaminée sans repartir de zéro</li><li><b>Exemple 2</b> — Une profession libérale qui ouvre un second cabinet : les deux activités doivent rester lisibles dans le même dossier</li><li><b>Exemple 3</b> — Une PME qui déménage : les contrats de choses et la RC doivent être repris avec la date du changement</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Un cabinet parisien a-t-il besoin d'un CRM spécifique ?",
+    "Dans un marché aussi dense, le suivi documenté fait la différence : contrats, échéances et pièces du dossier doivent être retrouvables en quelques secondes, par plusieurs personnes, sans dépendre d'un tableur."
+   ],
+   [
+    "Combien de cabinets de courtage compte Paris ?",
+    "Notre relevé SIRENE du 19/09/2026 recense 4 347 établissements dont l'activité déclarée correspond au courtage d'assurances (NAF 66.22Z) dans la commune."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Paris ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/paris",
+  "_octets": 17686,
+  "_section": "france"
+ },
+ {
+  "path": "/france/lyon",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Lyon",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Lyon | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Lyon : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 634 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Lyon",
+  "chapeau": "Un cabinet de courtage à Lyon tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Lyon",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Lyon combine une densité élevée (12,2 pour 10 000 habitants) et un tissu économique de PME et de professions libérales. Le cabinet lyonnais suit à la fois des particuliers exigeants et des entreprises dont les contrats évoluent avec l'activité.</p><p><b>Lyon</b> : 634 établissements de courtage d'assurances recensés  519 127 habitants  soit <b>12 2 établissements pour 10 000 habitants</b> (département : Rhône  région : Auvergne-Rhône-Alpes).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des dossiers entreprises (multirisque, RC professionnelle) dont les échéances ne tombent pas aux mêmes dates.</li><li>Une concurrence régionale forte avec des cabinets de taille comparable : le temps de réaction est un argument commercial.</li><li>Des équipes souvent réduites qui cumulent production et administration.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Portefeuille mixte particuliers / entreprises</td><td>Contrats et échéances rattachés au client, quelle que soit la branche</td></tr><tr><td>Échéances désynchronisées</td><td>Vue portefeuille pour préparer chaque renouvellement au bon moment</td></tr><tr><td>Petite équipe polyvalente</td><td>Une seule saisie, partagée, au lieu d'un tableur par collaborateur</td></tr><tr><td>Devis à suivre</td><td>Registre des devis et repérage de ceux restés sans réponse</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Lyon</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Une PME lyonnaise qui recrute : le contrat de prévoyance doit être revalorisé</li><li><b>Exemple 2</b> — Un client qui ajoute un véhicule professionnel : le dossier doit refléter la flotte réelle</li><li><b>Exemple 3</b> — Un devis resté sans réponse trois semaines : la relance doit être visible, pas oubliée</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Pourquoi un cabinet lyonnais suit-il difficilement ses échéances ?",
+    "Parce que les contrats entreprises et particuliers n'ont pas de rythme commun : sans vue consolidée des échéances, la préparation du renouvellement se fait au dernier moment."
+   ],
+   [
+    "Combien d'établissements de courtage à Lyon ?",
+    "634 établissements relevant du courtage d'assurances (NAF 66.22Z) dans notre extraction du 19/09/2026, pour 519 127 habitants."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Lyon ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/lyon",
+  "_octets": 17376,
+  "_section": "france"
+ },
+ {
+  "path": "/france/marseille",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Marseille",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Marseille | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Marseille : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 632 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Marseille",
+  "chapeau": "Un cabinet de courtage à Marseille tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Marseille",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Marseille affiche une densité plus faible que Lyon (7,1 pour 10 000 habitants) pour une population supérieure : le marché est vaste et fragmenté, avec beaucoup de très petites structures et un tissu artisanal et commercial étendu.</p><p><b>Marseille</b> : 632 établissements de courtage d'assurances recensés  886 040 habitants  soit <b>7 1 établissements pour 10 000 habitants</b> (département : Bouches-du-Rhône  région : Provence-Alpes-Côte d'Azur).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Un portefeuille dispersé géographiquement, entre quartiers et communes voisines.</li><li>Des clients artisans et commerçants dont les besoins suivent l'activité, avec des périodes creuses.</li><li>Peu de cabinets structurés : l'organisation interne devient un avantage compétitif direct.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Portefeuille dispersé</td><td>Recherche par client, par immatriculation ou par tag, sans fouiller un fichier</td></tr><tr><td>Clients artisans et commerçants</td><td>Historique du dossier pour suivre l'évolution de l'activité</td></tr><tr><td>Très petites structures</td><td>Aucune procédure lourde à installer : dossier, échéances, pièces, relances</td></tr><tr><td>Pièces difficiles à récupérer</td><td>Lien de dépôt client, sans création de compte</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Marseille</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un commerçant qui ferme une boutique et en ouvre une autre : deux lieux, un seul dossier</li><li><b>Exemple 2</b> — Un artisan qui change de statut : le contrat doit suivre la nouvelle situation</li><li><b>Exemple 3</b> — Un client qui n'a jamais envoyé son attestation : la pièce manquante doit remonter d'elle-même</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Un marché moins dense est-il plus facile pour un cabinet ?",
+    "Moins dense ne veut pas dire plus simple : avec 632 établissements et une population proche de 900 000 habitants, la difficulté est de tenir un portefeuille dispersé sans perdre le fil des échéances et des pièces."
+   ],
+   [
+    "Les artisans et commerçants demandent-ils un suivi particulier ?",
+    "Leur activité varie : les contrats doivent être réévalués quand l'entreprise change de taille, de locaux ou d'activité, ce qui suppose un historique de dossier à jour."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Marseille ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/marseille",
+  "_octets": 17629,
+  "_section": "france"
+ },
+ {
+  "path": "/france/toulouse",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Toulouse",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Toulouse | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Toulouse : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 477 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Toulouse",
+  "chapeau": "Un cabinet de courtage à Toulouse tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Toulouse",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Toulouse mêle un tissu technologique et aéronautique, des professions libérales nombreuses et une population étudiante et jeune : les besoins en prévoyance et en assurances de personnes y sont structurellement importants.</p><p><b>Toulouse</b> : 477 établissements de courtage d'assurances recensés  514 819 habitants  soit <b>9 3 établissements pour 10 000 habitants</b> (département : Haute-Garonne  région : Occitanie).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des dossiers de prévoyance et de santé qui demandent un suivi documentaire rigoureux.</li><li>Des clients mobiles (mutation professionnelle) dont les contrats doivent être réexaminés souvent.</li><li>Une concurrence importante sur les jeunes actifs, où la réactivité fait la conversion.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Dossiers de prévoyance et de santé</td><td>Suivi du dossier et des pièces, avec l'historique des décisions</td></tr><tr><td>Clients mobiles professionnellement</td><td>Consignation des changements de situation au fil de l'eau</td></tr><tr><td>Volume de devis élevé</td><td>Repérage des devis en attente et des relances à faire</td></tr><tr><td>Jeunes actifs</td><td>Parcours de suivi léger : un dossier, des contrats, des échéances</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Toulouse</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un ingénieur muté à l'étranger : sa prévoyance doit être revue avant le départ</li><li><b>Exemple 2</b> — Un couple qui s'installe : les deux dossiers doivent rester distincts et reliés</li><li><b>Exemple 3</b> — Un devis santé envoyé à un jeune actif : sans relance, l'affaire se perd</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Pourquoi la prévoyance demande-t-elle plus de suivi administratif ?",
+    "Parce que la situation du client (famille, activité, revenus) détermine le contrat : chaque changement significatif doit être retrouvé dans le dossier pour conseiller de nouveau."
+   ],
+   [
+    "Combien d'établissements de courtage à Toulouse ?",
+    "477 établissements (NAF 66.22Z) dans notre extraction du 19/09/2026, pour 514 819 habitants."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Toulouse ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/toulouse",
+  "_octets": 17277,
+  "_section": "france"
+ },
+ {
+  "path": "/france/bordeaux",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Bordeaux",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Bordeaux | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Bordeaux : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 398 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Bordeaux",
+  "chapeau": "Un cabinet de courtage à Bordeaux tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Bordeaux",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Bordeaux présente l'une des densités les plus élevées de notre relevé (14,9 pour 10 000 habitants) pour une population modérée : peu de cabinets, mais beaucoup d'établissements de courtage, ce qui signifie des structures souvent petites et un marché où tout le monde se connaît.</p><p><b>Bordeaux</b> : 398 établissements de courtage d'assurances recensés  267 991 habitants  soit <b>14 9 établissements pour 10 000 habitants</b> (département : Gironde  région : Nouvelle-Aquitaine).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des cabinets de petite taille où une seule absence suffit à bloquer le suivi.</li><li>Un tissu économique mixte : professions de santé, secteur viticole, entreprises de services.</li><li>Des clients qui attendent un interlocuteur unique et une continuité de service.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Cabinet de petite taille</td><td>Un dossier partagé qui ne dépend pas d'une seule personne</td></tr><tr><td>Absences bloquantes</td><td>Les échéances et les relances restent visibles par tous</td></tr><tr><td>Tissu économique mixte</td><td>Tags et segments pour retrouver rapidement une clientèle (santé, viticole, services)</td></tr><tr><td>Continuité de service</td><td>Historique complet pour reprendre un dossier sans appeler le collègue</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Bordeaux</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Le titulaire s'absente une semaine : les échéances doivent rester visibles</li><li><b>Exemple 2</b> — Un client viticole dont l'exploitation change de forme : contrat et pièces à reprendre</li><li><b>Exemple 3</b> — Un dossier repris par un associé : tout doit être dans l'outil, pas dans une mémoire</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Que signifie une densité de 14,9 pour un cabinet bordelais ?",
+    "Qu'il y a proportionnellement beaucoup d'établissements de courtage pour la population : la différenciation se joue sur la qualité du suivi et la mémoire du dossier, pas sur l'abondance de prospects."
+   ],
+   [
+    "Un petit cabinet peut-il tenir un portefeuille dense ?",
+    "Oui, à condition que l'information ne dépende pas d'une seule personne : c'est exactement ce que règle une fiche client partagée avec échéances et documents."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Bordeaux ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/bordeaux",
+  "_octets": 17539,
+  "_section": "france"
+ },
+ {
+  "path": "/france/lille",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Lille",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Lille | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Lille : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 190 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Lille",
+  "chapeau": "Un cabinet de courtage à Lille tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Lille",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Lille se situe dans une métropole transfrontalière : la proximité belge crée des situations de clients travaillant ou résidant de part et d'autre de la frontière, avec des contrats qui ne relèvent pas toujours du même cadre.</p><p><b>Lille</b> : 190 établissements de courtage d'assurances recensés  238 246 habitants  soit <b>8 0 établissements pour 10 000 habitants</b> (département : Nord  région : Hauts-de-France).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des dossiers transfrontaliers dont la cohérence doit être vérifiable.</li><li>Un tissu de PME industrielles et logistiques avec des contrats de choses et de flottes.</li><li>Des échéances contractuelles souvent groupées en début d'année civile.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Dossiers transfrontaliers</td><td>La situation réelle du client est consignée, avec les pièces qui la justifient</td></tr><tr><td>PME industrielles et logistiques</td><td>Contrats de choses et de flotte rattachés au dossier entreprise</td></tr><tr><td>Échéances groupées en début d'année</td><td>Vue portefeuille pour étaler la préparation des renouvellements</td></tr><tr><td>Multi-sites</td><td>Un client, plusieurs implantations, un seul historique</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Lille</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un salarié qui travaille en Belgique : sa situation doit être documentée dans le dossier</li><li><b>Exemple 2</b> — Une PME logistique qui renouvelle sa flotte : les contrats doivent suivre l'inventaire réel</li><li><b>Exemple 3</b> — Cinq renouvellements dans la même semaine de janvier : la préparation doit démarrer en décembre</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Comment suivre un client qui travaille en Belgique ?",
+    "En gardant dans le même dossier son statut, ses contrats et les pièces associées : le cadre applicable dépend de sa situation réelle, et le cabinet doit pouvoir le reconstituer."
+   ],
+   [
+    "Combien d'établissements de courtage à Lille ?",
+    "190 établissements (NAF 66.22Z) dans notre extraction du 19/09/2026, pour 238 246 habitants."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Lille ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/lille",
+  "_octets": 17202,
+  "_section": "france"
+ },
+ {
+  "path": "/france/nantes",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Nantes",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Nantes | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Nantes : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 282 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Nantes",
+  "chapeau": "Un cabinet de courtage à Nantes tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Nantes",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Nantes fait partie des métropoles qui gagnent des habitants chaque année : un cabinet nantais suit un portefeuille en croissance, avec beaucoup de primo-souscriptions et un besoin de structuration rapide.</p><p><b>Nantes</b> : 282 établissements de courtage d'assurances recensés  327 734 habitants  soit <b>8 6 établissements pour 10 000 habitants</b> (département : Loire-Atlantique  région : Pays de la Loire).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Un portefeuille jeune : les dossiers arrivent vite et doivent être cadrés dès l'ouverture.</li><li>Des professions libérales et des PME de services en développement.</li><li>Un risque de désorganisation quand le volume augmente plus vite que les procédures.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Portefeuille en croissance</td><td>Cadrage du dossier dès l'ouverture : identité, contrats, échéances, pièces</td></tr><tr><td>Primo-souscriptions nombreuses</td><td>Parcours simple pour ouvrir un dossier propre en quelques minutes</td></tr><tr><td>Professions libérales et PME de services</td><td>Suivi des évolutions d'activité et des contrats associés</td></tr><tr><td>Volume qui augmente</td><td>Listes de travail quotidiennes au lieu de rattrapages périodiques</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Nantes</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Une nouvelle cliente qui arrive avec trois contrats existants : tout doit entrer dans un dossier unique</li><li><b>Exemple 2</b> — Une PME de services qui double son effectif : prévoyance et RC à réexaminer</li><li><b>Exemple 3</b> — Un volume qui double en six mois : sans structure, le suivi devient du rattrapage</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Par où commencer quand le portefeuille grossit vite ?",
+    "Par la structure du dossier : identité, contrats, échéances, pièces. Une fois ces quatre blocs tenus, le volume devient gérable sans embaucher."
+   ],
+   [
+    "Combien d'établissements de courtage à Nantes ?",
+    "282 établissements (NAF 66.22Z) dans notre extraction du 19/09/2026, pour 327 734 habitants."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Nantes ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/nantes",
+  "_octets": 17152,
+  "_section": "france"
+ },
+ {
+  "path": "/france/strasbourg",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Strasbourg",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Strasbourg | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Strasbourg : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 209 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Strasbourg",
+  "chapeau": "Un cabinet de courtage à Strasbourg tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Strasbourg",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Strasbourg est une métropole bilingue, siège d'institutions européennes : les cabinets y côtoient des clients francophones et germanophones, ainsi que des professionnels en mobilité internationale.</p><p><b>Strasbourg</b> : 209 établissements de courtage d'assurances recensés  293 771 habitants  soit <b>7 1 établissements pour 10 000 habitants</b> (département : Bas-Rhin  région : Grand Est).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des dossiers à cheval sur deux langues de correspondance.</li><li>Des clients fonctionnaires européens ou salariés d'organisations internationales, avec des garanties spécifiques.</li><li>Une exigence de rigueur documentaire élevée dans ce type de clientèle.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Clients francophones et germanophones</td><td>Le contenu des messages reste libre ; l'historique reste lisible par tous</td></tr><tr><td>Salariés d'organisations internationales</td><td>Garanties spécifiques consignées et documents rattachés</td></tr><tr><td>Exigence documentaire élevée</td><td>Pièces collectées par lien et classées dans le dossier</td></tr><tr><td>Clients en mobilité</td><td>Changements de situation suivis au fil de l'eau</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Strasbourg</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un fonctionnaire européen qui change d'organisation : ses garanties doivent être revues</li><li><b>Exemple 2</b> — Un dossier tenu en allemand repris par un collègue francophone : l'historique doit être compréhensible</li><li><b>Exemple 3</b> — Un client qui part à l'étranger : les dates et les décisions doivent être tracées</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Faut-il gérer plusieurs langues dans le dossier client ?",
+    "Le contenu des messages reste libre : ce qui compte est que l'historique et les pièces restent lisibles par le collaborateur qui reprend le dossier."
+   ],
+   [
+    "Combien d'établissements de courtage à Strasbourg ?",
+    "209 établissements (NAF 66.22Z) dans notre extraction du 19/09/2026, pour 293 771 habitants."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Strasbourg ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/strasbourg",
+  "_octets": 17231,
+  "_section": "france"
+ },
+ {
+  "path": "/france/montpellier",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Montpellier",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Montpellier | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Montpellier : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 233 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Montpellier",
+  "chapeau": "Un cabinet de courtage à Montpellier tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Montpellier",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Montpellier combine une croissance démographique forte et un tissu de très petites entreprises : les cabinets y suivent beaucoup de clients indépendants dont l'activité change souvent.</p><p><b>Montpellier</b> : 233 établissements de courtage d'assurances recensés  310 240 habitants  soit <b>7 5 établissements pour 10 000 habitants</b> (département : Hérault  région : Occitanie).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des clients indépendants et micro-entrepreneurs, avec des contrats à réviser fréquemment.</li><li>Un volume de devis élevé pour des montants modestes : la relance devient un enjeu de rentabilité.</li><li>Une concurrence locale active sur les professions de santé.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Indépendants et micro-entreprises</td><td>Contrats à réviser quand l'activité évolue</td></tr><tr><td>Devis de faible montant, nombreux</td><td>Relances organisées : c'est là que se joue la rentabilité</td></tr><tr><td>Professions de santé</td><td>Suivi documentaire et échéances de prévoyance</td></tr><tr><td>Petite équipe</td><td>Aucune tâche administrative ne dépend d'une seule personne</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Montpellier</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Une masseuse-kinésithérapeute qui s'installe : premier contrat, premières échéances</li><li><b>Exemple 2</b> — Dix devis envoyés, deux réponses : les huit autres doivent remonter en relance</li><li><b>Exemple 3</b> — Un indépendant qui embauche : sa prévoyance doit être réévaluée</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Pourquoi la relance est-elle critique pour un cabinet montpelliérain ?",
+    "Quand les primes sont modestes, le coût d'acquisition pèse : un devis non relancé est une perte sèche, alors qu'une relance organisée coûte quelques minutes."
+   ],
+   [
+    "Combien d'établissements de courtage à Montpellier ?",
+    "233 établissements (NAF 66.22Z) dans notre extraction du 19/09/2026, pour 310 240 habitants."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Montpellier ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/montpellier",
+  "_octets": 17216,
+  "_section": "france"
+ },
+ {
+  "path": "/france/nice",
+  "type": "geo",
+  "country": "FR",
+  "zone": "Nice",
+  "indexable": true,
+  "title": "Logiciel courtier assurance à Nice | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Nice : CRM et cockpit IA pour cabinets de courtage en assurance. Portefeuille, contrats, relances, documents. 505 établissements de courtage dans la commune. Essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Nice",
+  "chapeau": "Un cabinet de courtage à Nice tient son portefeuille avec des dossiers dispersés : contrats, échéances, pièces et relances. COURTIARK réunit ce suivi dans un seul outil.",
+  "fil": [
+   [
+    "France",
+    "/france"
+   ],
+   [
+    "Nice",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Nice affiche une densité très élevée (14,1 pour 10 000 habitants) avec une clientèle marquée par la part des retraités et des résidents secondaires : beaucoup de dossiers, beaucoup de propriétaires, et des clients souvent absents une partie de l'année.</p><p><b>Nice</b> : 505 établissements de courtage d'assurances recensés  357 737 habitants  soit <b>14 1 établissements pour 10 000 habitants</b> (département : Alpes-Maritimes  région : Provence-Alpes-Côte d'Azur).</p><p>Données : base SIRENE (code NAF 66.22Z — agents et courtiers d'assurances), extraction du 19/09/2026 ; populations INSEE. Chiffres reproductibles, détail sur la page <a href=\"/fr/densite-courtage-grandes-villes-france\">densité du courtage en France</a>.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des clients difficiles à joindre à certaines périodes : la trace des échanges devient essentielle.</li><li>Des biens immobiliers multiples (résidence principale et secondaire) à couvrir.</li><li>Une proportion importante de clients seniors, avec des questions de prévoyance et de transmission.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Clients absents une partie de l'année</td><td>Chaque demande et chaque réponse est tracée dans le dossier</td></tr><tr><td>Résidence principale et secondaire</td><td>Les biens couverts sont rattachés au même client, sans confusion</td></tr><tr><td>Clientèle senior</td><td>Suivi des échéances et des questions de transmission, sans perte d'historique</td></tr><tr><td>Volume de dossiers élevé</td><td>Recherche rapide et listes de travail quotidiennes</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Nice</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un client à l'étranger six mois par an : à son retour, le dossier doit dire où on en était</li><li><b>Exemple 2</b> — Un couple propriétaire de deux logements : les deux doivent être couverts sans doublon</li><li><b>Exemple 3</b> — Un client de 70 ans qui souhaite revoir sa prévoyance : l'historique doit être complet</li></ul></div><h2>Cadre français</h2><div class=\"section\"><p>Le cabinet agit comme intermédiaire d'assurance : immatriculation au registre unique (ORIAS), devoir de conseil et information précontractuelle (DDA), protection des données (RGPD). Les repères détaillés et leurs sources sont sur la page <a href=\"/france\">COURTIARK en France</a>.</p></div><h2>Démarrer</h2><div class=\"section\"><p>Essai de 7 jours, sans carte bancaire. France : Starter 89 € HT/mois, Pro 159 € HT/mois. Un import permet de repartir d'un fichier existant plutôt que de ressaisir les dossiers.</p></div>",
+  "faq": [
+   [
+    "Comment suivre des clients absents une partie de l'année ?",
+    "En consignant chaque échange et chaque demande dans le dossier : à la reprise du contact, le cabinet sait exactement où en était le dossier."
+   ],
+   [
+    "Combien d'établissements de courtage à Nice ?",
+    "505 établissements (NAF 66.22Z) dans notre extraction du 19/09/2026, pour 357 737 habitants."
+   ],
+   [
+    "COURTIARK est-il utilisé par des cabinets à Nice ?",
+    "Nous ne publions pas de nombre de cabinets par ville : ce chiffre évolue et nous ne communiquons pas de donnée que nous ne pouvons pas vérifier publiquement."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Gestion de portefeuille",
+    "/fonctionnalites/gestion-portefeuille-assurance"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Densité du courtage en France",
+    "/fr/densite-courtage-grandes-villes-france"
+   ],
+   [
+    "COURTIARK en France",
+    "/france"
+   ]
+  ],
+  "slug": "/france/nice",
+  "_octets": 17214,
+  "_section": "france"
+ },
+ {
+  "path": "/suisse/nyon",
+  "type": "geo",
+  "country": "CH",
+  "zone": "Nyon",
+  "indexable": true,
+  "title": "Logiciel courtier assurance Nyon | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Nyon (Vaud) : CRM et cockpit IA pour intermédiaires d'assurance. Portefeuille, contrats, échéances, documents, commissions. Facturation CHF, essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Nyon",
+  "chapeau": "Un cabinet d'intermédiation d'assurance à Nyon doit suivre des dossiers dont les besoins changent avec l'activité et la saison. COURTIARK organise ce suivi et le rend partageable.",
+  "fil": [
+   [
+    "Suisse",
+    "/suisse"
+   ],
+   [
+    "Nyon",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Nyon est marquée par la proximité immédiate de Genève et par une population largement frontalière : un cabinet y suit des clients dont l'employeur, le lieu de travail et le lieu de résidence ne relèvent pas du même pays.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des situations transfrontalières où le contrat doit correspondre à la réalité du quotidien du client.</li><li>Un tissu de PME locales et d'entreprises de services liées à l'axe Genève-Lausanne.</li><li>Des clients qui changent souvent d'employeur et donc de cadre d'assurance.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Clients frontaliers</td><td>La situation réelle (lieu de travail, résidence, régime) est consignée dans le dossier</td></tr><tr><td>Changements d'employeur</td><td>Historique des modifications, sans repartir d'une feuille blanche</td></tr><tr><td>PME de l'axe lémanique</td><td>Contrats et échéances rattachés au dossier entreprise</td></tr><tr><td>Suivi à distance</td><td>Documents collectés par lien, échanges datés</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Nyon</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un frontalier qui change d'employeur genevois : sa couverture doit être revérifiée</li><li><b>Exemple 2</b> — Une PME de Nyon qui engage son premier salarié : prévoyance et RC à mettre en place</li><li><b>Exemple 3</b> — Un client qui déménage de Genève à Nyon : le dossier doit dire ce qui a changé et quand</li></ul></div><h2>Cadre suisse</h2><div class=\"section\"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href=\"/suisse\">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class=\"section\"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Un cabinet de Nyon doit-il traiter différemment les frontaliers ?",
+    "Oui : la couverture dépend de la situation réelle (lieu de travail, régime applicable), ce qui suppose un dossier à jour et un historique des changements de situation."
+   ],
+   [
+    "Le produit est-il disponible en allemand ?",
+    "Non : l'interface et les pages publiques sont en français. Nous ne l'annonçons donc pas comme disponible en Suisse alémanique."
+   ]
+  ],
+  "lire": [
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "CRM courtier assurance en Suisse",
+    "/suisse/crm-courtier-assurance"
+   ],
+   [
+    "Genève",
+    "/suisse/geneve"
+   ],
+   [
+    "Lausanne",
+    "/suisse/lausanne"
+   ],
+   [
+    "Suisse romande",
+    "/suisse/suisse-romande"
+   ]
+  ],
+  "slug": "/suisse/nyon",
+  "_octets": 16023,
+  "_section": "switzerland"
+ },
+ {
+  "path": "/suisse/vevey",
+  "type": "geo",
+  "country": "CH",
+  "zone": "Vevey",
+  "indexable": true,
+  "title": "Logiciel courtier assurance Vevey | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Vevey (Vaud) : CRM et cockpit IA pour intermédiaires d'assurance. Portefeuille, contrats, échéances, documents, commissions. Facturation CHF, essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Vevey",
+  "chapeau": "Un cabinet d'intermédiation d'assurance à Vevey doit suivre des dossiers dont les besoins changent avec l'activité et la saison. COURTIARK organise ce suivi et le rend partageable.",
+  "fil": [
+   [
+    "Suisse",
+    "/suisse"
+   ],
+   [
+    "Vevey",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Vevey vit au rythme de l'industrie agroalimentaire et de l'hôtellerie-restauration : les dossiers d'entreprise y côtoient des clients saisonniers, avec des besoins qui varient fortement selon la période.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des entreprises dont l'effectif varie selon la saison, avec des contrats à ajuster.</li><li>Des clients salariés du secteur hôtelier, souvent nouveaux en Suisse.</li><li>Des échéances groupées sur les périodes de basse activité.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Entreprises à effectif variable</td><td>Contrats suivis avec les variations d'effectif, saison par saison</td></tr><tr><td>Clients nouveaux en Suisse</td><td>Parcours d'ouverture de dossier clair, pièces rattachées</td></tr><tr><td>Hôtellerie et restauration</td><td>Risques de l'exploitation consignés dans le dossier</td></tr><tr><td>Périodes de basse activité</td><td>Renouvellements préparés pendant les creux, pas pendant les pics</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Vevey</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un hôtel qui double son effectif en été : le contrat doit suivre la réalité</li><li><b>Exemple 2</b> — Un salarié qui obtient son permis et change de situation : son dossier doit être mis à jour</li><li><b>Exemple 3</b> — Un renouvellement à préparer en novembre : la vue des échéances doit le faire remonter</li></ul></div><h2>Cadre suisse</h2><div class=\"section\"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href=\"/suisse\">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class=\"section\"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Pourquoi les dossiers saisonniers demandent-ils un suivi particulier ?",
+    "Parce qu'un même client peut changer de statut plusieurs fois dans l'année : sans historique, le cabinet repart de zéro à chaque contact."
+   ],
+   [
+    "Le produit est-il disponible en allemand ?",
+    "Non : l'interface et les pages publiques sont en français. Nous ne l'annonçons donc pas comme disponible en Suisse alémanique."
+   ]
+  ],
+  "lire": [
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "CRM courtier assurance en Suisse",
+    "/suisse/crm-courtier-assurance"
+   ],
+   [
+    "Genève",
+    "/suisse/geneve"
+   ],
+   [
+    "Lausanne",
+    "/suisse/lausanne"
+   ],
+   [
+    "Suisse romande",
+    "/suisse/suisse-romande"
+   ]
+  ],
+  "slug": "/suisse/vevey",
+  "_octets": 15943,
+  "_section": "switzerland"
+ },
+ {
+  "path": "/suisse/montreux",
+  "type": "geo",
+  "country": "CH",
+  "zone": "Montreux",
+  "indexable": true,
+  "title": "Logiciel courtier assurance Montreux | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Montreux (Vaud) : CRM et cockpit IA pour intermédiaires d'assurance. Portefeuille, contrats, échéances, documents, commissions. Facturation CHF, essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Montreux",
+  "chapeau": "Un cabinet d'intermédiation d'assurance à Montreux doit suivre des dossiers dont les besoins changent avec l'activité et la saison. COURTIARK organise ce suivi et le rend partageable.",
+  "fil": [
+   [
+    "Suisse",
+    "/suisse"
+   ],
+   [
+    "Montreux",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Montreux combine tourisme, événementiel et résidences secondaires : les dossiers y mêlent biens immobiliers de valeur, exploitation d'hébergements et clientèle internationale absente une partie de l'année.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des biens et des activités à couvrir sur plusieurs sites.</li><li>Des clients joignables par intermittence, ce qui exige une trace écrite des échanges.</li><li>Des entreprises événementielles dont les besoins varient d'un événement à l'autre.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Propriétaires absents une partie de l'année</td><td>Historique des échanges pour reprendre le fil au bon moment</td></tr><tr><td>Biens et activités sur plusieurs sites</td><td>Un client, plusieurs objets couverts, sans confusion</td></tr><tr><td>Entreprises événementielles</td><td>Besoins consignés événement par événement</td></tr><tr><td>Clientèle internationale</td><td>Documents rattachés au dossier, accessibles à tout moment</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Montreux</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un propriétaire résidant à l'étranger : le dossier doit permettre de reprendre sans rappeler l'historique</li><li><b>Exemple 2</b> — Un organisateur d'événements : chaque édition doit laisser une trace exploitable</li><li><b>Exemple 3</b> — Deux biens à Montreux et un à Lausanne : les couvertures doivent rester distinctes</li></ul></div><h2>Cadre suisse</h2><div class=\"section\"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href=\"/suisse\">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class=\"section\"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Comment gérer des clients présents seulement une partie de l'année ?",
+    "En documentant chaque demande et chaque réponse dans le dossier, pour que la reprise du contact se fasse sans dépendre de la mémoire d'un collaborateur."
+   ],
+   [
+    "Le produit est-il disponible en allemand ?",
+    "Non : l'interface et les pages publiques sont en français. Nous ne l'annonçons donc pas comme disponible en Suisse alémanique."
+   ]
+  ],
+  "lire": [
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "CRM courtier assurance en Suisse",
+    "/suisse/crm-courtier-assurance"
+   ],
+   [
+    "Genève",
+    "/suisse/geneve"
+   ],
+   [
+    "Lausanne",
+    "/suisse/lausanne"
+   ],
+   [
+    "Suisse romande",
+    "/suisse/suisse-romande"
+   ]
+  ],
+  "slug": "/suisse/montreux",
+  "_octets": 16058,
+  "_section": "switzerland"
+ },
+ {
+  "path": "/suisse/sion",
+  "type": "geo",
+  "country": "CH",
+  "zone": "Sion",
+  "indexable": true,
+  "title": "Logiciel courtier assurance Sion | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Sion (Valais) : CRM et cockpit IA pour intermédiaires d'assurance. Portefeuille, contrats, échéances, documents, commissions. Facturation CHF, essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Sion",
+  "chapeau": "Un cabinet d'intermédiation d'assurance à Sion doit suivre des dossiers dont les besoins changent avec l'activité et la saison. COURTIARK organise ce suivi et le rend partageable.",
+  "fil": [
+   [
+    "Suisse",
+    "/suisse"
+   ],
+   [
+    "Sion",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Sion est le centre administratif et économique d'un canton où dominent les PME, le tourisme et la construction : un cabinet valaisan suit des entreprises dont l'activité est saisonnière et géographiquement dispersée.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des chantiers et des sites multiples, avec des risques à couvrir localement.</li><li>Des entreprises familiales dont la transmission soulève des questions de prévoyance.</li><li>Des distances importantes entre clients : le suivi à distance devient la norme.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Chantiers dispersés</td><td>Un client, plusieurs sites, un seul historique de dossier</td></tr><tr><td>Activités saisonnières</td><td>Besoins réévalués au rythme de l'exploitation, tracés dans l'outil</td></tr><tr><td>Entreprises familiales</td><td>Suivi dans la durée, y compris les questions de transmission</td></tr><tr><td>Clients éloignés</td><td>Documents collectés à distance, rendez-vous consignés</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Sion</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Une entreprise de construction avec trois chantiers : les risques doivent être suivis site par site</li><li><b>Exemple 2</b> — Une exploitation touristique qui ferme en intersaison : les échéances doivent être anticipées</li><li><b>Exemple 3</b> — Un gérant qui prépare la reprise par son fils : l'historique du dossier devient la base du conseil</li></ul></div><h2>Cadre suisse</h2><div class=\"section\"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href=\"/suisse\">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class=\"section\"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Un cabinet valaisan peut-il suivre ses clients sans se déplacer ?",
+    "Les échanges et les pièces peuvent se suivre à distance ; le déplacement reste utile pour la relation, pas pour l'administration du dossier."
+   ],
+   [
+    "Le produit est-il disponible en allemand ?",
+    "Non : l'interface et les pages publiques sont en français. Nous ne l'annonçons donc pas comme disponible en Suisse alémanique."
+   ]
+  ],
+  "lire": [
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "CRM courtier assurance en Suisse",
+    "/suisse/crm-courtier-assurance"
+   ],
+   [
+    "Genève",
+    "/suisse/geneve"
+   ],
+   [
+    "Lausanne",
+    "/suisse/lausanne"
+   ],
+   [
+    "Suisse romande",
+    "/suisse/suisse-romande"
+   ]
+  ],
+  "slug": "/suisse/sion",
+  "_octets": 15977,
+  "_section": "switzerland"
+ },
+ {
+  "path": "/suisse/neuchatel",
+  "type": "geo",
+  "country": "CH",
+  "zone": "Neuchâtel",
+  "indexable": true,
+  "title": "Logiciel courtier assurance Neuchâtel | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Neuchâtel (Neuchâtel) : CRM et cockpit IA pour intermédiaires d'assurance. Portefeuille, contrats, échéances, documents, commissions. Facturation CHF, essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Neuchâtel",
+  "chapeau": "Un cabinet d'intermédiation d'assurance à Neuchâtel doit suivre des dossiers dont les besoins changent avec l'activité et la saison. COURTIARK organise ce suivi et le rend partageable.",
+  "fil": [
+   [
+    "Suisse",
+    "/suisse"
+   ],
+   [
+    "Neuchâtel",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Neuchâtel est un canton industriel : horlogerie, microtechnique et sous-traitance. Les cabinets y suivent des entreprises avec des contrats de choses, de responsabilité et de prévoyance liés à des activités précises.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des activités techniques dont les risques changent avec les procédés et les marchés.</li><li>Des clients qui sous-traitent et doivent pouvoir justifier leurs couvertures.</li><li>Une prévoyance professionnelle à suivre dans la durée.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Activités techniques</td><td>Risques consignés avec l'évolution des procédés et des marchés</td></tr><tr><td>Sous-traitance</td><td>Couvertures justifiables, documents rattachés au dossier</td></tr><tr><td>Prévoyance professionnelle</td><td>Suivi des contrats dans la durée, avec les échéances</td></tr><tr><td>Clients qui changent de marché</td><td>Historique exploitable pour réévaluer le besoin</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Neuchâtel</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Une société horlogère qui automatise une ligne : ses risques changent</li><li><b>Exemple 2</b> — Un sous-traitant qui doit prouver sa couverture à un donneur d'ordre</li><li><b>Exemple 3</b> — Un cadre qui approche de la retraite : prévoyance à réexaminer avec l'historique du dossier</li></ul></div><h2>Cadre suisse</h2><div class=\"section\"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href=\"/suisse\">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class=\"section\"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Pourquoi les dossiers industriels demandent-ils un historique ?",
+    "Parce que les risques évoluent avec l'activité : sans mémoire du dossier, l'évaluation du besoin repart d'une feuille blanche à chaque rendez-vous."
+   ],
+   [
+    "Le produit est-il disponible en allemand ?",
+    "Non : l'interface et les pages publiques sont en français. Nous ne l'annonçons donc pas comme disponible en Suisse alémanique."
+   ]
+  ],
+  "lire": [
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "CRM courtier assurance en Suisse",
+    "/suisse/crm-courtier-assurance"
+   ],
+   [
+    "Genève",
+    "/suisse/geneve"
+   ],
+   [
+    "Lausanne",
+    "/suisse/lausanne"
+   ],
+   [
+    "Suisse romande",
+    "/suisse/suisse-romande"
+   ]
+  ],
+  "slug": "/suisse/neuchatel",
+  "_octets": 16028,
+  "_section": "switzerland"
+ },
+ {
+  "path": "/suisse/fribourg",
+  "type": "geo",
+  "country": "CH",
+  "zone": "Fribourg",
+  "indexable": true,
+  "title": "Logiciel courtier assurance Fribourg | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Fribourg (Fribourg) : CRM et cockpit IA pour intermédiaires d'assurance. Portefeuille, contrats, échéances, documents, commissions. Facturation CHF, essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Fribourg",
+  "chapeau": "Un cabinet d'intermédiation d'assurance à Fribourg doit suivre des dossiers dont les besoins changent avec l'activité et la saison. COURTIARK organise ce suivi et le rend partageable.",
+  "fil": [
+   [
+    "Suisse",
+    "/suisse"
+   ],
+   [
+    "Fribourg",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Fribourg est un canton bilingue, avec un tissu d'agriculture, d'agroalimentaire et de PME : un cabinet y travaille avec des clients francophones et germanophones, et parfois les deux dans la même famille.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des dossiers à cheval sur deux langues de correspondance.</li><li>Des exploitations et des entreprises familiales, avec des questions de succession.</li><li>Des clients répartis entre zones rurales et agglomérations.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Clients francophones et germanophones</td><td>Contenu libre, dossier lisible par tout collaborateur</td></tr><tr><td>Entreprises familiales</td><td>Suivi des transmissions et des changements de génération</td></tr><tr><td>Zones rurales et agglomérations</td><td>Portefeuille segmenté, relances organisées selon la proximité</td></tr><tr><td>Exploitations agricoles</td><td>Contrats liés à l'exploitation et à ses évolutions</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Fribourg</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Une exploitation qui se diversifie : les risques ne sont plus les mêmes</li><li><b>Exemple 2</b> — Une reprise d'entreprise familiale : tout l'historique doit être disponible</li><li><b>Exemple 3</b> — Un client germanophone repris par un collègue francophone : le dossier doit rester exploitable</li></ul></div><h2>Cadre suisse</h2><div class=\"section\"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href=\"/suisse\">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class=\"section\"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Le bilinguisme change-t-il le suivi des dossiers ?",
+    "Le contenu des messages reste libre ; ce qui compte est que le dossier soit compréhensible par tout collaborateur qui le reprend, quelle que soit la langue d'origine."
+   ],
+   [
+    "Le produit est-il disponible en allemand ?",
+    "Non : l'interface et les pages publiques sont en français. Nous ne l'annonçons donc pas comme disponible en Suisse alémanique."
+   ]
+  ],
+  "lire": [
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "CRM courtier assurance en Suisse",
+    "/suisse/crm-courtier-assurance"
+   ],
+   [
+    "Genève",
+    "/suisse/geneve"
+   ],
+   [
+    "Lausanne",
+    "/suisse/lausanne"
+   ],
+   [
+    "Suisse romande",
+    "/suisse/suisse-romande"
+   ]
+  ],
+  "slug": "/suisse/fribourg",
+  "_octets": 15971,
+  "_section": "switzerland"
+ },
+ {
+  "path": "/suisse/vaud",
+  "type": "geo",
+  "country": "CH",
+  "zone": "Canton de Vaud",
+  "indexable": true,
+  "title": "Logiciel courtier assurance Canton de Vaud | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Canton de Vaud (Vaud) : CRM et cockpit IA pour intermédiaires d'assurance. Portefeuille, contrats, échéances, documents, commissions. Facturation CHF, essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Canton de Vaud",
+  "chapeau": "Un cabinet d'intermédiation d'assurance à Canton de Vaud doit suivre des dossiers dont les besoins changent avec l'activité et la saison. COURTIARK organise ce suivi et le rend partageable.",
+  "fil": [
+   [
+    "Suisse",
+    "/suisse"
+   ],
+   [
+    "Canton de Vaud",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Le canton de Vaud associe une métropole (Lausanne), un axe lémanique dense (Nyon, Vevey, Montreux) et des zones plus rurales. Un cabinet vaudois n'a pas le même portefeuille selon son implantation, mais il affronte partout la même question : comment tenir un suivi homogène sur des clients très différents.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des portefeuilles hétérogènes selon la zone d'implantation.</li><li>Une pression concurrentielle forte sur l'arc lémanique.</li><li>Une exigence de traçabilité identique pour tous les dossiers, quelle que soit leur taille.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Portefeuilles hétérogènes</td><td>Même méthode de dossier pour tous les clients, quelle que soit la zone</td></tr><tr><td>Arc lémanique concurrentiel</td><td>Réactivité et suivi documenté comme arguments de fidélisation</td></tr><tr><td>Exigence de traçabilité uniforme</td><td>Historique, pièces et décisions disponibles par dossier</td></tr><tr><td>Plusieurs collaborateurs</td><td>Rôles et cloisonnement par cabinet</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Canton de Vaud</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un cabinet qui ouvre une seconde implantation : les dossiers doivent rester accessibles aux deux équipes</li><li><b>Exemple 2</b> — Un client vaudois suivi depuis Lausanne qui déménage à Nyon : le dossier ne doit pas être recréé</li><li><b>Exemple 3</b> — Une revue de portefeuille annuelle : les échéances doivent être visibles à l'avance</li></ul></div><h2>Cadre suisse</h2><div class=\"section\"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href=\"/suisse\">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class=\"section\"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Un cabinet vaudois doit-il adapter ses procédures par zone ?",
+    "Les procédures peuvent rester communes (dossier, échéances, pièces) ; c'est la composition du portefeuille qui change, pas la méthode."
+   ],
+   [
+    "Le produit est-il disponible en allemand ?",
+    "Non : l'interface et les pages publiques sont en français. Nous ne l'annonçons donc pas comme disponible en Suisse alémanique."
+   ]
+  ],
+  "lire": [
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "CRM courtier assurance en Suisse",
+    "/suisse/crm-courtier-assurance"
+   ],
+   [
+    "Genève",
+    "/suisse/geneve"
+   ],
+   [
+    "Lausanne",
+    "/suisse/lausanne"
+   ],
+   [
+    "Suisse romande",
+    "/suisse/suisse-romande"
+   ]
+  ],
+  "slug": "/suisse/vaud",
+  "_octets": 16167,
+  "_section": "switzerland"
+ },
+ {
+  "path": "/suisse/valais",
+  "type": "geo",
+  "country": "CH",
+  "zone": "Canton du Valais",
+  "indexable": true,
+  "title": "Logiciel courtier assurance Canton du Valais | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Canton du Valais (Valais) : CRM et cockpit IA pour intermédiaires d'assurance. Portefeuille, contrats, échéances, documents, commissions. Facturation CHF, essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Canton du Valais",
+  "chapeau": "Un cabinet d'intermédiation d'assurance à Canton du Valais doit suivre des dossiers dont les besoins changent avec l'activité et la saison. COURTIARK organise ce suivi et le rend partageable.",
+  "fil": [
+   [
+    "Suisse",
+    "/suisse"
+   ],
+   [
+    "Canton du Valais",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>Le Valais combine tourisme de montagne, construction et PME. Les dossiers y sont marqués par la saisonnalité et par la dispersion géographique : beaucoup de clients, peu de proximité, et des périodes où l'activité se concentre.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Des activités saisonnières dont les couvertures doivent suivre la réalité de l'exploitation.</li><li>Des déplacements coûteux en temps : le suivi à distance devient un gain direct.</li><li>Des entreprises familiales avec des enjeux de transmission.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Activités saisonnières</td><td>Besoins réévalués saison par saison, avec trace des décisions</td></tr><tr><td>Dispersion géographique</td><td>Suivi à distance : documents par lien, relances tracées</td></tr><tr><td>Construction et tourisme</td><td>Risques d'exploitation consignés par client</td></tr><tr><td>Entreprises familiales</td><td>Historique dans la durée, y compris les transmissions</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Canton du Valais</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Une station qui prépare sa saison d'hiver en octobre : les couvertures doivent être prêtes avant l'ouverture</li><li><b>Exemple 2</b> — Une PME du bâtiment avec deux sites en vallée : un dossier, deux implantations</li><li><b>Exemple 3</b> — Un client qui vend son exploitation : les contrats à résilier doivent être identifiés</li></ul></div><h2>Cadre suisse</h2><div class=\"section\"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href=\"/suisse\">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class=\"section\"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Pourquoi la saisonnalité complique-t-elle le suivi valaisan ?",
+    "Parce que les besoins des clients touristiques et de la construction se réévaluent à chaque saison : sans vue consolidée des échéances, le cabinet court après les dates."
+   ],
+   [
+    "Le produit est-il disponible en allemand ?",
+    "Non : l'interface et les pages publiques sont en français. Nous ne l'annonçons donc pas comme disponible en Suisse alémanique."
+   ]
+  ],
+  "lire": [
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "CRM courtier assurance en Suisse",
+    "/suisse/crm-courtier-assurance"
+   ],
+   [
+    "Genève",
+    "/suisse/geneve"
+   ],
+   [
+    "Lausanne",
+    "/suisse/lausanne"
+   ],
+   [
+    "Suisse romande",
+    "/suisse/suisse-romande"
+   ]
+  ],
+  "slug": "/suisse/valais",
+  "_octets": 16187,
+  "_section": "switzerland"
+ },
+ {
+  "path": "/suisse/suisse-romande",
+  "type": "geo",
+  "country": "CH",
+  "zone": "Suisse romande",
+  "indexable": true,
+  "title": "Logiciel courtier assurance Suisse romande | CRM pour cabinets | COURTIARK",
+  "description": "COURTIARK à Suisse romande (Romandie) : CRM et cockpit IA pour intermédiaires d'assurance. Portefeuille, contrats, échéances, documents, commissions. Facturation CHF, essai 7 jours.",
+  "h1": "Logiciel de courtage assurance à Suisse romande",
+  "chapeau": "Un cabinet d'intermédiation d'assurance à Suisse romande doit suivre des dossiers dont les besoins changent avec l'activité et la saison. COURTIARK organise ce suivi et le rend partageable.",
+  "fil": [
+   [
+    "Suisse",
+    "/suisse"
+   ],
+   [
+    "Suisse romande",
+    null
+   ]
+  ],
+  "corps": "<h2>Le marché local</h2><div class=\"section\"><p>La Suisse romande réunit six cantons francophones (Genève, Vaud, Valais, Neuchâtel, Fribourg, Jura) aux structures économiques différentes. Les cabinets qui y opèrent partagent une contrainte commune : le vocabulaire et les repères ne sont pas ceux du marché français voisin.</p></div><h2>Ce que cela change pour l'organisation du cabinet</h2><div class=\"section\"><ul><li>Un cadre propre : loi sur le contrat d'assurance, surveillance prudentielle, protection des données.</li><li>Des marchés locaux très différents d'un canton à l'autre.</li><li>Des cabinets souvent de petite taille, où chaque collaborateur porte plusieurs rôles.</li></ul></div><h2>Ce que cela implique concrètement dans l'outil</h2><div class=\"section\"><table><thead><tr><th>Situation locale</th><th>Réponse de COURTIARK</th></tr></thead><tbody><tr><td>Six cantons, six réalités</td><td>Un dossier client par personne, avec sa situation et ses contrats</td></tr><tr><td>Vocabulaire suisse</td><td>Contrats, échéances et repères consignés selon le marché local</td></tr><tr><td>Petites structures</td><td>Une méthode unique, applicable sans informaticien</td></tr><tr><td>Suivi à distance</td><td>Documents collectés par lien, échanges horodatés</td></tr></tbody></table></div><h2>Cas concrets dans un cabinet à Suisse romande</h2><div class=\"section\"><ul><li><b>Exemple 1</b> — Un cabinet qui suit des clients dans deux cantons : la même méthode doit s'appliquer partout</li><li><b>Exemple 2</b> — Un client qui passe d'un canton à l'autre : l'historique doit suivre</li><li><b>Exemple 3</b> — Un nouveau collaborateur qui reprend un portefeuille : tout doit être dans l'outil</li></ul></div><h2>Cadre suisse</h2><div class=\"section\"><p>L'activité relève de la loi sur le contrat d'assurance et, selon le statut de l'intermédiaire, d'exigences d'inscription et d'information sous surveillance prudentielle. Les repères et leurs sources sont sur la page <a href=\"/suisse\">COURTIARK en Suisse</a>.</p></div><h2>Démarrer en Suisse romande</h2><div class=\"section\"><p>Essai de 7 jours sans carte bancaire. Facturation en francs suisses : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Un cabinet français qui s'installe en Suisse romande doit-il changer d'outil ?",
+    "Il doit surtout changer de repères : le vocabulaire, les échéances et les obligations d'information diffèrent. L'outil doit permettre de consigner ces éléments par dossier."
+   ],
+   [
+    "Le produit est-il disponible en allemand ?",
+    "Non : l'interface et les pages publiques sont en français. Nous ne l'annonçons donc pas comme disponible en Suisse alémanique."
+   ]
+  ],
+  "lire": [
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "CRM courtier assurance en Suisse",
+    "/suisse/crm-courtier-assurance"
+   ],
+   [
+    "Genève",
+    "/suisse/geneve"
+   ],
+   [
+    "Lausanne",
+    "/suisse/lausanne"
+   ],
+   [
+    "Suisse romande",
+    "/suisse/suisse-romande"
+   ]
+  ],
+  "slug": "/suisse/suisse-romande",
+  "_octets": 16268,
+  "_section": "switzerland"
+ },
+ {
+  "path": "/logiciel-courtier-assurance",
+  "type": "money",
+  "country": "FR",
+  "indexable": true,
+  "title": "Logiciel courtier assurance : périmètre, modules et critères de choix | COURTIARK",
+  "description": "À quoi doit servir un logiciel de courtier en assurance, quels modules sont indispensables, et comment le choisir sans se tromper. Le périmètre réel de COURTIARK, sans promesse.",
+  "h1": "Logiciel courtier assurance : ce qu'il doit couvrir",
+  "chapeau": "Un logiciel de courtage n'est pas un CRM généraliste configuré pour l'assurance. Voici le périmètre utile, les modules qui font gagner du temps, et ce qui n'a pas à y figurer.",
+  "fil": [
+   [
+    "Logiciel courtier assurance",
+    null
+   ]
+  ],
+  "alternate": "/suisse/crm-courtier-assurance",
+  "corps": "<h2>Le périmètre utile, module par module</h2><div class=\"section\"><table><thead><tr><th>Module</th><th>Ce qu'il doit faire</th><th>Présent dans COURTIARK</th></tr></thead><tbody><tr><td>Dossiers clients</td><td>Identité, situation, historique, segmentation</td><td>Oui</td></tr><tr><td>Contrats et échéances</td><td>Suivi des contrats et des dates de renouvellement</td><td>Oui</td></tr><tr><td>Devis</td><td>Registre, étape en cours, suivi des relances</td><td>Oui</td></tr><tr><td>Documents</td><td>Collecte, classement, rattachement au dossier</td><td>Oui (dépôt par lien)</td></tr><tr><td>Relances et tâches</td><td>Actions rattachées au dossier, avec trace</td><td>Oui</td></tr><tr><td>Commissions</td><td>Suivi des commissions et rétrocessions</td><td>Oui</td></tr><tr><td>Conformité</td><td>Repères France (DDA, ORIAS) et Suisse (LSA, FINMA)</td><td>Repères de suivi, pas un audit</td></tr><tr><td>Prospection</td><td>Recherche, campagnes, suivi des réponses</td><td>Oui</td></tr><tr><td>Tarification</td><td>Calcul de primes auprès des assureurs</td><td>Non — hors périmètre</td></tr><tr><td>Comptabilité</td><td>Écritures, bilan, TVA</td><td>Non — hors périmètre</td></tr></tbody></table></div><h2>Les cinq critères qui font la différence à l'usage</h2><div class=\"section\"><div class=\"etape\"><b>1. Les objets métier existent-ils ?</b><span>Un contrat, une échéance, une commission doivent être des objets, pas des champs libres.</span></div><div class=\"etape\"><b>2. Le client dépose-t-il ses pièces sans compte ?</b><span>Un lien de dépôt évite trois échanges d'e-mails par document.</span></div><div class=\"etape\"><b>3. Que se passe-t-il si le collaborateur part ?</b><span>Le dossier doit rester exploitable par un autre, sinon ce n'est pas un logiciel de cabinet.</span></div><div class=\"etape\"><b>4. Peut-on repartir avec ses données ?</b><span>L'export doit être possible, sans dépendre de l'éditeur.</span></div><div class=\"etape\"><b>5. Le prix suit-il l'usage ?</b><span>Un abonnement par utilisateur et par mois se compare ; les frais de mise en service cachés se découvrent trop tard.</span></div></div><h2>Ce que COURTIARK n'est pas</h2><div class=\"section\"><ul><li>Ce n'est pas un logiciel de tarification : il ne produit pas de primes d'assureurs.</li><li>Ce n'est pas un outil comptable.</li><li>Ce n'est pas un service de conformité : il organise le suivi, il ne certifie rien.</li><li>Ce n'est pas un outil qui contacte vos clients à votre place.</li></ul></div><h2>Prix et essai</h2><div class=\"section\"><table><thead><tr><th>Offre (France)</th><th>Prix</th><th>Pour qui</th></tr></thead><tbody><tr><td>Starter</td><td>89 € HT/mois</td><td>Courtier indépendant</td></tr><tr><td>Pro</td><td>159 € HT/mois</td><td>Cabinet avec plusieurs collaborateurs</td></tr><tr><td>Cabinet</td><td>Sur devis</td><td>Besoins spécifiques, reprise de données</td></tr></tbody></table><p>Suisse : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois. Essai de 7 jours, sans carte bancaire.</p></div>",
+  "faq": [
+   [
+    "Quelle différence entre un logiciel courtier et un CRM généraliste ?",
+    "Les objets métier : contrats, échéances, commissions, devis et pièces d'assurance existent nativement dans un logiciel de courtage, alors qu'un CRM généraliste les stocke au mieux en champs libres."
+   ],
+   [
+    "Faut-il choisir un logiciel ou un tableur ?",
+    "Un tableur suffit tant qu'une seule personne le tient. Dès que plusieurs personnes en dépendent, l'information doit être partagée et datée."
+   ],
+   [
+    "COURTIARK remplace-t-il mon logiciel de tarification ?",
+    "Non : il organise le suivi du cabinet. Si vous produisez des tarifs, vous gardez votre outil."
+   ],
+   [
+    "Peut-on tester avant de payer ?",
+    "Oui : l'essai dure 7 jours et ne demande pas de carte bancaire. À l'expiration, les données restent consultables."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Logiciel de courtage : le flux devis-contrat-commission",
+    "/logiciel-courtage-assurance"
+   ],
+   [
+    "Automatisation : ce qui est possible",
+    "/automatisation-courtier-assurance"
+   ],
+   [
+    "CRM assurance ou CRM généraliste",
+    "/comparatifs/crm-assurance-vs-crm-generaliste"
+   ]
+  ],
+  "slug": "/logiciel-courtier-assurance",
+  "_octets": 17629,
+  "_section": "core"
+ },
+ {
+  "path": "/logiciel-courtage-assurance",
+  "type": "money",
+  "country": "FR",
+  "indexable": true,
+  "title": "Logiciel de courtage assurance : devis, contrats, commissions | COURTIARK",
+  "description": "Le flux d'un cabinet de courtage, étape par étape : besoin, devis, contrat, échéance, commission. Ce que COURTIARK suit réellement dans ce flux, et ce qu'il laisse à votre métier.",
+  "h1": "Logiciel de courtage : suivre le flux du devis à la commission",
+  "chapeau": "Un cabinet de courtage vit d'un flux continu : un besoin, un devis, un contrat, une échéance, une commission. Ce flux se perd quand chaque étape vit dans un outil différent.",
+  "fil": [
+   [
+    "Logiciel de courtage assurance",
+    null
+   ]
+  ],
+  "corps": "<h2>Le flux, étape par étape</h2><div class=\"section\"><table><thead><tr><th>Étape</th><th>Ce qui se passe en cabinet</th><th>Ce que COURTIARK suit</th></tr></thead><tbody><tr><td>Besoin</td><td>Le client exprime un besoin, souvent incomplet</td><td>Fiche client créée, informations consignées</td></tr><tr><td>Devis</td><td>Un ou plusieurs devis sont préparés et transmis</td><td>Registre des devis et étape en cours</td></tr><tr><td>Décision</td><td>Le client accepte, négocie ou disparaît</td><td>Suivi des relances et des réponses</td></tr><tr><td>Contrat</td><td>Le contrat est émis par l'assureur</td><td>Contrat rattaché au client, avec son échéance</td></tr><tr><td>Vie du contrat</td><td>Changements de situation, avenants, sinistres</td><td>Historique du dossier et pièces</td></tr><tr><td>Échéance</td><td>Le renouvellement se prépare</td><td>Vue portefeuille et brief du matin</td></tr><tr><td>Commission</td><td>La rémunération est attendue puis encaissée</td><td>Suivi des commissions et rétrocessions</td></tr></tbody></table></div><h2>Où le flux se casse dans la pratique</h2><div class=\"section\"><ul><li>Le devis part et personne ne sait s'il a été lu.</li><li>Le contrat est émis mais l'échéance n'est enregistrée nulle part.</li><li>Le client change de situation et le dossier ne le reflète pas.</li><li>La commission est attendue mais rattachée à aucun dossier.</li></ul></div><h2>Ce qui reste votre métier</h2><div class=\"section\"><p>Le conseil, la négociation avec l'assureur, l'analyse des garanties et la relation client ne se délèguent pas à un logiciel. COURTIARK organise le suivi de ce que vous décidez, et garde la trace de vos décisions.</p></div><h2>Mettre un flux en place sans tout changer</h2><div class=\"section\"><div class=\"etape\"><b>Semaine 1</b><span>Importer le portefeuille existant et cadrer les dossiers.</span></div><div class=\"etape\"><b>Semaine 2</b><span>Enregistrer les échéances et les devis en cours.</span></div><div class=\"etape\"><b>Semaine 3</b><span>Activer les relances et les listes de travail quotidiennes.</span></div><div class=\"etape\"><b>Ensuite</b><span>Ajuster la méthode selon ce que les listes font remonter.</span></div><p>Essai de 7 jours sans carte bancaire ; France 89 € ou 159 € HT/mois, Suisse 199 ou 349 CHF HT/mois.</p></div>",
+  "faq": [
+   [
+    "Le logiciel génère-t-il les devis ?",
+    "COURTIARK suit les devis et leur étape ; la production du document tarifaire dépend de votre outil d'assurance."
+   ],
+   [
+    "Peut-on suivre un contrat sans échéance connue ?",
+    "Oui, mais l'intérêt est limité : l'échéance est ce qui permet de préparer le renouvellement. Sans elle, le contrat reste invisible jusqu'au contact du client."
+   ],
+   [
+    "Les commissions sont-elles calculées automatiquement ?",
+    "Le suivi et le calcul d'appoint existent ; les barèmes restent ceux de vos conventions avec les assureurs."
+   ]
+  ],
+  "lire": [
+   [
+    "Logiciel courtier assurance : les critères",
+    "/logiciel-courtier-assurance"
+   ],
+   [
+    "Gestion des contrats",
+    "/fonctionnalites/gestion-contrats"
+   ],
+   [
+    "Renouvellements",
+    "/fonctionnalites/renouvellements-assurance"
+   ],
+   [
+    "Guide : suivre les renouvellements",
+    "/guides/automatiser-renouvellements-assurance"
+   ]
+  ],
+  "slug": "/logiciel-courtage-assurance",
+  "_octets": 16048,
+  "_section": "core"
+ },
+ {
+  "path": "/automatisation-courtier-assurance",
+  "type": "money",
+  "country": "FR",
+  "indexable": true,
+  "title": "Automatisation courtier assurance : ce qui est possible, ce qui doit rester humain | COURTIARK",
+  "description": "Automatiser un cabinet de courtage sans casser la relation client : les tâches répétitives à traiter, celles qui ne doivent jamais être automatisées, et ce que COURTIARK fait réellement.",
+  "h1": "Automatisation d'un cabinet de courtage : la frontière",
+  "chapeau": "Automatiser, dans un cabinet d'assurance, ce n'est pas envoyer des messages en série. C'est faire en sorte qu'aucune action nécessaire ne dépende de la mémoire d'une personne.",
+  "fil": [
+   [
+    "Automatisation courtier assurance",
+    null
+   ]
+  ],
+  "corps": "<h2>Les tâches qui peuvent être organisées automatiquement</h2><div class=\"section\"><table><thead><tr><th>Tâche</th><th>Ce que l'outil peut faire</th><th>Ce qui reste humain</th></tr></thead><tbody><tr><td>Repérer un devis sans suite</td><td>Le faire remonter dans une liste de travail</td><td>Décider du contenu et du moment de la relance</td></tr><tr><td>Signaler une pièce manquante</td><td>Marquer le dossier comme incomplet et préparer le lien de dépôt</td><td>Demander la pièce au client</td></tr><tr><td>Voir une échéance approcher</td><td>Remonter le contrat dans la vue portefeuille et le brief du matin</td><td>Préparer et mener le rendez-vous</td></tr><tr><td>Préparer un message</td><td>Proposer un texte à partir du dossier</td><td>Relire, corriger, envoyer</td></tr><tr><td>Lire un document</td><td>Extraire les informations et les proposer avec leur origine</td><td>Valider ou corriger avant écriture</td></tr></tbody></table></div><h2>Les tâches à ne jamais automatiser</h2><div class=\"section\"><ul><li>Envoyer un message au client sans relecture humaine.</li><li>Décider d'un conseil ou d'une garantie.</li><li>Modifier un contrat ou une échéance sans validation.</li><li>Contacter une personne qui s'est opposée à tout contact.</li></ul></div><h2>Avant / après, sur un cas réel de cabinet</h2><div class=\"section\"><div class=\"bascule\"><div><h3>Sans COURTIARK</h3><ul><li>Le devis part et on attend</li><li>La pièce manquante est redemandée trois fois</li><li>L'échéance se découvre à l'arrivée</li><li>Le reporting se reconstitue en fin d'année</li></ul></div><div><h3>Avec COURTIARK</h3><ul><li>Les devis sans suite apparaissent dans une liste</li><li>Le dossier incomplet le dit lui-même</li><li>Les échéances sont visibles 90 jours avant</li><li>L'activité se lit dans les données du cabinet</li></ul></div></div></div><h2>Combien ça coûte et ce que ça ne promet pas</h2><div class=\"section\"><p>France : 89 € ou 159 € HT/mois ; Suisse : 199 ou 349 CHF HT/mois ; essai de 7 jours. Nous n'annonçons aucun pourcentage de temps gagné : cette mesure dépend de votre organisation, et nous ne disposons pas de donnée représentative.</p><p><a href=\"/outils/calculateur-productivite-courtier\">Estimer la charge administrative de votre cabinet</a></p></div>",
+  "faq": [
+   [
+    "COURTIARK envoie-t-il des relances automatiquement ?",
+    "Non. L'outil organise les rappels et les listes de travail ; l'envoi reste une action du cabinet."
+   ],
+   [
+    "Peut-on automatiser la lecture des documents ?",
+    "ARK peut lire un document et proposer les informations détectées avec leur origine ; rien n'est écrit sans validation."
+   ],
+   [
+    "L'automatisation remplace-t-elle un collaborateur ?",
+    "Non : elle supprime les oublis et les recherches, pas le travail de conseil."
+   ]
+  ],
+  "lire": [
+   [
+    "Automatisation des relances",
+    "/fonctionnalites/automatisation-relances"
+   ],
+   [
+    "Comparatif : automatisation ou gestion manuelle",
+    "/fr/comparatif/automatisation-vs-gestion-manuelle"
+   ],
+   [
+    "WhatsApp dans un cabinet de courtage",
+    "/fr/whatsapp-courtier-assurance"
+   ],
+   [
+    "Assistant ARK",
+    "/fonctionnalites/assistant-ark"
+   ],
+   [
+    "Guide : réduire la saisie manuelle",
+    "/guides/reduire-saisie-manuelle-courtier"
+   ],
+   [
+    "Comparatif : tableur ou CRM courtier",
+    "/comparatifs/excel-vs-crm-courtier-assurance"
+   ]
+  ],
+  "slug": "/automatisation-courtier-assurance",
+  "_octets": 16167,
+  "_section": "core"
+ },
+ {
+  "path": "/tarifs",
+  "type": "money",
+  "country": "FR",
+  "indexable": true,
+  "title": "Tarifs COURTIARK — CRM courtier assurance, France et Suisse",
+  "description": "Tarifs COURTIARK : France 89 € ou 159 € HT/mois, Suisse 199 ou 349 CHF HT/mois. Essai de 7 jours sans carte bancaire, aucune donnée supprimée à l'expiration.",
+  "h1": "Tarifs",
+  "chapeau": "Un abonnement par utilisateur et par mois, un essai de 7 jours sans carte bancaire, et une facturation dans la devise du marché du cabinet.",
+  "fil": [
+   [
+    "Tarifs",
+    null
+   ]
+  ],
+  "corps": "<h2>France</h2><div class=\"section\"><table><thead><tr><th>Offre</th><th>Prix</th><th>Pour qui</th><th>Ce qui change</th></tr></thead><tbody><tr><td>Starter</td><td>89 € HT/mois</td><td>Courtier indépendant</td><td>Dossiers clients, contrats, échéances, documents, relances, ARK.</td></tr><tr><td>Pro</td><td>159 € HT/mois</td><td>Cabinet avec plusieurs collaborateurs</td><td>Tout le Starter, plus la gestion d'équipe, les rôles et le reporting d'activité.</td></tr><tr><td>Cabinet</td><td>Sur devis</td><td>Structures et volumes spécifiques</td><td>Reprise de données accompagnée et besoins particuliers.</td></tr></tbody></table><p>Tarifs hors taxes, facturés en euros. Paiement par carte bancaire via notre prestataire de paiement.</p></div><h2>Suisse</h2><div class=\"section\"><table><thead><tr><th>Offre</th><th>Prix</th><th>Pour qui</th></tr></thead><tbody><tr><td>Indépendant</td><td>199 CHF HT/mois</td><td>Intermédiaire seul</td></tr><tr><td>Cabinet</td><td>349 CHF HT/mois</td><td>Cabinet avec plusieurs collaborateurs</td></tr><tr><td>Sur devis</td><td>Sur devis</td><td>Structures et volumes spécifiques</td></tr></tbody></table><p>Tarifs hors taxes, facturés en francs suisses.</p></div><h2>L'essai</h2><div class=\"section\"><ul><li>7 jours, sans carte bancaire.</li><li>À l'expiration, aucune donnée n'est supprimée : le compte reste consultable, les écritures sont suspendues.</li><li>Aucun engagement de durée : vous pouvez arrêter en fin de période.</li><li>Questions sur l'offre : contact@courtiark.fr.</li></ul></div><h2>Ce que le prix ne cache pas</h2><div class=\"section\"><p>Toutes les fonctions décrites sur ce site sont incluses dans l'offre correspondante : il n'y a pas de module métier verrouillé en supplément. Nous ne facturons ni la reprise d'un fichier standard, ni l'export de vos données.</p></div>",
+  "faq": [
+   [
+    "Y a-t-il des frais d'installation ?",
+    "Non pour un démarrage standard. Une reprise de données complexe est chiffrée dans l'offre Cabinet, avant tout engagement."
+   ],
+   [
+    "Le prix dépend-il du nombre de dossiers ?",
+    "Non : le nombre de dossiers clients n'est pas un critère de facturation. L'offre dépend du nombre d'utilisateurs du cabinet."
+   ],
+   [
+    "Que se passe-t-il après l'essai de 7 jours ?",
+    "Le compte reste accessible en lecture ; les fonctions d'écriture sont suspendues jusqu'à la souscription. Rien n'est supprimé."
+   ],
+   [
+    "Peut-on changer d'offre en cours de route ?",
+    "Oui, à la hausse comme à la baisse, au moment du renouvellement de la période."
+   ]
+  ],
+  "lire": [
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ],
+   [
+    "Logiciel courtier assurance : les critères",
+    "/logiciel-courtier-assurance"
+   ],
+   [
+    "COURTIARK en Suisse",
+    "/suisse"
+   ],
+   [
+    "Essai et démonstration",
+    "/demo"
+   ]
+  ],
+  "cta_final": [
+   "/register",
+   "Démarrer l'essai de 7 jours"
+  ],
+  "slug": "/tarifs",
+  "_octets": 15491,
+  "_section": "core"
+ },
+ {
+  "path": "/outils/calculateur-taux-transformation-assurance",
+  "type": "tool",
+  "country": "FR",
+  "indexable": true,
+  "title": "Calculateur de taux de transformation — courtier assurance | COURTIARK",
+  "description": "Mesurez vos taux lead → devis, devis → contrat et global, et le nombre de devis non convertis. Formules affichées, calcul dans votre navigateur, aucune donnée transmise.",
+  "h1": "Calculateur de taux de transformation",
+  "chapeau": "Trois chiffres suffisent pour savoir où votre cabinet perd des affaires : les leads entrants, les devis émis, les contrats signés sur la même période.",
+  "fil": [
+   [
+    "Outils",
+    "/outils"
+   ],
+   [
+    "Calculateur de taux de transformation",
+    null
+   ]
+  ],
+  "corps": "\n<div class=\"section\">\n  <div class=\"champ\"><label for=\"t-leads\">Leads entrants sur la période</label><input id=\"t-leads\" type=\"number\" min=\"0\" max=\"100000\" value=\"60\"></div>\n  <div class=\"champ\"><label for=\"t-devis\">Devis émis sur la même période</label><input id=\"t-devis\" type=\"number\" min=\"0\" max=\"100000\" value=\"35\"></div>\n  <div class=\"champ\"><label for=\"t-contrats\">Contrats signés sur la même période</label><input id=\"t-contrats\" type=\"number\" min=\"0\" max=\"100000\" value=\"12\"></div>\n  <button class=\"principal\" type=\"button\" id=\"t-calc\">Calculer</button>\n  <div class=\"resultat\" id=\"t-resultat\" aria-live=\"polite\"><p class=\"note\">Renseignez vos valeurs puis lancez le calcul.</p></div>\n</div>\n<script src=\"/js/outil-transformation.js\" defer></script>\n<h2>Les formules utilisées</h2><div class=\"section\"><table><thead><tr><th>Indicateur</th><th>Calcul</th></tr></thead><tbody><tr><td>Lead → devis</td><td>devis ÷ leads × 100</td></tr><tr><td>Devis → contrat</td><td>contrats ÷ devis × 100</td></tr><tr><td>Taux global</td><td>contrats ÷ leads × 100</td></tr><tr><td>Devis non convertis</td><td>devis − contrats</td></tr></tbody></table><p>Aucune valeur n'est envoyée : le calcul s'exécute dans votre navigateur.</p><p>L'hypothèse de récupération de 20 % affichée dans le résultat est un exemple explicite, pas une performance mesurée chez nous.</p></div>",
+  "faq": [
+   [
+    "Pourquoi suivre deux taux plutôt qu'un seul ?",
+    "Parce qu'ils ne se corrigent pas de la même façon : un taux lead → devis faible indique un problème de qualification ou de réponse, un taux devis → contrat faible indique un problème de suivi ou de conseil."
+   ],
+   [
+    "Ces chiffres sont-ils envoyés quelque part ?",
+    "Non : le calcul est local, rien n'est transmis ni enregistré."
+   ]
+  ],
+  "lire": [
+   [
+    "Guide : ne plus oublier les relances",
+    "/guides/comment-ne-plus-oublier-relances-courtier"
+   ],
+   [
+    "Relance de devis",
+    "/fonctionnalites/relance-devis-assurance"
+   ],
+   [
+    "Calculateur de charge administrative",
+    "/outils/calculateur-productivite-courtier"
+   ]
+  ],
+  "cta_final": [
+   "/fonctionnalites/relance-devis-assurance",
+   "Piloter mes opportunités avec COURTIARK"
+  ],
+  "slug": "/outils/calculateur-taux-transformation-assurance",
+  "_octets": 14711,
+  "_section": "tools"
+ },
+ {
+  "path": "/outils/checklist-dossier-courtier-assurance",
+  "type": "tool",
+  "country": "FR",
+  "indexable": true,
+  "title": "Checklist dossier courtier assurance — les points à ne pas manquer | COURTIARK",
+  "description": "Une checklist de dossier client pour cabinet de courtage : identité, besoin, conseil, pièces, devis, signature, contrat, suivi. Utilisable sans formulaire, imprimable.",
+  "h1": "Checklist d'un dossier client en courtage d'assurance",
+  "chapeau": "27 points de contrôle, de l'ouverture du dossier au renouvellement. Cochez ce qui est fait : votre avancement est conservé dans votre navigateur, imprimable pour un contrôle interne.",
+  "fil": [
+   [
+    "Outils",
+    "/outils"
+   ],
+   [
+    "Checklist dossier",
+    null
+   ]
+  ],
+  "corps": "\n<div class=\"section\">\n  <p id=\"chk-resume\" aria-live=\"polite\" class=\"note\"></p>\n  <form id=\"chk-dossier\"><fieldset><legend>Identité et coordonnées</legend><ul><li><input type=\"checkbox\" id=\"dossier-1\"> <label for=\"dossier-1\">Identité du souscripteur vérifiée (pièce d'identité si le dossier l'exige)</label></li><li><input type=\"checkbox\" id=\"dossier-2\"> <label for=\"dossier-2\">Coordonnées à jour : adresse, téléphone, e-mail professionnel</label></li><li><input type=\"checkbox\" id=\"dossier-3\"> <label for=\"dossier-3\">Situation de famille connue et consignée</label></li><li><input type=\"checkbox\" id=\"dossier-4\"> <label for=\"dossier-4\">Profession ou activité exacte, y compris les activités secondaires</label></li></ul></fieldset><fieldset><legend>Besoin et conseil</legend><ul><li><input type=\"checkbox\" id=\"dossier-5\"> <label for=\"dossier-5\">Besoins et exigences du client recueillis et écrits (pas seulement évoqués)</label></li><li><input type=\"checkbox\" id=\"dossier-6\"> <label for=\"dossier-6\">Antécédents d'assurance et sinistres connus</label></li><li><input type=\"checkbox\" id=\"dossier-7\"> <label for=\"dossier-7\">Conseil donné, avec sa motivation</label></li><li><input type=\"checkbox\" id=\"dossier-8\"> <label for=\"dossier-8\">Réserves ou refus du client consignés</label></li></ul></fieldset><fieldset><legend>Pièces du dossier</legend><ul><li><input type=\"checkbox\" id=\"dossier-9\"> <label for=\"dossier-9\">Pièces demandées listées et rattachées au dossier</label></li><li><input type=\"checkbox\" id=\"dossier-10\"> <label for=\"dossier-10\">Pièces reçues datées et classées</label></li><li><input type=\"checkbox\" id=\"dossier-11\"> <label for=\"dossier-11\">Pièces manquantes signalées au client</label></li><li><input type=\"checkbox\" id=\"dossier-12\"> <label for=\"dossier-12\">Documents illisibles redemandés</label></li></ul></fieldset><fieldset><legend>Devis et comparaison</legend><ul><li><input type=\"checkbox\" id=\"dossier-13\"> <label for=\"dossier-13\">Devis enregistrés avec leur date et leur assureur</label></li><li><input type=\"checkbox\" id=\"dossier-14\"> <label for=\"dossier-14\">Options écartées identifiées et raisons notées</label></li><li><input type=\"checkbox\" id=\"dossier-15\"> <label for=\"dossier-15\">Étape en cours du devis à jour (envoyé, relancé, accepté, refusé)</label></li></ul></fieldset><fieldset><legend>Souscription et signature</legend><ul><li><input type=\"checkbox\" id=\"dossier-16\"> <label for=\"dossier-16\">Décision du client consignée</label></li><li><input type=\"checkbox\" id=\"dossier-17\"> <label for=\"dossier-17\">Documents signés conservés</label></li><li><input type=\"checkbox\" id=\"dossier-18\"> <label for=\"dossier-18\">Date d'effet des garanties notée</label></li><li><input type=\"checkbox\" id=\"dossier-19\"> <label for=\"dossier-19\">Informations précontractuelles transmises et traçables</label></li></ul></fieldset><fieldset><legend>Contrat et échéances</legend><ul><li><input type=\"checkbox\" id=\"dossier-20\"> <label for=\"dossier-20\">Contrat rattaché au client avec son échéance</label></li><li><input type=\"checkbox\" id=\"dossier-21\"> <label for=\"dossier-21\">Conditions particulières connues</label></li><li><input type=\"checkbox\" id=\"dossier-22\"> <label for=\"dossier-22\">Prélèvement et moyen de paiement vérifiés</label></li><li><input type=\"checkbox\" id=\"dossier-23\"> <label for=\"dossier-23\">Date de premier avis enregistrée pour éviter un impayé</label></li></ul></fieldset><fieldset><legend>Suivi et renouvellement</legend><ul><li><input type=\"checkbox\" id=\"dossier-24\"> <label for=\"dossier-24\">Échéance visible dans le suivi du portefeuille</label></li><li><input type=\"checkbox\" id=\"dossier-25\"> <label for=\"dossier-25\">Prochaine action planifiée (contact, point annuel)</label></li><li><input type=\"checkbox\" id=\"dossier-26\"> <label for=\"dossier-26\">Évolution de la situation du client à réévaluer</label></li><li><input type=\"checkbox\" id=\"dossier-27\"> <label for=\"dossier-27\">Historique des échanges accessible à un autre collaborateur</label></li></ul></fieldset></form>\n  <div class=\"cta\">\n    <button class=\"principal\" type=\"button\" id=\"chk-print\">Imprimer / exporter en PDF</button>\n    <button type=\"button\" id=\"chk-reset\">Réinitialiser</button>\n  </div>\n  <p class=\"note\">Aucune donnée n'est transmise : les cases cochées restent dans votre navigateur (stockage local).</p>\n</div>\n<script src=\"/js/checklist-dossier.js\" defer></script>\n<h2>Comment l'utiliser</h2><div class=\"section\"><ul><li>Une checklist n'est utile que si elle est relue : faites-en un contrôle mensuel par échantillon de dossiers.</li><li>Les points « conseil » et « pièces » sont ceux qui font défaut dans un audit interne.</li><li>Une case non cochée n'est pas une faute : c'est une action à planifier.</li></ul></div><h2>Ce que COURTIARK change</h2><div class=\"section\"><p>Les points de cette checklist deviennent des données du dossier : les pièces manquantes remontent d'elles-mêmes, les échéances sont visibles, et l'historique reste lisible par un autre collaborateur.</p></div>",
+  "faq": [
+   [
+    "Puis-je imprimer la checklist vierge pour l'équipe ?",
+    "Oui : le bouton d'impression produit une version papier ou PDF."
+   ],
+   [
+    "La checklist est-elle conservée d'une visite à l'autre ?",
+    "Oui, dans votre navigateur (stockage local), sans envoi sur un serveur."
+   ]
+  ],
+  "lire": [
+   [
+    "Checklist renouvellement",
+    "/outils/checklist-renouvellement-assurance"
+   ],
+   [
+    "Gestion des documents",
+    "/fonctionnalites/gestion-documents-assurance"
+   ],
+   [
+    "Guide : centraliser les documents clients",
+    "/guides/centraliser-documents-clients-assurance"
+   ]
+  ],
+  "cta_final": [
+   "/register",
+   "Centraliser mes dossiers dans COURTIARK"
+  ],
+  "slug": "/outils/checklist-dossier-courtier-assurance",
+  "_octets": 18152,
+  "_section": "tools"
+ },
+ {
+  "path": "/outils/checklist-renouvellement-assurance",
+  "type": "tool",
+  "country": "FR",
+  "indexable": true,
+  "title": "Checklist renouvellement assurance — préparer une échéance | COURTIARK",
+  "description": "La séquence complète d'un renouvellement de contrat d'assurance : préparation, réévaluation avec le client, comparaison, décision, exécution et traçabilité. Checklist interactive et imprimable.",
+  "h1": "Checklist de renouvellement d'un contrat d'assurance",
+  "chapeau": "16 points, organisés dans l'ordre réel d'un renouvellement — de la préparation 90 jours avant à la trace laissée dans le dossier.",
+  "fil": [
+   [
+    "Outils",
+    "/outils"
+   ],
+   [
+    "Checklist renouvellement",
+    null
+   ]
+  ],
+  "corps": "\n<div class=\"section\">\n  <p id=\"renouv-resume\" aria-live=\"polite\" class=\"note\"></p>\n  <form id=\"chk-renouv\"><fieldset><legend>Préparer (90 jours avant)</legend><ul><li><input type=\"checkbox\" id=\"renouv-1\"> <label for=\"renouv-1\">Tous les contrats à échéance identifiés</label></li><li><input type=\"checkbox\" id=\"renouv-2\"> <label for=\"renouv-2\">Client contacté pour fixer un rendez-vous</label></li><li><input type=\"checkbox\" id=\"renouv-3\"> <label for=\"renouv-3\">Dossier vérifié : pièces, coordonnées, situation</label></li><li><input type=\"checkbox\" id=\"renouv-4\"> <label for=\"renouv-4\">Historique relu avant l'échange</label></li></ul></fieldset><fieldset><legend>Réévaluer avec le client</legend><ul><li><input type=\"checkbox\" id=\"renouv-5\"> <label for=\"renouv-5\">Situation actuelle confirmée (famille, activité, biens)</label></li><li><input type=\"checkbox\" id=\"renouv-6\"> <label for=\"renouv-6\">Besoins nouveaux recensés</label></li><li><input type=\"checkbox\" id=\"renouv-7\"> <label for=\"renouv-7\">Couverture actuelle expliquée au client</label></li><li><input type=\"checkbox\" id=\"renouv-8\"> <label for=\"renouv-8\">Écarts entre la situation réelle et le contrat identifiés</label></li></ul></fieldset><fieldset><legend>Comparer et décider</legend><ul><li><input type=\"checkbox\" id=\"renouv-9\"> <label for=\"renouv-9\">Devis demandés là où c'est pertinent</label></li><li><input type=\"checkbox\" id=\"renouv-10\"> <label for=\"renouv-10\">Comparaison expliquée, pas seulement chiffrée</label></li><li><input type=\"checkbox\" id=\"renouv-11\"> <label for=\"renouv-11\">Recommandation écrite et motivée</label></li><li><input type=\"checkbox\" id=\"renouv-12\"> <label for=\"renouv-12\">Décision du client consignée (reconduction, modification, résiliation)</label></li></ul></fieldset><fieldset><legend>Exécuter et tracer</legend><ul><li><input type=\"checkbox\" id=\"renouv-13\"> <label for=\"renouv-13\">Documents de résiliation ou d'avenant préparés</label></li><li><input type=\"checkbox\" id=\"renouv-14\"> <label for=\"renouv-14\">Dates de fin et de début de garantie vérifiées (pas de trou de couverture)</label></li><li><input type=\"checkbox\" id=\"renouv-15\"> <label for=\"renouv-15\">Pièces reçues classées dans le dossier</label></li><li><input type=\"checkbox\" id=\"renouv-16\"> <label for=\"renouv-16\">Échéance suivante enregistrée</label></li></ul></fieldset></form>\n  <div class=\"cta\">\n    <button class=\"principal\" type=\"button\" id=\"renouv-print\">Imprimer / exporter en PDF</button>\n    <button type=\"button\" id=\"renouv-reset\">Réinitialiser</button>\n  </div>\n  <p class=\"note\">Aucune donnée n'est transmise : les cases cochées restent dans votre navigateur.</p>\n</div>\n<script src=\"/js/checklist-renouvellement.js\" defer></script>\n<h2>Le point le plus souvent oublié</h2><div class=\"section\"><p>La vérification des dates de fin et de début de garantie lors d'un changement d'assureur. Un chevauchement coûte au client, un trou de couverture peut lui coûter beaucoup plus.</p></div><h2>Repères par marché</h2><div class=\"section\"><p>France : devoir de conseil et information précontractuelle (DDA), immatriculation ORIAS. Suisse : cadre de la loi sur le contrat d'assurance et exigences propres à l'intermédiaire. Détail et sources : <a href=\"/france\">France</a> · <a href=\"/suisse\">Suisse</a>.</p></div>",
+  "faq": [
+   [
+    "Combien de temps avant l'échéance faut-il commencer ?",
+    "La séquence de cette checklist suppose un démarrage environ 90 jours avant l'échéance : c'est ce qui permet de préparer le rendez-vous, de comparer et de décider sans précipitation."
+   ],
+   [
+    "La checklist remplace-t-elle un logiciel ?",
+    "Non : elle sert de contrôle interne. Un outil rend ces points visibles en permanence, au lieu d'être relus ponctuellement."
+   ]
+  ],
+  "lire": [
+   [
+    "Renouvellements",
+    "/fonctionnalites/renouvellements-assurance"
+   ],
+   [
+    "Guide : automatiser les renouvellements",
+    "/guides/automatiser-renouvellements-assurance"
+   ],
+   [
+    "Checklist dossier",
+    "/outils/checklist-dossier-courtier-assurance"
+   ]
+  ],
+  "cta_final": [
+   "/register",
+   "Suivre mes échéances dans COURTIARK"
+  ],
+  "slug": "/outils/checklist-renouvellement-assurance",
+  "_octets": 16819,
+  "_section": "tools"
+ },
+ {
+  "path": "/guides/organiser-cabinet-courtage-25-points",
+  "type": "guide",
+  "country": "FR",
+  "indexable": true,
+  "title": "25 points pour organiser un cabinet de courtage | COURTIARK",
+  "description": "Une checklist complète pour organiser un cabinet de courtage : dossiers, relances, pièces, échéances, commissions, accès, mesure. Utilisable immédiatement, sans formulaire.",
+  "h1": "25 points pour organiser un cabinet de courtage",
+  "chapeau": "Cette liste est utilisable telle quelle, dès aujourd'hui, sans logiciel. Elle sert aussi de grille de contrôle si vous évaluez un outil de gestion.",
+  "fil": [
+   [
+    "Guides",
+    "/guides"
+   ],
+   [
+    "25 points pour organiser un cabinet",
+    null
+   ]
+  ],
+  "corps": "<h2>La liste</h2><div class=\"section\"><ol><li>Un seul endroit pour la fiche client : contacts, contrats, échéances, documents, historique.</li><li>Une convention de nommage des dossiers, appliquée par tous</li><li>Une règle écrite pour la première relance d'un devis</li><li>Un responsable désigné par type de relance</li><li>Une revue hebdomadaire des dossiers bloqués</li><li>Les pièces attendues standardisées par type de dossier</li><li>Un lien de dépôt pour que le client envoie ses documents sans compte</li><li>La liste des pièces manquantes mise à jour à chaque réception</li><li>Les échéances saisies au moment de la souscription, pas plus tard</li><li>Une vue des échéances à 90 jours</li><li>Une préparation de renouvellement démarrée 60 jours avant</li><li>Un compte rendu consigné après chaque échange client</li><li>Les décimales et les unités fixées une fois pour toutes (euros, francs, HT/TTC)</li><li>Un import du portefeuille existant plutôt qu'une ressaisie</li><li>Aucun dossier sans échéance ni sans prochaine action</li><li>Les commissions suivies par dossier, pas en fin d'année</li><li>Les accès nominatifs, jamais de compte partagé</li><li>Les départs de collaborateur anticipés : rien ne doit vivre dans une seule tête</li><li>Un contrôle mensuel des dossiers incomplets</li><li>Une mesure simple de l'activité : devis en cours, gagnés, perdus</li><li>Les données de santé exclues de toute prospection</li><li>Une procédure claire d'opposition à la prospection</li><li>Les documents exportables à tout moment (pas de dépendance à l'éditeur)</li><li>Une revue de portefeuille annuelle planifiée</li><li>Un point de sortie écrit : ce que fait le cabinet quand il change d'outil</li></ol><p><a class=\"principal\" href=\"/ressources/checklist-25-points-organiser-cabinet-courtage.pdf\">Télécharger la version PDF (sans formulaire)</a></p></div><h2>Comment s'en servir</h2><div class=\"section\"><div class=\"etape\"><b>Aujourd'hui</b><span>Cochez ce qui est déjà en place. Ne cherchez pas à tout corriger.</span></div><div class=\"etape\"><b>Cette semaine</b><span>Traitez les deux points qui bloquent le plus le suivi au quotidien.</span></div><div class=\"etape\"><b>Ce mois</b><span>Transformez trois points en règle écrite, connue de l'équipe.</span></div><div class=\"etape\"><b>Ensuite</b><span>Relisez la liste une fois par trimestre : elle vieillit avec le cabinet.</span></div></div><h2>Le point qui compte le plus</h2><div class=\"section\"><p>Aucun dossier ne doit vivre dans la tête d'une seule personne. Tout le reste en découle : si l'information est dans l'outil et datée, les relances, les échéances et les pièces suivent.</p></div>",
+  "faq": [
+   [
+    "Faut-il un logiciel pour appliquer cette liste ?",
+    "Non, la liste fonctionne avec un tableur. Un outil spécialisé rend simplement ces règles permanentes au lieu d'être des résolutions."
+   ],
+   [
+    "Le PDF demande-t-il mes coordonnées ?",
+    "Non : le téléchargement est direct, sans formulaire."
+   ]
+  ],
+  "lire": [
+   [
+    "Checklist dossier",
+    "/outils/checklist-dossier-courtier-assurance"
+   ],
+   [
+    "Guide : organiser un portefeuille",
+    "/guides/organiser-portefeuille-assurance"
+   ],
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ]
+  ],
+  "slug": "/guides/organiser-cabinet-courtage-25-points",
+  "_octets": 15209,
+  "_section": "resources"
+ },
+ {
+  "path": "/glossaire",
+  "type": "guide",
+  "country": "FR",
+  "indexable": true,
+  "title": "Glossaire du courtage d'assurance : France et Suisse | COURTIARK",
+  "description": "Les termes du courtage d'assurance, définis simplement : intermédiaire, DDA, devoir de conseil, ORIAS, RGPD, IARD, prévoyance, RC Pro, LSA, FINMA, LPD. Chaque définition renvoie à sa page.",
+  "h1": "Glossaire du courtage d'assurance",
+  "chapeau": "Dix-neuf notions que tout cabinet de courtage manipule, avec pour chacune une définition courte et les pages qui l'approfondissent.",
+  "fil": [
+   [
+    "Glossaire",
+    null
+   ]
+  ],
+  "corps": "<h2>Sommaire</h2><div class=\"section\"><nav aria-label=\"Sommaire du glossaire\"><ul><li><a href=\"#courtier\">Courtier en assurance</a></li><li><a href=\"#intermédiaire\">Intermédiaire d'assurance</a></li><li><a href=\"#dda\">DDA (directive sur la distribution d'assurances)</a></li><li><a href=\"#devoir\">Devoir de conseil</a></li><li><a href=\"#orias\">ORIAS</a></li><li><a href=\"#acpr\">ACPR</a></li><li><a href=\"#rgpd\">RGPD</a></li><li><a href=\"#iard\">IARD</a></li><li><a href=\"#prévoyance\">Prévoyance</a></li><li><a href=\"#rc\">RC Pro (responsabilité civile professionnelle)</a></li><li><a href=\"#portefeuille\">Portefeuille d'assurance</a></li><li><a href=\"#renouvellement\">Renouvellement</a></li><li><a href=\"#devis\">Devis d'assurance</a></li><li><a href=\"#commission\">Commission et rétrocession</a></li><li><a href=\"#lsa\">LSA (loi sur le contrat d'assurance)</a></li><li><a href=\"#finma\">FINMA</a></li><li><a href=\"#lpd\">LPD / nLPD</a></li><li><a href=\"#lamal\">LAMal et LCA</a></li><li><a href=\"#lpp\">LPP et 3e pilier</a></li></ul></nav></div><h2 id=\"courtier\">Courtier en assurance</h2><div class=\"section\"><p>Intermédiaire qui présente des contrats d'assurance et agit, selon les cas, pour le compte du client ou comme intermédiaire d'assurance. Son activité est encadrée par le droit des intermédiaires.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/crm-courtier-assurance\">Le CRM courtier assurance</a></li></ul></div><h2 id=\"intermédiaire\">Intermédiaire d'assurance</h2><div class=\"section\"><p>Professionnel qui met en relation un client et un assureur, ou qui présente des contrats. En France, l'activité d'intermédiation est définie par le Code des assurances ; en Suisse, elle relève de la loi sur le contrat d'assurance (LSA).</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/france\">COURTIARK en France</a></li><li><a href=\"/suisse\">COURTIARK en Suisse</a></li></ul></div><h2 id=\"dda\">DDA (directive sur la distribution d'assurances)</h2><div class=\"section\"><p>Cadre européen transposé en droit français qui organise la distribution d'assurance : informations précontractuelles, recueil des besoins et exigences du client, motivation du conseil, formation des distributeurs.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/guides/devoir-de-conseil-suivi-dossier\">Guide : devoir de conseil et suivi du dossier</a></li></ul></div><h2 id=\"devoir\">Devoir de conseil</h2><div class=\"section\"><p>Obligation, pour le distributeur, de proposer un contrat cohérent avec les besoins et exigences exprimés par le client, et de pouvoir expliquer ce qui a motivé ce conseil.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/guides/devoir-de-conseil-suivi-dossier\">Guide : devoir de conseil</a></li></ul></div><h2 id=\"orias\">ORIAS</h2><div class=\"section\"><p>Registre unique des intermédiaires en assurance, banque et finance en France. L'immatriculation au registre est une condition d'exercice de l'activité d'intermédiaire.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/france\">COURTIARK en France</a></li></ul></div><h2 id=\"acpr\">ACPR</h2><div class=\"section\"><p>Autorité de contrôle prudentiel et de résolution : supervise le secteur de la banque et de l'assurance en France. Elle ne remplace pas les obligations propres à chaque intermédiaire.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/france\">COURTIARK en France</a></li></ul></div><h2 id=\"rgpd\">RGPD</h2><div class=\"section\"><p>Règlement européen sur la protection des données. Il encadre la collecte et l'usage des données personnelles : finalité, minimisation, sécurité, droits des personnes. Les données de santé relèvent de catégories particulières.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/guides/donnees-clients-assurance-france-suisse\">Guide : données clients France et Suisse</a></li><li><a href=\"/confidentialite\">Confidentialité</a></li></ul></div><h2 id=\"iard\">IARD</h2><div class=\"section\"><p>Assurances « incendie, accidents et risques divers » : les assurances de biens et de responsabilité (habitation, automobile, multirisque professionnelle, responsabilité civile).</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/assurances\">Branches d'assurance</a></li></ul></div><h2 id=\"prévoyance\">Prévoyance</h2><div class=\"section\"><p>Couverture des conséquences financières d'événements de la vie (décès, invalidité, arrêt de travail). Elle peut être individuelle ou collective, et s'articule avec les régimes obligatoires.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/assurances/prevoyance\">Assurances : prévoyance</a></li></ul></div><h2 id=\"rc\">RC Pro (responsabilité civile professionnelle)</h2><div class=\"section\"><p>Garantie qui couvre les conséquences des dommages causés à des tiers dans l'exercice d'une activité professionnelle.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/assurances/rc-pro\">Assurances : RC professionnelle</a></li></ul></div><h2 id=\"portefeuille\">Portefeuille d'assurance</h2><div class=\"section\"><p>Ensemble des contrats suivis par un cabinet pour ses clients, avec leurs échéances, leurs garanties et leurs documents. C'est l'actif central d'un cabinet de courtage.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/fonctionnalites/gestion-portefeuille-assurance\">Gestion de portefeuille d'assurance</a></li><li><a href=\"/guides/organiser-portefeuille-assurance\">Guide : organiser un portefeuille</a></li></ul></div><h2 id=\"renouvellement\">Renouvellement</h2><div class=\"section\"><p>Échéance annuelle d'un contrat, moment où l'assuré et le cabinet réexaminent la couverture. C'est une étape de conseil, pas une formalité administrative.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/fonctionnalites/renouvellements-assurance\">Renouvellements</a></li><li><a href=\"/outils/checklist-renouvellement-assurance\">Checklist renouvellement</a></li></ul></div><h2 id=\"devis\">Devis d'assurance</h2><div class=\"section\"><p>Proposition de garanties et de prix transmise à un client. Son suivi (relance, réponse, décision) détermine une part importante de l'activité commerciale du cabinet.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/fonctionnalites/relance-devis-assurance\">Relance de devis</a></li></ul></div><h2 id=\"commission\">Commission et rétrocession</h2><div class=\"section\"><p>Rémunération versée au distributeur pour la distribution d'un contrat. En Suisse, on parle volontiers de commission ou de rétrocession ; la transparence sur ces rémunérations relève des obligations propres à l'intermédiaire.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/crm-courtier-assurance\">Suivi des commissions</a></li></ul></div><h2 id=\"lsa\">LSA (loi sur le contrat d'assurance)</h2><div class=\"section\"><p>Loi suisse qui régit le contrat d'assurance et le statut des intermédiaires d'assurance, y compris les exigences d'inscription selon leur statut.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/suisse\">COURTIARK en Suisse</a></li></ul></div><h2 id=\"finma\">FINMA</h2><div class=\"section\"><p>Autorité fédérale de surveillance des marchés financiers en Suisse. Elle surveille notamment les acteurs de l'assurance ; le registre des intermédiaires permet de vérifier le statut d'un intermédiaire.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/suisse\">COURTIARK en Suisse</a></li><li><a href=\"/suisse/geneve\">Genève</a></li></ul></div><h2 id=\"lpd\">LPD / nLPD</h2><div class=\"section\"><p>Cadre suisse de protection des données, révisé ces dernières années : transparence sur le traitement, droits des personnes, obligations de sécurité, sous-traitance encadrée.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/guides/donnees-clients-assurance-france-suisse\">Guide : données clients France et Suisse</a></li></ul></div><h2 id=\"lamal\">LAMal et LCA</h2><div class=\"section\"><p>La LAMal régit l'assurance-maladie obligatoire ; la LCA encadre l'assurance-vie et les  assurances complémentaires. La distinction est structurante pour un cabinet suisse.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/assurances/mutuelle-sante\">Assurances : mutuelle et complémentaire santé</a></li></ul></div><h2 id=\"lpp\">LPP et 3e pilier</h2><div class=\"section\"><p>En Suisse, la prévoyance professionnelle (LPP, deuxième pilier) et la prévoyance individuelle liée ou libre (troisième pilier) : deux cadres distincts du suivi client.</p><p class=\"doux\">À approfondir :</p><ul><li><a href=\"/assurances/prevoyance\">Assurances : prévoyance</a></li></ul></div><h2>Sources</h2><div class=\"section\"><p>Les notions réglementaires sont formulées à partir de sources officielles : <a href=\"https://www.orias.fr/\" rel=\"nofollow noopener\" target=\"_blank\">orias.fr</a> · <a href=\"https://www.legifrance.gouv.fr/\" rel=\"nofollow noopener\" target=\"_blank\">legifrance.gouv.fr</a> · <a href=\"https://www.cnil.fr/\" rel=\"nofollow noopener\" target=\"_blank\">cnil.fr</a> · <a href=\"https://www.finma.ch/fr/\" rel=\"nofollow noopener\" target=\"_blank\">finma.ch</a> · <a href=\"https://www.fedlex.admin.ch/fr/cc/internal-law\" rel=\"nofollow noopener\" target=\"_blank\">fedlex.admin.ch</a>. Ce glossaire est documentaire : il ne constitue pas un conseil juridique.</p></div>",
+  "faq": [
+   [
+    "Pourquoi définir ces termes sur un site de logiciel ?",
+    "Parce qu'un cabinet de courtage nous évalue sur le vocabulaire qu'il emploie tous les jours : un outil qui ignore la différence entre LAMal et LCA, ou entre devis et contrat, se voit immédiatement."
+   ],
+   [
+    "Ces définitions remplacent-elles une formation réglementaire ?",
+    "Non. Elles servent à se comprendre, pas à remplacer les obligations de formation et de conseil du cabinet."
+   ]
+  ],
+  "lire": [
+   [
+    "Guide : devoir de conseil",
+    "/guides/devoir-de-conseil-suivi-dossier"
+   ],
+   [
+    "Guide : données clients France et Suisse",
+    "/guides/donnees-clients-assurance-france-suisse"
+   ],
+   [
+    "Le CRM courtier assurance",
+    "/crm-courtier-assurance"
+   ]
+  ],
+  "slug": "/glossaire",
+  "_octets": 21901,
+  "_section": "resources"
+ },
+ {
   "path": "/guides/",
   "type": "hub",
   "country": "FR",
@@ -1474,7 +3082,7 @@
     null
    ]
   ],
-  "corps": "<h2>Les guides disponibles</h2><div class=\"section\"><ul><li><a href=\"/guides/comment-ne-plus-oublier-relances-courtier\">Ne plus oublier les relances</a></li><li><a href=\"/guides/automatiser-renouvellements-assurance\">Automatiser les renouvellements</a></li><li><a href=\"/guides/centraliser-documents-clients-assurance\">Centraliser les documents clients</a></li><li><a href=\"/guides/organiser-portefeuille-assurance\">Organiser un portefeuille</a></li><li><a href=\"/guides/reduire-saisie-manuelle-courtier\">Réduire la saisie manuelle</a></li><li><a href=\"/guides/automatiser-suivi-prospects-assurance\">Automatiser le suivi des prospects</a></li><li><a href=\"/guides/devoir-de-conseil-suivi-dossier\">Devoir de conseil : ce qu'il faut pouvoir montrer</a></li><li><a href=\"/guides/donnees-clients-assurance-france-suisse\">Données clients : France et Suisse</a></li></ul></div>",
+  "corps": "<h2>Les guides disponibles</h2><div class=\"section\"><ul><li><a href=\"/guides/comment-ne-plus-oublier-relances-courtier\">Ne plus oublier les relances</a></li><li><a href=\"/guides/automatiser-renouvellements-assurance\">Automatiser les renouvellements</a></li><li><a href=\"/guides/centraliser-documents-clients-assurance\">Centraliser les documents clients</a></li><li><a href=\"/guides/organiser-portefeuille-assurance\">Organiser un portefeuille</a></li><li><a href=\"/guides/reduire-saisie-manuelle-courtier\">Réduire la saisie manuelle</a></li><li><a href=\"/guides/automatiser-suivi-prospects-assurance\">Automatiser le suivi des prospects</a></li><li><a href=\"/guides/devoir-de-conseil-suivi-dossier\">Devoir de conseil : ce qu'il faut pouvoir montrer</a></li><li><a href=\"/guides/donnees-clients-assurance-france-suisse\">Données clients : France et Suisse</a></li><li><a href=\"/guides/organiser-cabinet-courtage-25-points\">25 points pour organiser un cabinet</a> — la liste de contrôle complète, également disponible en PDF</li><li><a href=\"/glossaire\">Glossaire du courtage</a> — dix-neuf notions définies, France et Suisse</li></ul></div>",
   "faq": [],
   "lire": [
    [
@@ -1491,7 +3099,7 @@
    ]
   ],
   "slug": "/guides/",
-  "_octets": 12416,
+  "_octets": 12689,
   "_section": "resources"
  },
  {
@@ -1723,10 +3331,18 @@
    [
     "Guide : centraliser les documents",
     "/guides/centraliser-documents-clients-assurance"
+   ],
+   [
+    "Automatisation : la frontière",
+    "/automatisation-courtier-assurance"
+   ],
+   [
+    "Checklist dossier client",
+    "/outils/checklist-dossier-courtier-assurance"
    ]
   ],
   "slug": "/guides/reduire-saisie-manuelle-courtier",
-  "_octets": 13690,
+  "_octets": 13870,
   "_section": "resources"
  },
  {
@@ -2061,7 +3677,7 @@
     null
    ]
   ],
-  "corps": "<h2>Disponible aujourd'hui</h2><div class=\"section\"><ul><li><a href=\"/outils/calculateur-productivite-courtier\">Calculateur de charge administrative</a> — estimez les heures de saisie, de relance et de recherche de documents de votre cabinet.</li></ul></div><h2>La règle de calcul</h2><div class=\"section\"><p>Toutes les formules sont visibles sur la page de l'outil. Aucun pourcentage de gain n'est promis : le calcul montre une charge, pas une économie.</p></div>",
+  "corps": "<h2>Disponible aujourd'hui</h2><div class=\"section\"><ul><li><a href=\"/outils/calculateur-productivite-courtier\">Calculateur de charge administrative</a> — estimez les heures de saisie, de relance et de recherche de documents de votre cabinet.</li><li><a href=\"/outils/calculateur-taux-transformation-assurance\">Calculateur de taux de transformation</a> — leads, devis, contrats : où votre cabinet perd des affaires.</li><li><a href=\"/outils/checklist-dossier-courtier-assurance\">Checklist dossier client</a> — les points de contrôle d'un dossier, de l'ouverture au renouvellement.</li><li><a href=\"/outils/checklist-renouvellement-assurance\">Checklist renouvellement</a> — la séquence complète d'une échéance, 90 jours avant.</li></ul></div><h2>À télécharger (sans formulaire)</h2><div class=\"section\"><ul><li><a href=\"/ressources/checklist-25-points-organiser-cabinet-courtage.pdf\">25 points pour organiser un cabinet de courtage</a> (PDF) — la liste complète, utilisable sans logiciel.</li><li><a href=\"/ressources/checklist-dossier-courtier-assurance.pdf\">Checklist dossier (PDF)</a> — version imprimable.</li><li><a href=\"/ressources/checklist-renouvellement-assurance.pdf\">Checklist renouvellement (PDF)</a> — version imprimable.</li></ul></div><h2>La règle de calcul</h2><div class=\"section\"><p>Toutes les formules sont visibles sur la page de l'outil. Aucun pourcentage de gain n'est promis : le calcul montre une charge, pas une économie.</p></div>",
   "faq": [],
   "lire": [
    [
@@ -2074,7 +3690,7 @@
    ]
   ],
   "slug": "/outils/",
-  "_octets": 11984,
+  "_octets": 12998,
   "_section": "tools"
  },
  {
@@ -2386,7 +4002,7 @@
     null
    ]
   ],
-  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>perf(web): sortir les scripts du HTML pour respecter la CSP</td><td>3f172969</td></tr><tr><td>26/09/2026</td><td>fix(seo): le shell de l'application reste hors index et porte la marque COURTIARK</td><td>4c5dce29</td></tr><tr><td>26/09/2026</td><td>feat(acquisition): mesurer la visite SEO et la conversion</td><td>af9461d1</td></tr><tr><td>26/09/2026</td><td>feat(seo): architecture publique COURTIARK et moteur de pages</td><td>31b8bcdf</td></tr><tr><td>26/09/2026</td><td>feat(seo): separer le site public de l'application (shell app.html, home statique)</td><td>9c977512</td></tr><tr><td>25/09/2026</td><td>E-mail d'acces : le remplacement du mot de passe temporaire est la PREMIERE etape</td><td>72daeacd</td></tr><tr><td>25/09/2026</td><td>Essai : fin imposee a l'instant pres, e-mail a l'heure de Paris, erreurs JSON preservees</td><td>d38fc13a</td></tr><tr><td>23/09/2026</td><td>ARK : la case « Creer le contrat » cochee seule ne creait rien</td><td>cb4e590a</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le chat transmet le dossier cible (ARK repondait sans aucune donnee client)</td><td>100597ec</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le dossier affiche devient le dossier cible</td><td>4ce2a271</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers restait vide malgre une reponse HTTP 200</td><td>c7a48b88</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers ne se chargeait jamais en production (/api/api/clients)</td><td>576f3bea</td></tr><tr><td>23/09/2026</td><td>ARK Documents : un document long n'echoue plus (reponse tronquee) et une panne est toujours expliquee</td><td>0bb0b64b</td></tr><tr><td>23/09/2026</td><td>Revue adverse JEV : un PDF scanne ne peut plus produire de valeurs inventees</td><td>0b0cd3a5</td></tr><tr><td>23/09/2026</td><td>ARK Documents : l'ecriture echouait si le courtier ne validait que des champs sans colonne</td><td>1faf1a3e</td></tr><tr><td>23/09/2026</td><td>arkEngine : le basculement DeepSeek visait un modele inexistant (deepseek-chat)</td><td>79dfd662</td></tr><tr><td>23/09/2026</td><td>ARK Documents : provider DeepSeek (runtime), OCR reel des images, creation du contrat</td><td>7fffea7e</td></tr><tr><td>23/09/2026</td><td>Revue adverse (JEV passe 4) : suppression du chemin casse, garde explicite, fin du faux succes partiel</td><td>06d6606b</td></tr><tr><td>23/09/2026</td><td>ARK documents : mention « a confirmer » quand le modele ne tranche pas le type + note de retention</td><td>383ab356</td></tr><tr><td>23/09/2026</td><td>ARK documents : joindre un PDF ou une image dans la bulle, lecture reelle, diff valide puis ecriture en base</td><td>ee24891e</td></tr><tr><td>22/09/2026</td><td>SEO: les trois pages de la vague 2 entrent dans le pipeline (14 etapes) + metadonnees conformes</td><td>0cdffc93</td></tr><tr><td>22/09/2026</td><td>SEO vague 5 (suite): actif de donnees etendu, cluster IA approfondi, rappels suisses individualises</td><td>6cf88c9b</td></tr><tr><td>22/09/2026</td><td>SEO vague 5: cluster gain de temps, outils de calcul, processus, checklists, glossaire, confiance, systeme de controle</td><td>e99f7cc4</td></tr><tr><td>22/09/2026</td><td>SEO: artefacts regeneres apres la vague 4 (suivi des pages, maillage, intentions)</td><td>f568b1de</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
+  "corps": "<h2>Changements publiés</h2><div class=\"section\"><table><thead><tr><th>Date</th><th>Changement</th><th>Version</th></tr></thead><tbody><tr><td>26/09/2026</td><td>fix(seo): liens internes sans slash final et sitemap aligne sur les URL servies</td><td>f8171df6</td></tr><tr><td>26/09/2026</td><td>perf(web): sortir les scripts du HTML pour respecter la CSP</td><td>3f172969</td></tr><tr><td>26/09/2026</td><td>fix(seo): le shell de l'application reste hors index et porte la marque COURTIARK</td><td>4c5dce29</td></tr><tr><td>26/09/2026</td><td>feat(acquisition): mesurer la visite SEO et la conversion</td><td>af9461d1</td></tr><tr><td>26/09/2026</td><td>feat(seo): architecture publique COURTIARK et moteur de pages</td><td>31b8bcdf</td></tr><tr><td>26/09/2026</td><td>feat(seo): separer le site public de l'application (shell app.html, home statique)</td><td>9c977512</td></tr><tr><td>25/09/2026</td><td>E-mail d'acces : le remplacement du mot de passe temporaire est la PREMIERE etape</td><td>72daeacd</td></tr><tr><td>25/09/2026</td><td>Essai : fin imposee a l'instant pres, e-mail a l'heure de Paris, erreurs JSON preservees</td><td>d38fc13a</td></tr><tr><td>23/09/2026</td><td>ARK : la case « Creer le contrat » cochee seule ne creait rien</td><td>cb4e590a</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le chat transmet le dossier cible (ARK repondait sans aucune donnee client)</td><td>100597ec</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : le dossier affiche devient le dossier cible</td><td>4ce2a271</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers restait vide malgre une reponse HTTP 200</td><td>c7a48b88</td></tr><tr><td>23/09/2026</td><td>Bulle ARK : la liste des dossiers ne se chargeait jamais en production (/api/api/clients)</td><td>576f3bea</td></tr><tr><td>23/09/2026</td><td>ARK Documents : un document long n'echoue plus (reponse tronquee) et une panne est toujours expliquee</td><td>0bb0b64b</td></tr><tr><td>23/09/2026</td><td>Revue adverse JEV : un PDF scanne ne peut plus produire de valeurs inventees</td><td>0b0cd3a5</td></tr><tr><td>23/09/2026</td><td>ARK Documents : l'ecriture echouait si le courtier ne validait que des champs sans colonne</td><td>1faf1a3e</td></tr><tr><td>23/09/2026</td><td>arkEngine : le basculement DeepSeek visait un modele inexistant (deepseek-chat)</td><td>79dfd662</td></tr><tr><td>23/09/2026</td><td>ARK Documents : provider DeepSeek (runtime), OCR reel des images, creation du contrat</td><td>7fffea7e</td></tr><tr><td>23/09/2026</td><td>Revue adverse (JEV passe 4) : suppression du chemin casse, garde explicite, fin du faux succes partiel</td><td>06d6606b</td></tr><tr><td>23/09/2026</td><td>ARK documents : mention « a confirmer » quand le modele ne tranche pas le type + note de retention</td><td>383ab356</td></tr><tr><td>23/09/2026</td><td>ARK documents : joindre un PDF ou une image dans la bulle, lecture reelle, diff valide puis ecriture en base</td><td>ee24891e</td></tr><tr><td>22/09/2026</td><td>SEO: les trois pages de la vague 2 entrent dans le pipeline (14 etapes) + metadonnees conformes</td><td>0cdffc93</td></tr><tr><td>22/09/2026</td><td>SEO vague 5 (suite): actif de donnees etendu, cluster IA approfondi, rappels suisses individualises</td><td>6cf88c9b</td></tr><tr><td>22/09/2026</td><td>SEO vague 5: cluster gain de temps, outils de calcul, processus, checklists, glossaire, confiance, systeme de controle</td><td>e99f7cc4</td></tr></tbody></table></div><h2>Comment lire ce journal</h2><div class=\"section\"><ul><li>Chaque ligne correspond à une modification réellement publiée sur la production.</li><li>La colonne « version » est l'identifiant du commit correspondant.</li><li>Les corrections de contenu de ce site y figurent aussi.</li></ul></div>",
   "faq": [],
   "lire": [
    [
@@ -2399,7 +4015,7 @@
    ]
   ],
   "slug": "/changelog",
-  "_octets": 14014,
+  "_octets": 14012,
   "_section": "core"
  }
 ]

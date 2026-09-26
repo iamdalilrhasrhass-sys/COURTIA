@@ -6,6 +6,11 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://courtiark.fr/automatisation-courtier-assurance</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://courtiark.fr/changelog</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -14,6 +19,23 @@
     <loc>https://courtiark.fr/crm-courtier-assurance</loc>
     <xhtml:link rel="alternate" hreflang="fr-FR" href="https://courtiark.fr/crm-courtier-assurance"/>
     <xhtml:link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/suisse/crm-courtier-assurance"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/logiciel-courtage-assurance</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/logiciel-courtier-assurance</loc>
+    <xhtml:link rel="alternate" hreflang="fr-FR" href="https://courtiark.fr/logiciel-courtier-assurance"/>
+    <xhtml:link rel="alternate" hreflang="fr-CH" href="https://courtiark.fr/suisse/crm-courtier-assurance"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://courtiark.fr/tarifs</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

@@ -1,0 +1,110 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 1046 >>
+stream
+BT
+/F1 12 Tf
+14 TL
+60 760 Td
+(ATTESTATION D'ASSURANCE AUTOMOBILE - DOCUMENT DE TEST \(DONNEES FICTIVES\)) Tj T*
+() Tj T*
+(Assure : MARTIN Jean) Tj T*
+(Adresse : 12 rue des Essais) Tj T*
+(Code postal : 75011) Tj T*
+(Ville : Paris) Tj T*
+() Tj T*
+(Compagnie : ASSURANCES FICTIVES SA) Tj T*
+(Numero de contrat : PA-2026-998877) Tj T*
+(Date d'effet : 2026-01-01) Tj T*
+(Date d'echeance : 2027-01-01) Tj T*
+(Prime annuelle : 512.40 EUR) Tj T*
+(Franchise : 300 EUR) Tj T*
+(Garanties : responsabilite civile, vol, incendie, bris de glace, assistance 0 km) Tj T*
+() Tj T*
+(Vehicule assure : RENAULT CLIO) Tj T*
+(Immatriculation : AA-123-BB) Tj T*
+(Numero de serie \(VIN\) : VF1RJA00X12345678) Tj T*
+(Date de mise en circulation : 2021-06-15) Tj T*
+(Energie : essence) Tj T*
+() Tj T*
+(Coefficient bonus-malus : 0.50) Tj T*
+(Sinistres declares sur 3 ans : 0) Tj T*
+() Tj T*
+(Document etabli pour la demonstration technique. Les coordonnees bancaires, l'adresse) Tj T*
+(e-mail et le telephone de l'assure ne figurent PAS dans ce document.) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 428 >>
+stream
+BT
+/F1 12 Tf
+14 TL
+60 760 Td
+(CONDITIONS PARTICULIERES - PAGE 2 \(DOCUMENT DE TEST\)) Tj T*
+() Tj T*
+(Vehicule : RENAULT CLIO, immatriculation AA-123-BB) Tj T*
+(Usage declare : prive et trajet domicile-travail) Tj T*
+(Kilometrage annuel declare : 12000 km) Tj T*
+(Stationnement habituel : garage ferme) Tj T*
+() Tj T*
+(Les informations de paiement \(IBAN, BIC\) ne sont pas mentionnees dans cette attestation.) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 361 >>
+stream
+BT
+/F1 12 Tf
+14 TL
+60 760 Td
+(RELEVE D'INFORMATION - PAGE 3 \(DOCUMENT DE TEST\)) Tj T*
+() Tj T*
+(Coefficient bonus-malus confirme au 1er janvier 2026 : 0.50) Tj T*
+(Nombre de sinistres responsables sur 3 ans : 0) Tj T*
+(Anciennete du permis de conduire : 12 annees) Tj T*
+() Tj T*
+(Aucun numero de compte bancaire ne figure dans ce document.) Tj T*
+() Tj T*
+ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000323 00000 n 
+0000001421 00000 n 
+0000001547 00000 n 
+0000002026 00000 n 
+0000002152 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+2564
+%%EOF

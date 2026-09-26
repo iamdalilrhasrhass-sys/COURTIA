@@ -53,11 +53,22 @@ def pages_geo():
                              ["Cabinet", "Sur devis", "Volumes et besoins spécifiques, reprise de données."]])
                     + p("Essai de 7 jours sans carte bancaire. À l'expiration, aucune donnée n'est supprimée : "
                         "le compte reste consultable, les écritures sont suspendues.")),
-            section("Villes et régions",
-                    p("Les pages locales et régionales sont publiées progressivement, uniquement lorsqu'elles apportent "
-                      "un contenu propre à la zone. Aucune page de ville vide n'est mise en ligne.")
-                    + ul(['<a href="/suisse/geneve">Genève</a> et <a href="/suisse/lausanne">Lausanne</a> pour la Suisse romande.',
-                          'Les agglomérations françaises seront publiées par vagues, avec un contenu local réel.'])),
+            section("Villes",
+                    p("Chaque page de ville porte les chiffres réels du courtage local (établissements immatriculés au "
+                      "code NAF 66.22Z, densité pour 10 000 habitants) et les conséquences concrètes pour un cabinet de "
+                      "cette agglomération. Aucune page de ville sans donnée propre n'est publiée.")
+                    + ul(['<a href="/france/paris">Paris</a> — 4 347 établissements, 20,7 pour 10 000 habitants',
+                          '<a href="/france/lyon">Lyon</a> · <a href="/france/marseille">Marseille</a> · '
+                          '<a href="/france/toulouse">Toulouse</a> · <a href="/france/bordeaux">Bordeaux</a>',
+                          '<a href="/france/lille">Lille</a> · <a href="/france/nantes">Nantes</a> · '
+                          '<a href="/france/strasbourg">Strasbourg</a> · <a href="/france/montpellier">Montpellier</a> · '
+                          '<a href="/france/nice">Nice</a>'])
+                    + p('Source de référence et méthode : <a href="/france/densite-courtage-grandes-villes-france">'
+                        'densité du courtage dans les grandes villes françaises</a> (base SIRENE, extraction du 19/09/2026).')),
+            section("Régions et départements",
+                    p("Les pages de région ne sont pas publiées tant qu'elles ne portent pas de donnée propre : les "
+                      "départements sont traités depuis les villes et depuis la page de densité, où figure la répartition "
+                      "réelle par département.")),
             section("Et la Suisse ?",
                     p('Le marché suisse est traité séparément, avec son vocabulaire et ses repères : '
                       '<a href="/suisse/">COURTIARK en Suisse</a>.')),
@@ -101,9 +112,16 @@ def pages_geo():
                              ["Sur devis", "Sur devis", "Structures et volumes spécifiques."]])
                     + p("Essai de 7 jours sans carte bancaire.")),
             section("Suisse romande : Genève, Vaud, Valais, Neuchâtel, Fribourg",
-                    ul(['<a href="/suisse/geneve">COURTIARK à Genève</a>',
-                        '<a href="/suisse/lausanne">COURTIARK à Lausanne</a>',
-                        'Le reste de la Romandie (Nyon, Vevey, Montreux, Sion, Neuchâtel, Fribourg) sera publié par vagues, avec un contenu propre à chaque zone.'])
+                    ul(['<a href="/suisse/geneve">Genève</a> · <a href="/suisse/nyon">Nyon</a> · '
+                        '<a href="/suisse/lausanne">Lausanne</a> · <a href="/suisse/vevey">Vevey</a> · '
+                        '<a href="/suisse/montreux">Montreux</a>',
+                        '<a href="/suisse/sion">Sion</a> · <a href="/suisse/neuchatel">Neuchâtel</a> · '
+                        '<a href="/suisse/fribourg">Fribourg</a>',
+                        'Vue d\'ensemble : <a href="/suisse/vaud">Vaud</a> · <a href="/suisse/valais">Valais</a> · '
+                        '<a href="/suisse/suisse-romande">Suisse romande</a>',
+                        'Sujet connexe : <a href="/ch/partenaires-apporteurs-courtier-assurance-suisse">apporteurs d\'affaires en Suisse</a> · '
+                        '<a href="/ch/sinistres-courtier-assurance-suisse">suivi des sinistres</a> · '
+                        '<a href="/ch/workflows-courtier-assurance-suisse">workflows de cabinet</a>'])
                     + p("Les régions alémaniques et italophones sont documentées dans notre analyse, mais aucune page "
                         "n'est promise sans contenu vérifié.")),
             section("Voir la version suisse du CRM",

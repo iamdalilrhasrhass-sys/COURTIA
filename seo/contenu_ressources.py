@@ -73,7 +73,10 @@ def pages_ressources():
                         '<a href="/guides/reduire-saisie-manuelle-courtier">Réduire la saisie manuelle</a>',
                         '<a href="/guides/automatiser-suivi-prospects-assurance">Automatiser le suivi des prospects</a>',
                         '<a href="/guides/devoir-de-conseil-suivi-dossier">Devoir de conseil : ce qu\'il faut pouvoir montrer</a>',
-                        '<a href="/guides/donnees-clients-assurance-france-suisse">Données clients : France et Suisse</a>'])),
+                        '<a href="/guides/donnees-clients-assurance-france-suisse">Données clients : France et Suisse</a>',
+                        '<a href="/guides/organiser-cabinet-courtage-25-points">25 points pour organiser un cabinet</a> — '
+                        'la liste de contrôle complète, également disponible en PDF',
+                        '<a href="/glossaire">Glossaire du courtage</a> — dix-neuf notions définies, France et Suisse'])),
         ]),
         faq=[],
         lire=[("Fonctionnalités", "/fonctionnalites/"), ("Outils gratuits", "/outils/"), ("Comparatifs", "/comparatifs/")]))
@@ -237,7 +240,8 @@ def pages_ressources():
         [("ARK saisit-il les informations à ma place ?", "ARK propose les informations lues dans un document ; vous validez ou corrigez avant écriture."),
          ("Puis-je importer mes données ?", "Oui, un import permet de démarrer depuis un fichier existant."),
          ("Combien de temps vais-je gagner ?", "Nous ne le chiffrons pas : cela dépend de votre organisation. L'outil rend la charge observable.")],
-        [("Assistant ARK", "/fonctionnalites/assistant-ark"), ("Guide : centraliser les documents", "/guides/centraliser-documents-clients-assurance")]))
+        lire=[("Assistant ARK", "/fonctionnalites/assistant-ark"), ("Guide : centraliser les documents", "/guides/centraliser-documents-clients-assurance"),
+              ("Automatisation : la frontière", "/automatisation-courtier-assurance"), ("Checklist dossier client", "/outils/checklist-dossier-courtier-assurance")]))
 
     P.append(guide(
         '/guides/automatiser-suivi-prospects-assurance',
@@ -455,7 +459,18 @@ def pages_ressources():
         fil=[("Outils", None)],
         corps=section("Disponible aujourd'hui",
                      ul(['<a href="/outils/calculateur-productivite-courtier">Calculateur de charge administrative</a> — '
-                         'estimez les heures de saisie, de relance et de recherche de documents de votre cabinet.']))
+                         'estimez les heures de saisie, de relance et de recherche de documents de votre cabinet.',
+                         '<a href="/outils/calculateur-taux-transformation-assurance">Calculateur de taux de transformation</a> — '
+                         'leads, devis, contrats : où votre cabinet perd des affaires.',
+                         '<a href="/outils/checklist-dossier-courtier-assurance">Checklist dossier client</a> — '
+                         'les points de contrôle d\'un dossier, de l\'ouverture au renouvellement.',
+                         '<a href="/outils/checklist-renouvellement-assurance">Checklist renouvellement</a> — '
+                         'la séquence complète d\'une échéance, 90 jours avant.']))
+        + section("À télécharger (sans formulaire)",
+                  ul(['<a href="/ressources/checklist-25-points-organiser-cabinet-courtage.pdf">25 points pour organiser un '
+                      'cabinet de courtage</a> (PDF) — la liste complète, utilisable sans logiciel.',
+                      '<a href="/ressources/checklist-dossier-courtier-assurance.pdf">Checklist dossier (PDF)</a> — version imprimable.',
+                      '<a href="/ressources/checklist-renouvellement-assurance.pdf">Checklist renouvellement (PDF)</a> — version imprimable.']))
         + section("La règle de calcul",
                   p("Toutes les formules sont visibles sur la page de l'outil. Aucun pourcentage de gain n'est promis : "
                     "le calcul montre une charge, pas une économie.")),
