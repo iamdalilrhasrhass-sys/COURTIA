@@ -46,6 +46,7 @@ const ALLOWED_EVENT_NAMES = new Set([
      sur un calculateur ou une checklist, et non seulement qu'il a vu la page. */
   'tool_start',
   'tool_complete',
+  'tool_cta_click',
 ])
 
 function requireAdmin(req, res, next) {

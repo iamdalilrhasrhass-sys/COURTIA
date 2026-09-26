@@ -1,12 +1,20 @@
 # Maillage interne
 
-- pages indexables : 182
-- liens internes uniques : 2788
+- pages indexables : 100
+- liens internes uniques : 2316
 
 ## Pages orphelines
 
-Aucune.
-
+- /fr/guide/audit-acpr
+- /fr/guide/devoir-de-conseil
+- /fr/guide/ipid
+- /fr/guide/lcb-ft
+- /fr/guide/reforme-courtage
+- /fr/guide/sanctions-acpr
+- /fr/guide/structurer-pipeline-courtier
+- /fr/partenaires-apporteurs-courtier-assurance
+- /fr/pipeline-kanban-courtier-assurance
+- /fr/rendez-vous-courtier-assurance
 
 ## Pages commerciales sous 2 liens entrants
 
@@ -15,15 +23,15 @@ Aucune.
 
 ## Pages les plus liees
 
-- / : 150 liens entrants
-- /assurances : 79 liens entrants
-- /solutions : 79 liens entrants
-- /fonctionnalites/assistant-ark : 79 liens entrants
-- /suisse : 79 liens entrants
-- /suisse/geneve : 79 liens entrants
-- /confidentialite : 79 liens entrants
-- /mentions-legales : 79 liens entrants
-- /fonctionnalites/renouvellements-assurance : 79 liens entrants
-- /crm-courtier-assurance : 79 liens entrants
-- /solutions/equipe-commerciale-assurance : 79 liens entrants
+- / : 93 liens entrants
 - /comparatifs : 79 liens entrants
+- /france : 79 liens entrants
+- /securite : 79 liens entrants
+- /fonctionnalites/gestion-portefeuille-assurance : 79 liens entrants
+- /guides : 79 liens entrants
+- /fonctionnalites/relance-devis-assurance : 79 liens entrants
+- /contact : 79 liens entrants
+- /outils : 79 liens entrants
+- /fonctionnalites/gestion-documents-assurance : 79 liens entrants
+- /crm-courtier-assurance : 79 liens entrants
+- /solutions/reseau-courtage : 79 liens entrants

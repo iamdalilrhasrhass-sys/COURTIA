@@ -275,6 +275,69 @@ def bloc_faq(faq: list) -> str:
     items = ''.join(f'<h3>{esc(q)}</h3><p>{esc(r)}</p>' for q, r in faq)
     return f'<h2>Questions fréquentes</h2><div class="section">{items}</div>'
 
+# Maillage vers la page money « logiciel pour courtier en assurance ».
+# Un lien contextuel par page, avec une ancre differente et une phrase qui dit pourquoi le lien
+# est la : le but est de relier des pages qui parlent du meme metier, pas de repeter un bloc.
+MONEY = '/logiciel-courtier-assurance'
+# Maillage vers la page money : un lien contextuel par page, ancre differente, phrase qui dit
+# pourquoi le lien est la. {L} est remplace par l'ancre HTML dans bloc_money.
+LIENS_MONEY = {
+    '/crm-courtier-assurance': (
+        "logiciel pour courtier en assurance",
+        "Si vous cherchez d'abord a comprendre ce qu'un outil metier doit couvrir avant de comparer, "
+        "la page sur le {L} detaille le perimetre et les criteres de choix."),
+    '/france': (
+        "logiciel pour courtier",
+        "Le perimetre fonctionnel attendu par un cabinet francais est decrit sur la page du {L} en assurance."),
+    '/suisse': (
+        "logiciel de courtage",
+        "Cote outillage, le {L} retenu doit tenir les memes objets metier qu'en France, avec la facturation en francs suisses."),
+    '/suisse/geneve': (
+        "logiciel courtier",
+        "Le detail de ce qu'un {L} doit couvrir dans un cabinet est traite sur la page produit."),
+    '/suisse/lausanne': (
+        "logiciel courtier",
+        "Pour comparer les fonctions attendues, la page {L} liste le perimetre module par module."),
+    '/fonctionnalites/relance-devis-assurance': (
+        "CRM assurance",
+        "Les devis ne vivent pas seuls : ils appartiennent a un dossier client, comme l'explique la page {L}."),
+    '/fonctionnalites/assistant-ark': (
+        "COURTIARK",
+        "ARK fait partie d'un ensemble : le {L} qui porte les dossiers, les contrats et les echeances."),
+    '/fonctionnalites/gestion-portefeuille-assurance': (
+        "piloter un cabinet de courtage",
+        "Piloter un portefeuille n'est utile que si le reste du cabinet suit : voir {L}."),
+    '/comparatifs/crm-assurance-vs-crm-generaliste': (
+        "logiciel de courtage",
+        "Si la question est de choisir un outil plutot qu'un autre, la page {L} donne les criteres concrets."),
+    '/glossaire': (
+        "logiciel courtier",
+        "Voir aussi la page sur le {L}, qui decrit le perimetre attendu d'un outil de gestion de cabinet."),
+    '/outils': (
+        "CRM pour courtier",
+        "Ces outils se manipulent a la main ; un {L} les rend permanents dans le dossier."),
+    '/guides/comment-ne-plus-oublier-relances-courtier': (
+        "logiciel de courtage",
+        "La methode decrite ici s'appuie sur un {L} qui rend les relances visibles au quotidien."),
+    '/guides/organiser-portefeuille-assurance': (
+        "CRM pour courtier",
+        "Un {L} applique cette organisation en continu, sans repasser par un tableur."),
+    '/outils/checklist-renouvellement-assurance': (
+        "logiciel pour courtier en assurance",
+        "Pour que cette checklist ne depende plus de votre memoire : {L}."),
+}
+
+
+def bloc_money(page: dict) -> str:
+    chemin = page.get('path') or ''
+    entree = LIENS_MONEY.get(chemin) or LIENS_MONEY.get(chemin.rstrip('/')) or LIENS_MONEY.get(chemin + '/')
+    if not entree:
+        return ''
+    ancre, phrase = entree
+    lien = '<a href="%s">%s</a>' % (MONEY, ancre)
+    return '<div class="section"><p>%s</p></div>' % phrase.format(L=lien)
+
+
 def bloc_lire(liens: list) -> str:
     if not liens:
         return ''
@@ -307,6 +370,7 @@ def rendre(page: dict) -> str:
         corps.append(f'<p class="chapeau">{esc(page["chapeau"])}</p>')
     corps.append(cta(secondaire=page.get('cta2', ('/demo/', 'Demander une démonstration'))))
     corps.append(page.get('corps', ''))
+    corps.append(bloc_money(page))
     corps.append(cta(principal=page.get('cta_final', ('/register', f'Essayer {TRIAL_DAYS} jours'))))
     corps.append(bloc_faq(page.get('faq', [])))
     corps.append(bloc_lire(page.get('lire', [])))

@@ -21,6 +21,7 @@ from contenu_geo import pages_geo  # noqa: E402
 from contenu_ressources import pages_ressources, TRACK_JS  # noqa: E402
 from contenu_villes import pages_villes  # noqa: E402
 from contenu_intentions import pages_intentions  # noqa: E402
+from contenu_money import pages_money  # noqa: E402
 from contenu_outils import pages_outils  # noqa: E402
 from contenu_glossaire import pages_glossaire  # noqa: E402
 from scripts_js import (MESURE_JS, FORMULAIRE_JS, OUTIL_JS, TRANSFORMATION_JS,  # noqa: E402
@@ -150,7 +151,7 @@ def section_de(path: str) -> str:
 
 
 def main():
-    pages = (pages_core() + pages_geo() + pages_villes() + pages_intentions() + pages_outils()
+    pages = (pages_core() + pages_geo() + pages_villes() + pages_money() + pages_intentions() + pages_outils()
              + pages_glossaire() + pages_ressources())
     chemins = [p['path'] for p in pages]
     doublons = [c for c, n in Counter(chemins).items() if n > 1]

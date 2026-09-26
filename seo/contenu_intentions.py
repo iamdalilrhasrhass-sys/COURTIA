@@ -17,63 +17,6 @@ def pages_intentions():
     P = []
 
     P.append(dict(
-        path='/logiciel-courtier-assurance', type='money', country='FR', indexable=True,
-        title="Logiciel courtier assurance : périmètre, modules et critères de choix | COURTIARK",
-        description="À quoi doit servir un logiciel de courtier en assurance, quels modules sont indispensables, et "
-                    "comment le choisir sans se tromper. Le périmètre réel de COURTIARK, sans promesse.",
-        h1="Logiciel courtier assurance : ce qu'il doit couvrir",
-        chapeau="Un logiciel de courtage n'est pas un CRM généraliste configuré pour l'assurance. Voici le périmètre "
-                "utile, les modules qui font gagner du temps, et ce qui n'a pas à y figurer.",
-        fil=[("Logiciel courtier assurance", None)],
-        alternate='/suisse/crm-courtier-assurance',
-        corps=''.join([
-            section("Le périmètre utile, module par module",
-                    tableau(["Module", "Ce qu'il doit faire", "Présent dans COURTIARK"],
-                            [["Dossiers clients", "Identité, situation, historique, segmentation", "Oui"],
-                             ["Contrats et échéances", "Suivi des contrats et des dates de renouvellement", "Oui"],
-                             ["Devis", "Registre, étape en cours, suivi des relances", "Oui"],
-                             ["Documents", "Collecte, classement, rattachement au dossier", "Oui (dépôt par lien)"],
-                             ["Relances et tâches", "Actions rattachées au dossier, avec trace", "Oui"],
-                             ["Commissions", "Suivi des commissions et rétrocessions", "Oui"],
-                             ["Conformité", "Repères France (DDA, ORIAS) et Suisse (LSA, FINMA)", "Repères de suivi, pas un audit"],
-                             ["Prospection", "Recherche, campagnes, suivi des réponses", "Oui"],
-                             ["Tarification", "Calcul de primes auprès des assureurs", "Non — hors périmètre"],
-                             ["Comptabilité", "Écritures, bilan, TVA", "Non — hors périmètre"]])),
-            section("Les cinq critères qui font la différence à l'usage",
-                    etapes([("1. Les objets métier existent-ils ?", "Un contrat, une échéance, une commission doivent être des objets, pas des champs libres."),
-                            ("2. Le client dépose-t-il ses pièces sans compte ?", "Un lien de dépôt évite trois échanges d'e-mails par document."),
-                            ("3. Que se passe-t-il si le collaborateur part ?", "Le dossier doit rester exploitable par un autre, sinon ce n'est pas un logiciel de cabinet."),
-                            ("4. Peut-on repartir avec ses données ?", "L'export doit être possible, sans dépendre de l'éditeur."),
-                            ("5. Le prix suit-il l'usage ?", "Un abonnement par utilisateur et par mois se compare ; les frais de mise en service cachés se découvrent trop tard.")])),
-            section("Ce que COURTIARK n'est pas",
-                    ul(["Ce n'est pas un logiciel de tarification : il ne produit pas de primes d'assureurs.",
-                        "Ce n'est pas un outil comptable.",
-                        "Ce n'est pas un service de conformité : il organise le suivi, il ne certifie rien.",
-                        "Ce n'est pas un outil qui contacte vos clients à votre place."])),
-            section("Prix et essai",
-                    tableau(["Offre (France)", "Prix", "Pour qui"],
-                            [["Starter", "89 € HT/mois", "Courtier indépendant"],
-                             ["Pro", "159 € HT/mois", "Cabinet avec plusieurs collaborateurs"],
-                             ["Cabinet", "Sur devis", "Besoins spécifiques, reprise de données"]])
-                    + p("Suisse : Indépendant 199 CHF HT/mois, Cabinet 349 CHF HT/mois. Essai de 7 jours, sans carte bancaire.")),
-        ]),
-        faq=[("Quelle différence entre un logiciel courtier et un CRM généraliste ?",
-              "Les objets métier : contrats, échéances, commissions, devis et pièces d'assurance existent nativement dans un "
-              "logiciel de courtage, alors qu'un CRM généraliste les stocke au mieux en champs libres."),
-             ("Faut-il choisir un logiciel ou un tableur ?",
-              "Un tableur suffit tant qu'une seule personne le tient. Dès que plusieurs personnes en dépendent, l'information "
-              "doit être partagée et datée."),
-             ("COURTIARK remplace-t-il mon logiciel de tarification ?",
-              "Non : il organise le suivi du cabinet. Si vous produisez des tarifs, vous gardez votre outil."),
-             ("Peut-on tester avant de payer ?",
-              "Oui : l'essai dure 7 jours et ne demande pas de carte bancaire. À l'expiration, les données restent consultables.")],
-        lire=[("Le CRM courtier assurance", "/crm-courtier-assurance"),
-              ("Logiciel de courtage : le flux devis-contrat-commission", "/logiciel-courtage-assurance"),
-              ("Automatisation : ce qui est possible", "/automatisation-courtier-assurance"),
-              ("CRM assurance ou CRM généraliste", "/comparatifs/crm-assurance-vs-crm-generaliste")],
-    ))
-
-    P.append(dict(
         path='/logiciel-courtage-assurance', type='money', country='FR', indexable=True,
         title="Logiciel de courtage assurance : devis, contrats, commissions | COURTIARK",
         description="Le flux d'un cabinet de courtage, étape par étape : besoin, devis, contrat, échéance, commission. "
